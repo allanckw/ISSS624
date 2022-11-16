@@ -1,0 +1,9 @@
+---
+title: "ISSS624"
+---
+
+Welcome to ISSS624 Geospatial Analytics Applications.
+
+```{r}
+1 + 1
+```
