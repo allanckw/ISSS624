@@ -1,9 +1,9 @@
 ---
-title: "ISSS624"
+title: "ISSS624 Geospatial Analytics"
+author: "Chong Kok Wei @ Allan Chong"
+editor: visual
 ---
 
 Welcome to ISSS624 Geospatial Analytics Applications.
 
-```{r}
-1 + 1
-```
+This site will document my learning Journey

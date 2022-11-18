@@ -1,0 +1,301 @@
+---
+title: "Hands-on Exercise 1: Geospatial Data Wrangling"
+author: "Allan Chong"
+editor: visual
+---
+
+## Overview
+
+In this hands on exercise, I learnt how to import & wrangle geospatial data using appropriate R packages
+
+## Getting Started
+
+The code chunk below install & load sf & tidyverse packages into the R env
+
+```{r}
+pacman::p_load(sf,tidyverse)
+
+```
+
+### What is a Projected Coordinate System
+
+According to SLA SiReNT (2020), Geographical information systems' data sets uses projected coordinate systems, such that common features can be incorporated into geographical data sets. A common coordinate system is the global ***WGS84*** datum to map the spherical surface of the earth onto a 2 or 3 dimensional Cartesian coordinate plane for analysis.
+
+The ***SVY21*** coordinate system may be used in Singapore's context as the datum are localized to describe the region more precisely in order to provide accurate analysis.
+
+## 1.4 Importing Geospatial Data
+
+We use *st_read()* to read the dataset, specifying the folder in the dsn parameter and the dataset name in the layer parameter
+
+### Master Planning Subzone dataset
+
+```{r}
+mpsz = st_read(dsn="data/geospatial", layer="MP14_SUBZONE_WEB_PL")
+```
+
+The output of the code shows that there are a total of 323 features & 15 fields of geometry type Multipolygon in the x and y dimensions.
+
+The driver used is ESRI shapefile, which is a geospatial vector data format for Geographical information systems
+
+### Cycling path dataset
+
+```{r}
+cyclingpath = st_read(dsn="data/geospatial", layer="CyclingPathGazette")
+
+```
+
+The output of the code shows that there are a total of 1625 features & 2 fields of geometry type LINESTRING in the x and y dimensions.
+
+### Preschool dataset
+
+The preschool dataset is in kml format. The difference between importing kml file and the other 2 dataset is that there is no layer information. Simply call st_read() with the filename
+
+KML stands for Keyhole markup language., an XML notation to express geographical annotation and visualization. (ARCGIS, 2016)
+
+```{r}
+preschool = st_read("data/geospatial/pre-schools-location-kml.kml")
+```
+
+The output of the code shows that there are a total of 1359 features & 2 fields of geometry type POINT in 3 dimensions (X, Y and Z). In this case preschool is in the ***WGS84*** projected coordinate systems
+
+## 1.5 Checking the content of a simple Feature Data Frame
+
+### `st_geometry()`
+
+st_geometry returns geometries in a list, of class *`'sfc'`*
+
+```{r}
+st_geometry(mpsz)
+```
+
+The output in the case returns the bounding box, projected coordinated systems and the first 5 geometries
+
+### `glimpse()`
+
+```{r}
+glimpse(mpsz)
+```
+
+*`glimpse()`* displays each field's data type, for example double precision number for X_ADDR, Y_ADDR, SHAPE_Leng, SHAPE_AREA and their corresponding available values in the dataset.
+
+### `head()`
+
+`head()` reveals the complete information of a feature object
+
+```{r}
+head(mpsz, n=5)
+```
+
+## 1.6 Plotting the Geospatial Data with `Plot()`
+
+We can use plot() of R to plot the geographical objects.
+
+```{r}
+plot(mpsz)
+```
+
+We could call `st_geometry()` from within `plot()` to only display the geometry of the sf object
+
+```{r}
+plot(st_geometry(mpsz))
+```
+
+In addition, we can choose the plot the sf object by using a specific attribute like how we reference a dictionary in major programming languages with `objname["<attributename>"]`
+
+```{r}
+plot(mpsz["PLN_AREA_N"])
+```
+
+## 1.7 Working with projection
+
+### Assigning EPSG Code to a simple feature data frame
+
+The EPSG, or European Petroleum Survey Group, is a company that manages a database of geodetic parameters with standardized codes for coordinate systems, datums, spheroids, units.
+
+Sometimes, importing geospatial data into R may not give an accurate analysis as the projected coordinate system is either missing or incorrect during the import system. We could use `st_crs()`to retrieve the coordinate system from the object.
+
+```{r}
+st_crs(mpsz)
+```
+
+The result shows that the EPSG Code is 9001, which is incorrect. The correct code for the SVY21 projected coordinate system is 3414. We could use `st_set_crs()` to correct the EPSG Code.
+
+```{r}
+mpsz3414 = st_set_crs(mpsz,3414)
+```
+
+```{r}
+st_crs(mpsz3414)
+```
+
+### Reprojection
+
+We can see that the variable mpsz3414 has the EPSG code corrected after running `st_set_crs()`
+
+We could however see that it returns a warning that it does not reproject data, and is asked to use `st_transform()`
+
+Reprojection is the process to update the coordinates values of a dataset from one coordinate system to another coordinate system, in this case from EPSG 9001 to EPSG 3414 for the mpsz dataset.
+
+Below is the code to transform the preschool dataset to the SVY21 (EPSG 3414) projected coordinate system
+
+```{r}
+preschool3414 = st_transform(preschool, crs=3414)
+st_crs(preschool3414)
+```
+
+## 1.8 Importing & Converting Aspatial Data
+
+ASpatial data is a dataset that contains x and y coordinates of locations' data points. In this example, the Inside AirBnB dataset is used.
+
+### Importing Aspatial data
+
+As listings is in csv format, we could use `read_csv()` of ***readr*** package to import the dataset
+
+```{r}
+airbnb_listing = read_csv("data/aspatial/listings.csv")
+```
+
+We can use list() to display the dataset, it shows that there are 4252 rows and 16 columns, and we are interested in the longitude and latitude values
+
+```{r}
+list(airbnb_listing)
+```
+
+### Creating a feature dataframe from an Aspatial data frame with `st_as_sf()`
+
+We can use `st_as_sf`to create a dataframe from the longitude (*x*) and latitude (*y*) values. The EPSG 4326 code is used as the dataset is referencing WGS84 geographic coordinate system
+
+```{r}
+airbnb_listings_sf = st_as_sf(airbnb_listing, coords = c("longitude", "latitude"), crs=4326)
+```
+
+We can then use *`glimpse()`* to displays each field's data type & available values.
+
+The results shows that the longitude and latitude values have been converted to a geometry object consisting of the longitude and latitude values as points, with both columns now dropped.
+
+```{r}
+glimpse(airbnb_listings_sf)
+
+```
+
+## 1.9 Geoprocessing with sf package
+
+### `st_buffer()`
+
+Using `st_buffer()` to compute the 5m buffers around cycling path
+
+```{r}
+buffer_cycling = st_buffer(cyclingpath, 
+                               dist=5, nQuadSegs = 30)
+```
+
+nQuadSegs is the number of segments per quadrant for all or per feature, the higher the number, the smoother are the curves of the buffer. Setting nQuadSeg to 1 yields straight lines with jagged edges (Pebesma, n.d)
+
+### `st_area()`
+
+The area of the buffer is computed by using `st_area()`
+
+```{r}
+buffer_cycling$AREA <- st_area(buffer_cycling)
+```
+
+Finally, we use sum() to compute the total land area
+
+```{r}
+sum(buffer_cycling$AREA)
+```
+
+### `st_intersects()`
+
+We can use `st_intersects()` to find common data points between 2 geographical datasets. The `length()` function is used to find the number of points in the intersection.
+
+In this case we want to identify pre-schools located inside each Planning Subzones
+
+```{r}
+mpsz3414$'PreSch Count'<- lengths(st_intersects(mpsz3414, preschool3414))
+```
+
+Using the summary function, we can find the summary statistics of the numbers of preschools of the various planning zones
+
+```{r}
+summary(mpsz3414$'PreSch Count')
+```
+
+The top_n function can be used to find the planning zones with the most pre-schools
+
+```{r}
+top_n(mpsz3414, 1, 'PreSch Count')
+```
+
+### Computing Density
+
+Density can be computed by first computing the area of each planning subzone.
+
+```{r}
+mpsz3414$Area <- mpsz3414 %>% st_area()
+```
+
+the `mutate()` function of dplyr package is then called to compute the density
+
+```{r}
+mpsz3414 <- mpsz3414 %>%
+  mutate(`PreSch Density` = `PreSch Count`/Area * 1000000)
+```
+
+## 1.10 Exploratory Data Analysis (EDA)
+
+### Using `ggplot2()` to plot graphs
+
+#### Histogram
+
+The Hist() function of R Graphics can be used to output the histogram to display the distribution of PreSch Density.
+
+```{r}
+hist(mpsz3414$`PreSch Density`)
+```
+
+However, it is not meaningful with the default labels. ggplot2 can be used to enhanced the quality of data visualization.
+
+```{r}
+ggplot(data=mpsz3414, 
+       aes(x= as.numeric(`PreSch Density`)))+
+  geom_histogram(bins=20, 
+                 color="White", 
+                 fill="Blue") +
+  labs(title = "Are pre-school evenly distributed in Singapore?",
+       subtitle= "There are many planning sub-zones with a single pre-school, on the other hand, \nthere are two planning sub-zones with at least 20 pre-schools",
+      x = "Pre-school density (per km sq)",
+      y = "Frequency")
+```
+
+#### Scatterplot
+
+We can use ggplot and geom_point() to plot scatter diagram
+
+```{r}
+ggplot(data=mpsz3414, 
+       aes(x= as.numeric(`PreSch Density`), y=as.numeric(`PreSch Count`))) +
+       geom_point(shape=18, color="blue") + 
+       xlim(0,40) + ylim(0,40) +
+       labs(title="Relationship between Pre-school density & Pre-school count", x="Pre-School Density (per km sq)", y="Pre-school count")
+
+       
+```
+
+## Reference:
+
+ARCGIS (2016), *What is KML*
+
+https://desktop.arcgis.com/en/arcmap/10.3/manage-data/kml/what-is-kml-.htm
+
+Singapore Land Authority (SLA), Singapore Satellite Positioning Reference Network (SiReNT), 2020, *Plane Coordinate System - SVY21*
+
+https://app.sla.gov.sg/sirent/About/PlaneCoordinateSystem
+
+E. Pebesma (n.d) *Geometric unary operations on simple feature geometry sets*
+
+https://r-spatial.github.io/sf/reference/geos_unary.html
+
+Virtual Surveyor (2022), *What is an EPSG Code*
+
+https://support.virtual-surveyor.com/en/support/solutions/articles/1000261353-what-is-an-epsg-code-#:\~:text=EPSG%20stands%20for%20European%20Petroleum,spheroids%2C%20units%20and%20such%20alike.

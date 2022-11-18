@@ -7,11 +7,11 @@ website:
     left: 
       - text: Hands-On Exercises
         menu: 
-          - text: Hands-on Exercise 1
-          - text: Hands-on Exercise 2
-          - text: Hands-on Exercise 3
-          - text: Hands-on Exercise 4
-          - text: Hands-on Exercise 5
+          - text: Hands-on Exercise 1.1 - Geospatial Data Wrangling
+            href: Hands-on_Ex1\Hands-on Ex1.qmd
+          - text: Hands-on Exercise 1.2 - Choropleth Mapping with R
+            href: Hands-on_Ex2\Hands-on Ex2.qmd
+         
     right:
       - href: index.qmd
         text: Home
