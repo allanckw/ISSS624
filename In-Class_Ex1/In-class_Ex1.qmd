@@ -231,7 +231,7 @@ It returns
 
 -   **nc:** number of disjoint connected subgraphs
 
-**comp.id:** vector with the indices of the disjoint connected subgraphs that the nodes in **`nb.obj`** belong to, in this case the distance weight matrix
+-   **comp.id:** vector with the indices of the disjoint connected subgraphs that the nodes in **`nb.obj`** belong to, in this case the distance weight matrix
 
 ```{r}
 n_comp$nc
@@ -241,8 +241,117 @@ table(n_comp$comp.id)
 
 ## Plotting fixed distance weight matrix
 
+We can plot the distance weight matrix by using the code below.
+
+```{r}
+plot(hunan$geometry, border="lightblue")
+plot(wm_d62, coord, add=TRUE)
+plot(k1, coord, add=TRUE, col="red", length = 0.1)
+```
+
+-   The black lines show the links of neighbours within the cut-off distance of 62km.
+
+-   The red lines show the links of 1st nearest neighbours
+
+Alternatively, we can plot both of them next to each other with the code below.
+
+```{r}
+par(mfrow=c(1,2))
+plot(hunan$geometry, border="lightblue")
+plot(wm_d62, coord, add=TRUE)
+plot(hunan$geometry, border="lightblue")
+plot(k1, coord, add=TRUE, col="red", length = 0.1)
+```
+
+## Computing adaptive distance weight matrix
+
+The fixed distance weight matrix has the property that locations with higher densities of habitation (often urban areas) tend to have more neighbours, whereas areas with lower densities (typically rural areas) tend to have fewer neighbours.
+
+By enforcing symmetry or accepting asymmetric neighbours, as shown in the code below, it is possible to control the number of neighbours of each region using the knn algorithm.
+
+```{r}
+knn6 = knn2nb(knearneigh(coord, k=6))
+```
+
+Similarly, we can display the content of the matrix by using `str()`
+
+```{r}
+str(knn6)
+```
+
+#### Plotting distance based neighbours
+
+```{r}
+plot(hunan$geometry, border="lightblue")
+plot(knn6, coord, pch = 19, cex = 0.6, add = TRUE, col = "red")
+```
+
+## Weights based on Inverse distance methods
+
+We will need to compute the distances between areas using `nbdistI()` of **spdep** package
+
+```{r}
+dist = nbdists(wm_q, coord, longlat=TRUE)
+ids = lapply(dist, function(x) 1/ (x))
+ids
+```
+
+### Row standardize Weight Matrix
+
+The `nb2listw` function adds spatial weights for the selected coding scheme to a neighbours list. It's possible to determine whether a spatial weights object is similar to symmetric and can be transformed in this way to produce real eigenvalues or for Cholesky decomposition.
+
+There are a number of Styles to choose from (Bivand, n.d)
+
+-   B is the basic binary coding,
+
+-   W is row standardised (sums over all links to n),
+
+-   C is globally standardised (sums over all links to n),
+
+-   U is equal to C divided by the number of neighbours (sums over all links to unity),
+
+-   S is the variance-stabilizing coding scheme
+
+For this example, we\'ll stick with the style=\"W\" option for simplicity\'s but note that other more robust options are available, notably style=\"B\", basic binary coding.
+
+```{r}
+rswm_q = nb2listw(wm_q, style="W", zero.policy=TRUE)
+rswm_q
+```
+
+Lists of non-neighbors are possible with the zero.policy=TRUE option.
+
+A zero.policy of FALSE would return an error, however this should be used carefully as the user might not be aware of missing neighbors in their dataset.
+
+To view the weight of the first polygon's 10 neighbour types, we can use the code below
+
+```{r}
+rswm_q$weights[10]
+```
+
+Each neighbor is assigned a 0.125 of the total weight. This means that when R computes the average neighboring income values, each neighbor\'s income will be multiplied by 0.125 before being tallied.
+
+Using the same method, we can also derive a row standardized distance weight matrix by using the code below.
+
+```{r}
+rswm_ids <- nb2listw(wm_q, glist=ids, style="B", zero.policy=TRUE)
+rswm_ids
+
+```
+
+```{r}
+rswm_ids$weights[1]
+summary(unlist(rswm_ids$weights))
+```
+
+## Application of Spatial Weight Matrix
+
 ## Reference
 
 Kam T.S (2022), *R for Geospatial Data Science and Analytics, Chapter 3 Spatial Weights and Applications*
 
 https://r4gdsa.netlify.app/chap03.html
+
+Bivand R (n.d) *Spatial weights for neighbours lists*
+
+https://r-spatial.github.io/spdep/reference/nb2listw.html
