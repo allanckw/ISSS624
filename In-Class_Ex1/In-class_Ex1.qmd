@@ -10,20 +10,20 @@ In Class Exercise 1
 
 ## Getting Started
 
-The code chunk below install & load sf & tidyverse packages into the R env
+The code chunk below install & load sf, spdep, tmap & tidyverse packages into the R env
 
 ```{r}
 pacman::p_load(sf,tidyverse,spdep, tmap)
 
 ```
 
-### Importing Hunan Geospatial Shp File
+### Importing Hunan Geospatial sf
 
 ```{r}
 hunan_sf = st_read(dsn="data/geospatial", layer="Hunan")
 ```
 
-### Loading Hunan GDP Aspatial File in CSV
+### Loading Hunan 2012 Aspatial File in CSV
 
 ```{r}
 hunan_GDP = read_csv("data/aspatial/hunan_2012.csv")
@@ -68,7 +68,11 @@ summary(wm_r)
 
 ```
 
-From the results, there are 88 regions in hunan, 85 of them has 11 neighbours, while only 2 of them has 1 neighbour
+From the results, there are 88 regions in Hunan,
+
+Using the Queen's method, 85 of them has 11 neighbours, while only 2 of them has 1 neighbour
+
+Using the Rook's method 85 of them has 10 neighbours, while only 2 of them has 1 neighbour
 
 To see neighbours for polygons in the objects, we could reference them like the below for the first polygon:
 
@@ -105,3 +109,140 @@ The complete weight matrix can be displayed by using the `str()` function
 ```{r}
 str(wm_q)
 ```
+
+## Visualizing contiguity weights
+
+In a connectivity graph, each point's neighbouring points are represented by a line. As the exercise is focused on  polygons, points needs to be created before we can build connectivity graphs. Polygon centroids will be the mechanism used for this purpose. 
+
+### Getting Latitude and Longitude of Polygon Centroids
+
+Before we can create the connectivity graph, we must assign points to each polygon.  For this to function, we need the coordinates in a separate data frame. We'll utilize a mapping function to accomplish this. The mapping function creates a vector of identical length by applying a specified function to each element of a vector. We will use the geometry column of us.bound as our input vector. 
+
+`st_centroid` from the sf package & `map_dbl`from the purrr package will be used to accomplish this. We can map the `st_centroid` function over the geometry column us.bounds to obtain our required values.
+
+-   The longitude is the first variable in each centroid, this enables us to obtain only the longitude.
+
+-   The latitude is the second variable in each centroid, this enables us to obtain only the latitude
+
+-   Using the double bracket notation \[\[\]\] and the index, we can access the latitude & longitude values.
+
+    ```{r}
+    longitude = map_dbl(hunan$geometry, ~st_centroid(.x)[[1]]) #longitude index 1
+    latitude = map_dbl(hunan$geometry, ~st_centroid(.x)[[2]]) #latitude index 2
+
+    ```
+
+    After getting the longitude and latitudes, we can form the coordinates object named `coord` using `cbind`
+
+    Using the `head` function, we can inspect the elements of `coord` to verify if they are correctly formatted
+
+    ```{r}
+    coord = cbind(longitude, latitude)
+    head(coord)
+    ```
+
+### Plotting Queen contiguity based neighbours map
+
+We can now plot the contiguity graph with our `coord` object
+
+#### Using Queen's method with `wm_q`
+
+```{r}
+plot(hunan$geometry, border="lightblue")
+plot(wm_q, coord, pch = 19, cex = 0.6, add = TRUE, col= "black")
+```
+
+#### Using Rook's Method with `wm_r`
+
+```{r}
+plot(hunan$geometry, border="lightblue")
+plot(wm_r, coord, pch = 19, cex = 0.6, add = TRUE, col= "black")
+```
+
+#### Plotting both Rook's & Queen's method
+
+```{r}
+par(mfrow=c(1,2))
+plot(hunan$geometry, border="lightblue")
+plot(wm_r, coord, pch = 19, cex = 0.6, add = TRUE, col= "black")
+plot(hunan$geometry, border="lightblue")
+plot(wm_q, coord, pch = 19, cex = 0.6, add = TRUE, col= "black")
+```
+
+## Computing distance based neighbours
+
+With the use of Neighbourhood contiguity by distance - `dnearneigh()` of **spdep** package, we can determine the distance based weight matrix.
+
+The function looks for neighbours of regions points by Euclidean distance between the *lower (\>=) and upper (\<=) bound* or with the parameter `longlat = True` by great circle distance in km
+
+### Find the lower and upper bounds
+
+1.  Using the k nearest neighbour (knn) algorithm, we can return a matrix with indices of points that belongs to the set of k nearest neighbours of each others by using `knearneigh()` of **spdep**
+
+2.  Convert the knn objects into a neighbours list of class nb with a list of integer vectors containing neighbour region number ids by using `knn2nb()`
+
+3.  Return the length of neighbour relationship edges by using `nbdists()` of spdep. The function returns in the units of coordinates if the coordinates are projected, in km otherwise.
+
+4.  Remove the list structure of the return objects by using `unlist()`
+
+```{r}
+k1 = knn2nb(knearneigh(coord)) #returns a list of nb objects from the result of k nearest neighbours matrix, Step 1 & 2
+k1dist = unlist(nbdists(k1, coord, longlat = TRUE)) #return the length of neighbour relationship edges and remove the list structures, Step 3 & 4
+summary(k1dist)
+```
+
+From the result, the largest first nearest neighbour is 61.79km, hence by using this as the upper bound, we can be certain that all units will have at least 1 neighbour
+
+### Finding the fixed distanced weight matrix
+
+`dnearneigh` will be used to compute the distance weight matrix
+
+```{r}
+wm_d62 = dnearneigh(coord, 0, 62, longlat = TRUE)
+wm_d62
+```
+
+The average number of links denotes the number of non zero links divided by the number of regions. In this case, a region has about on average between 3-4 neighbours
+
+Next, we will use `str()` to display the content of wm_d62 weight matrix.
+
+```{r}
+str(wm_d62)
+```
+
+Another way to display the structure of the weight matrix is to combine `table()` and `card()` of spdep.
+
+-   The `card()` function counts the neighboring regions in the neighbours list.
+
+-   `table()` creates a contingency table of the counts for each combination of factor levels using cross-classifying factors.
+
+```{r}
+cardinality = card(wm_d62)
+table(hunan$County, cardinality) 
+```
+
+**`n.comp.nb()`** finds the number of disjoint connected subgraphs in the graph depicted by **`nb.obj`** - a spatial neighbours list object using depth first search
+
+```{r}
+n_comp = n.comp.nb(wm_d62)
+```
+
+It returns
+
+-   **nc:** number of disjoint connected subgraphs
+
+**comp.id:** vector with the indices of the disjoint connected subgraphs that the nodes in **`nb.obj`** belong to, in this case the distance weight matrix
+
+```{r}
+n_comp$nc
+#n_comp$comp.id
+table(n_comp$comp.id)
+```
+
+## Plotting fixed distance weight matrix
+
+## Reference
+
+Kam T.S (2022), *R for Geospatial Data Science and Analytics, Chapter 3 Spatial Weights and Applications*
+
+https://r4gdsa.netlify.app/chap03.html
