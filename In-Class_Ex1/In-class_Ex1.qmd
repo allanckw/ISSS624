@@ -1,5 +1,5 @@
 ---
-title: "In Class Exercise 1 - Applications of Spatial Weights"
+title: "In Class Exercise 1 - Chp 3 Applications of Spatial Weights"
 author: "Allan Chong"
 editor: visual
 ---
@@ -312,7 +312,7 @@ There are a number of Styles to choose from (Bivand, n.d)
 
 -   S is the variance-stabilizing coding scheme
 
-For this example, we\'ll stick with the style=\"W\" option for simplicity\'s but note that other more robust options are available, notably style=\"B\", basic binary coding.
+For this example, we'll stick with the style="W" option for simplicity's but note that other more robust options are available, notably style="B", basic binary coding.
 
 ```{r}
 rswm_q = nb2listw(wm_q, style="W", zero.policy=TRUE)
@@ -329,7 +329,7 @@ To view the weight of the first polygon's 10 neighbour types, we can use the cod
 rswm_q$weights[10]
 ```
 
-Each neighbor is assigned a 0.125 of the total weight. This means that when R computes the average neighboring income values, each neighbor\'s income will be multiplied by 0.125 before being tallied.
+Each neighbor is assigned a 0.125 of the total weight. This means that when R computes the average neighboring income values, each neighbor's income will be multiplied by 0.125 before being tallied.
 
 Using the same method, we can also derive a row standardized distance weight matrix by using the code below.
 
@@ -358,8 +358,7 @@ In this section, 4 different spatial lagged variables are discussed, they are:
 
 ### 1. Spatial lag with row-standardized weights
 
-First, Compute the average neighbor GDPPC value for each polygon. These values are often referred to as **spatially lagged values**.
-We use `lag.listw` to compute the Spatial lag of a numeric vector
+First, Compute the average neighbor GDPPC value for each polygon. These values are often referred to as **spatially lagged values**. We use `lag.listw` to compute the Spatial lag of a numeric vector
 
 ```{r}
 gdppc.lag = lag.listw(rswm_q, hunan$GDPPC)

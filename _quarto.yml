@@ -7,13 +7,18 @@ website:
     left: 
       - text: Hands-On Exercises
         menu: 
-          - text: Hands-on Exercise 1.1 - Geospatial Data Wrangling
+          - text: Hands-on Exercise Week 1.1 - Ch 1 Geospatial Data Wrangling
             href: Hands-on_Ex1\Hands-on Ex1.qmd
-          - text: Hands-on Exercise 1.2 - Choropleth Mapping with R
+            
+          - text: Hands-on Exercise Week 1.2 - Ch 2 Choropleth Mapping with R
             href: Hands-on_Ex2\Hands-on Ex2.qmd
+            
+          - text: In class Exercises Week 2.1 - Ch 4 Choropleth Mapping with R
+            href: Hands-on_Ex3\Hands-on Ex3.qmd
+            
       - text: In class Exercises
         menu: 
-          - text: In Class Exercise 1 - Applications of Spatial Weights
+          - text: In Class Exercise Week 1 - Applications of Spatial Weights
             href: In-Class_Ex1\In-class_Ex1.qmd
             
     right:

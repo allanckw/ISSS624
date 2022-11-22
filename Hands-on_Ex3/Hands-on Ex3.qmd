@@ -1,0 +1,167 @@
+---
+title: "Hands On Exercise 2.1 - Global and Local Measures of Spatial Autocorrelation"
+author: "Allan Chong"
+editor: visual
+---
+
+## Overview
+
+Hands On Exercise 3 - Global and Local Measures of Spatial Autocorrelation
+
+In this hands-on exercise, we explore how to compute Global and Local Measure of Spatial Autocorrelation (GLSA) by using **spdep** package.
+
+## Getting Started
+
+The code chunk below install & load sf, spdep, tmap & tidyverse packages into the R env
+
+```{r}
+pacman::p_load(sf,tidyverse,spdep, tmap)
+
+```
+
+### Importing Hunan Geospatial sf
+
+```{r}
+hunan_sf = st_read(dsn="data/geospatial", layer="Hunan")
+```
+
+### Loading Hunan 2012 Aspatial File in CSV
+
+```{r}
+hunan_GDP = read_csv("data/aspatial/hunan_2012.csv")
+```
+
+## Joining attribute data to the simple feature files
+
+Next, *left_join()* of **dplyr** is used to join the geographical data and attribute table
+
+```{r}
+hunan = left_join(hunan_sf, hunan_GDP)
+```
+
+## Visualizing Regional Development Indicator
+
+We will visualize a choropleth map that displays the distribution of GDPPC 2012 using the tmap package
+
+```{r}
+equal = tm_shape(hunan) + 
+  tm_fill("GDPPC", n = 5, style="equal") +
+  tm_borders(alpha=0.5) + 
+  tm_layout(main.title = "Equal interval categorization")
+
+quantile = tm_shape(hunan) + 
+  tm_fill("GDPPC", n = 5, style="quantile") +
+  tm_borders(alpha=0.5) + 
+  tm_layout(main.title = "Equal quantile interval categorization")
+
+tmap_arrange(equal, quantile)
+```
+
+## Computing Spatial Autocorrelation 
+
+We learn how to compute ***GLOBAL*** spatial autocorrelation statistics and to perform spatial complete randomness test for global spatial correlation
+
+### Computing Spatial Weights
+
+We need to find the spatial weights first before we can compute global spatial correlation statistics. The spatial weights is used to define the neighbourhood relationships between the geographical units
+
+We use poly2nb() of spdep package to compute the contiguity weight matrix. The function builds a neighbour list based on regions with contiguous boundaries. Using queen's contiguity weight matrix, we have
+
+```{r}
+wm_q = poly2nb(hunan)
+summary(wm_q)
+```
+
+From the results, there are 88 regions in Hunan,
+
+Using the Queen's method, 85 of them has 11 neighbours, while only 2 of them has 1 neighbour
+
+### Building the Row-standardised weights matrix
+
+After computing the spatial weights, we will need to build the row standardized weights matrix. "W" Style will be used such that each neighbouring polygon will be assigned equal weight. This is done by taking the 1/(no. of neighbours) to each neighbouring county and then summing up the weighted income values.
+
+*Although this is the most logical way to summarize the neighbours' values, there is a **disadvantage in that polygons at the study area's boundaries will base their lagged values on fewer polygons**, which could lead to an over- or underestimation of the true degree of spatial autocorrelation in the data.*
+
+```{r}
+rs_wm_q = nb2listw(wm_q, style="W", zero.policy = TRUE)
+rs_wm_q
+```
+
+#### Computing Spatial Autocorrelation: Moran's I
+
+We will perform Moran's I statistical test with `moran.test()` of the **spdep** package.
+
+```{r}
+moran.test(hunan$GDPPC, listw = rs_wm_q, zero.policy = TRUE, na.action = na.omit)
+```
+
+For Moran I's statistics, the null hypothesis is to assume that GDPPC is randomly distributed between the different counties.
+
+Based on the result, we will ***reject*** the null hypothesis as the p-value is less than 0.05. In fact as the p-value is less than 0.01, we can consider that as **highly significant.**
+
+#### Computing Spatial Autocorrelation: Moran's I with Monte Carlo simulation
+
+In order to further further confirm that the null hypothesis is false, we could use Monte Carlo simulation to predict potential outcomes of the event by using `moran.mc()` function of the **spdep** package. We will use 1000 simulations for this test.
+
+```{r}
+set.seed(908)
+
+bperm = moran.mc(hunan$GDPPC, listw = rs_wm_q, nsim=999, zero.policy = TRUE, na.action = na.omit)
+
+bperm
+```
+
+Based on the result, we will ***reject*** the null hypothesis as the p-value is less than 0.05. In fact as the p-value is less than 0.01, we can consider that as **highly significant** even if the statistics is repeated 1000 times. Therefore, we can conclude that the outcome is not random.
+
+#### Visualising Monte Carlo Moran\'s I
+
+It is always a good practice to examine the simulated Moran's I test statistics in detail. This can be done by plotting the statistical values as a histogram by the code below:
+
+```{r}
+mean(bperm$res[1:999]) #compute mean
+
+var(bperm$res[1:999]) #compute variance
+
+sd(bperm$res[1:999]) #compute std dev.
+
+summary(bperm$res[1:999])
+```
+
+**Building the histogram**
+
+```{r}
+hist(bperm$res, freq=TRUE, breaks = 20, xlab="Simulated Moran's I")
+abline(v=mean(bperm$res), col="blue")
+
+```
+
+The distribution follows a normal distribution and it is positively skewed
+
+Using ggplot, we can reproduce the same graph, however we need to convert the result into a data frame first
+
+```{r}
+df = data.frame(bperm$res) #convert to data frame
+
+ggplot(df, aes(bperm$res)) + #aes = column name
+  geom_histogram(bins=20, 
+                 color="White", 
+                 fill="lightblue") +
+  labs(x = "Simulated Moran's I",
+       y = "Frequency") +
+  geom_vline(aes(xintercept=mean(bperm$res)),   
+               color="red", linetype="dashed", size=1)
+
+
+```
+
+### Visualising Geary's C test
+
+#### Computing Spatial Autocorrelation: Geary's C
+
+We will perform Moran's I statistical test with `geary.test()` of the **spdep** package.
+
+## Reference
+
+ArcGIS Pro 3.0, *How Spatial Autocorrelation (Global Moran's I) works*
+
+https://pro.arcgis.com/en/pro-app/latest/tool-reference/spatial-statistics/h-how-spatial-autocorrelation-moran-s-i-spatial-st.htm

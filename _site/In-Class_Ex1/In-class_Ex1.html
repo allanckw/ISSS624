@@ -8,7 +8,7 @@
 
 <meta name="author" content="Allan Chong">
 
-<title>ISSS624 - Geospatial Analytics App - In Class Exercise 1 - Applications of Spatial Weights</title>
+<title>ISSS624 - Geospatial Analytics App - In Class Exercise 1 - Chp 3 Applications of Spatial Weights</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -150,11 +150,15 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <ul class="dropdown-menu" aria-labelledby="nav-menu-hands-on-exercises">    
         <li>
     <a class="dropdown-item" href="../Hands-on_Ex1/Hands-on Ex1.html">
- <span class="dropdown-text">Hands-on Exercise 1.1 - Geospatial Data Wrangling</span></a>
+ <span class="dropdown-text">Hands-on Exercise Week 1.1 - Ch 1 Geospatial Data Wrangling</span></a>
   </li>  
         <li>
     <a class="dropdown-item" href="../Hands-on_Ex2/Hands-on Ex2.html">
- <span class="dropdown-text">Hands-on Exercise 1.2 - Choropleth Mapping with R</span></a>
+ <span class="dropdown-text">Hands-on Exercise Week 1.2 - Ch 2 Choropleth Mapping with R</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../Hands-on_Ex3/Hands-on Ex3.html">
+ <span class="dropdown-text">In class Exercises Week 2.1 - Ch 4 Choropleth Mapping with R</span></a>
   </li>  
     </ul>
   </li>
@@ -165,7 +169,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <ul class="dropdown-menu" aria-labelledby="nav-menu-in-class-exercises">    
         <li>
     <a class="dropdown-item" href="../In-Class_Ex1/In-class_Ex1.html">
- <span class="dropdown-text">In Class Exercise 1 - Applications of Spatial Weights</span></a>
+ <span class="dropdown-text">In Class Exercise Week 1 - Applications of Spatial Weights</span></a>
   </li>  
     </ul>
   </li>
@@ -235,7 +239,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">In Class Exercise 1 - Applications of Spatial Weights</h1>
+<h1 class="title">In Class Exercise 1 - Chp 3 Applications of Spatial Weights</h1>
 </div>
 
 
@@ -1275,7 +1279,7 @@ Average number of links: 3.681818 </code></pre>
 <li><p>U is equal to C divided by the number of neighbours (sums over all links to unity),</p></li>
 <li><p>S is the variance-stabilizing coding scheme</p></li>
 </ul>
-<p>For this example, we'll stick with the style="W" option for simplicity's but note that other more robust options are available, notably style="B", basic binary coding.</p>
+<p>For this example, we’ll stick with the style=“W” option for simplicity’s but note that other more robust options are available, notably style=“B”, basic binary coding.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>rswm_q <span class="ot">=</span> <span class="fu">nb2listw</span>(wm_q, <span class="at">style=</span><span class="st">"W"</span>, <span class="at">zero.policy=</span><span class="cn">TRUE</span>)</span>
 <span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>rswm_q</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1303,7 +1307,7 @@ W 88 7744 88 37.86334 365.9147</code></pre>
 [1] 0.125 0.125 0.125 0.125 0.125 0.125 0.125 0.125</code></pre>
 </div>
 </div>
-<p>Each neighbor is assigned a 0.125 of the total weight. This means that when R computes the average neighboring income values, each neighbor's income will be multiplied by 0.125 before being tallied.</p>
+<p>Each neighbor is assigned a 0.125 of the total weight. This means that when R computes the average neighboring income values, each neighbor’s income will be multiplied by 0.125 before being tallied.</p>
 <p>Using the same method, we can also derive a row standardized distance weight matrix by using the code below.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>rswm_ids <span class="ot">&lt;-</span> <span class="fu">nb2listw</span>(wm_q, <span class="at">glist=</span>ids, <span class="at">style=</span><span class="st">"B"</span>, <span class="at">zero.policy=</span><span class="cn">TRUE</span>)</span>
