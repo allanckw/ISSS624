@@ -13,18 +13,21 @@ website:
           - text: Hands-on Exercise Week 1.2 - Ch 2 Choropleth Mapping with R
             href: Hands-on_Ex2\Hands-on Ex2.qmd
             
-          - text: In class Exercises Week 2.1 - Ch 4 Choropleth Mapping with R
+          - text: Hands-on Exercise Week 2.1 - Ch 4 Choropleth Mapping with R
             href: Hands-on_Ex3\Hands-on Ex3.qmd
             
       - text: In class Exercises
         menu: 
-          - text: In Class Exercise Week 1 - Applications of Spatial Weights
+          - text: In Class Exercise Week 1 - Ch 3 Applications of Spatial Weights
             href: In-Class_Ex1\In-class_Ex1.qmd
             
+      - text: Take Home Exercises    
+        menu: 
+          - text: Take Home Exercise 1 - Investigation of Water points in Nigeria
+            href: Take-Home_Ex1\Take-Home_Ex1.qmd
     right:
       - href: index.qmd
         text: Home
-      - about.qmd
 
 format:
   html:

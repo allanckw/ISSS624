@@ -1,0 +1,7 @@
+---
+title: "Hands On Exercise 2.1 - Global and Local Measures of Spatial Autocorrelation"
+author: "Allan Chong"
+editor: visual
+---
+
+## Overview
