@@ -21,10 +21,13 @@ website:
           - text: In Class Exercise Week 1 - Applications of Spatial Weights
             href: In-Class_Ex1\In-class_Ex1.qmd
             
+      - text: Take Home Exercises    
+        menu: 
+          - text: Take Home Exercise Week 1 - Investigation of Water points in Nigeria
+            href: Take-Home_Ex1\Take-Home_Ex1.qmd
     right:
       - href: index.qmd
         text: Home
-      - about.qmd
 
 format:
   html:
