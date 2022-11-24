@@ -158,8 +158,7 @@ ggplot(df, aes(bperm$res)) + #aes = column name
 
 ```
 
-=======
-**Analysis:**
+======= **Analysis:**
 
 The reason why abline is set to 0 is because it must fall between \[-1, 1\].
 
@@ -177,7 +176,6 @@ We will perform Geary's C statistical test with `geary.test()` of the **spdep** 
 geary.test(hunan$GDPPC, list=rs_wm_q)
 ```
 
-<<<<<<< HEAD
 Based on the result, we will ***reject*** the null hypothesis as the p-value is less than 0.05. In fact as the p-value is less than 0.01, we can consider that as **highly significant.**
 
 Therefore, we can conclude that the GDPPC is not randomly distributed based on Geary's C statistics
@@ -186,8 +184,7 @@ Therefore, we can conclude that the GDPPC is not randomly distributed based on G
 
 In order to further confirm that the null hypothesis is false, we could use Monte Carlo simulation to predict potential outcomes of the event by using geary`.mc()` function of the **spdep** package. We will use 1000 simulations for this test.
 
-=======
-#### Computing Spatial Autocorrelation: Geary's C with Monte Carlo simulation
+======= \#### Computing Spatial Autocorrelation: Geary's C with Monte Carlo simulation
 
 ```{r}
 set.seed(908)
@@ -200,7 +197,6 @@ bpermG
 Based on the result, we will ***reject*** the null hypothesis as the p-value is less than 0.05. In fact as the p-value is less than 0.01, we can consider that as **highly significant** even when the statistics is repeated 1000 times.
 
 Therefore, we can conclude that the GDPPC is not randomly distributed based on Geary's C statistics with Monte Carlo simulation
-
 
 #### Visualising Monte Carlo Geary's C
 
@@ -238,8 +234,7 @@ ggplot(df_G, aes(bpermG$res)) + #aes = column name
 
 ```
 
-=======
-**Analysis:**
+======= **Analysis:**
 
 The reason why abline is set to 1 is because it must fall between \[0, 2\].
 
@@ -253,13 +248,12 @@ There is a positive correlation based on the result of the histogram for Geary's
 
 Examining spatial autocorrelation patterns in the data or model residuals is made simple with spatial correlograms.
 
-<<<<<<< HEAD
 They are graphs of some measure of autocorrelation (Moran's I or Geary's C) against distance and they demonstrate how correlated pairs of spatial observations are as one increase the distance (lag) between them.
 
 ### Computing Moran's I correlogram
 
-We use `sp.correlogram()` of **spdep** package to compute a 6-lag spatial correlogram of GDPPC. The global spatial autocorrelation used in Moran's I
-=======
+# We use `sp.correlogram()` of **spdep** package to compute a 6-lag spatial correlogram of GDPPC. The global spatial autocorrelation used in Moran's I
+
 They are graphs of some measure of autocorrelation (Moran's I or Geary's c) against distance and they demonstrate how correlated pairs of spatial observations are as one increase the distance (lag) between them.
 
 Although correlograms are not as fundamental as variograms, which is a fundamental idea in geostatistics, they are nevertheless a very valuable tool for exploratory and descriptive work. They offer deeper insights than variograms do for this purpose.
@@ -300,13 +294,11 @@ plot(GC_Corr)
 
 Plotting the output might not allow us to provide complete interpretation, this is because not all autocorrelation values are statistically significant. Hence we should analyze the report by printing out the result
 
-
 ```{r}
 print(GC_Corr)
 ```
 
 In this case, it is only statistically significant for the 1st, 2nd and 5th degree neighbour for GDPPC to be correlated by distance. The rest of the neighbours are not and appears to be random for the Geary's C method.
-
 
 ## Cluster and Outlier Analysis
 
@@ -315,7 +307,6 @@ Statistics called Local Indicators of Spatial Association, or LISA, assess wheth
 Local clusters in the rates, for example, indicate that some census tracts in a given city have greater or lower rates than would be predicted by chance alone; that is, the values observed are higher or lower than those of a random distribution in space.
 
 We will use relevant ***Local Indicators for Spatial Association (LISA)***, particularly ***local Moran'I,*** in this section to identify clusters and/or outliers in the GDP per capita 2012 figures for Hunan Province.
-
 
 ### Computing local Moran's I
 
@@ -331,7 +322,6 @@ head(localMI)
 
 -   *Ii*: the local Moran's I statistics
 
-<<<<<<< HEAD
 -   *E.Ii:* the expectation (**mean**) of local Moran statistic under the randomization hypothesis
 
 -   *Var.Ii:* the **variance** of local Moran statistic under the randomization hypothesis
@@ -340,8 +330,8 @@ head(localMI)
 
 -   *Pr*: the **p-value** of local Moran statistic
 
-We can print the local Moran matrix by `printCoefmat`
-=======
+# We can print the local Moran matrix by `printCoefmat`
+
 -   *E.Ii:* the expectation of local moran statistic under the randomisation hypothesis
 
 -   *Var.Ii:* the variance of local moran statistic under the randomisation hypothesis
@@ -351,7 +341,6 @@ We can print the local Moran matrix by `printCoefmat`
 -   *Pr*: the p-value of local moran statistic
 
 We can print the localmoran matrix by `printCoefmat`
->>>>>>> db36c18bf0b71162e075ad7af9e8184c37a8f77e
 
 ```{r}
 printCoefmat(data.frame(localMI[fips,], 
@@ -411,7 +400,6 @@ pvalue.map = tm_shape(hunan.localMI) +
 tmap_arrange(localMI.map, pvalue.map, asp=1, ncol=2)
 ```
 
-<<<<<<< HEAD
 #### The Null Hypothesis of Local Moran's I Statistics
 
 The null hypothesis of Local Moran's I statistics is that there is no correlation between the value at one site and the values at other locations close by. (Long, n.d.)
@@ -443,7 +431,6 @@ After superimposing it with the p value map, we can infer that
 -   In all other regions. the null hypothesis is accepted and they have a positive local Moran I value purely due to chance.
 
 ![](local%20moran%20similar.png){width="509"}
-
 
 The relevant sites are color coded on the LISA Cluster Map according to the type of spatial autocorrelation.
 
@@ -479,7 +466,6 @@ The global Moran's I is estimated from the slope of the regression line. The rel
 -   The areas that are above the average in the high-high quadrant are likely represented by purple and dark red spots on the local Moran's I map in Cluster A.
 
 -   ZiXing and LengShuiJiang are likely the 2 areas with dissimilar features in cluster A as previously explained.
-
 
 ### Preparing LISA map classes
 
@@ -541,7 +527,6 @@ The global Moran's I is estimated from the slope of the regression line. The rel
 
 For effective interpretation, it is better to plot both the LISA map and its GDPPC map next to each other.
 
-
 ```{r}
 gdppc <- qtm(hunan, "GDPPC")
 
@@ -588,7 +573,6 @@ A cold spot is a location place where low values cluster together
 
 • Cannot tell if these are hot spots, cold spots, or both
 
-
 To overcome the limitations, we could use LISA maps to identify hot and cold spots.
 
 ### Getis and Ord's G-Statistics
@@ -615,8 +599,7 @@ The analysis consists of three steps:
 
 ### Deriving distance-based weight matrix
 
-We must first specify a new set of neighbours. While the spatial autocorrelation took into account units that shared borders, in Getis-Ord, neighbours are determined based on distance.
-There are 2 types of distance-based proximity matrix, they are:
+We must first specify a new set of neighbours. While the spatial autocorrelation took into account units that shared borders, in Getis-Ord, neighbours are determined based on distance. There are 2 types of distance-based proximity matrix, they are:
 
 1.  fixed distance weight matrix; and
 
@@ -699,7 +682,7 @@ gi.fixed = localG(hunan$GDPPC, wm62_lw)
 gi.fixed
 ```
 
-The output of `localG()` is a vector of G or Gstar values, with attributes \"`gstari`\" set to TRUE or FALSE, \"call\" set to the function call, and class \"localG\".
+The output of `localG()` is a vector of G or Gstar values, with attributes "`gstari`" set to TRUE or FALSE, "call" set to the function call, and class "localG".
 
 The Gi statistics is represented as a Z-score. Greater values represent a greater intensity of clustering and the direction (positive or negative) indicates high or low clusters.
 
@@ -734,7 +717,6 @@ tmap_arrange(gdppc, Gimap, asp=1, ncol=2)
 
 #### **Analysis**
 
-
 ### Mapping Gi values with adaptive distance weights
 
 The code below is used to compute the Gi values for GDPPC 2012 by using an adaptive distance weight matrix (i.e *`knb_lw`*).
@@ -761,7 +743,6 @@ tmap_arrange(gdppc, Gimap, asp=1, ncol=2)
 
 #### **Analysis**
 
-
 ## Reference
 
 Anselin L. (2020) *Local Spatial Autocorrelation (1) LISA and Local Moran* https://geodacenter.github.io/workbook/6a_local_auto/lab6a.html#local-moran
@@ -775,4 +756,3 @@ Gomez, Cristina & White, Joanne & Wulder, Michael. (2011). *Characterizing the s
 Long, A (n.d.), *Local Moran*
 
 http://ceadserv1.nku.edu/longa//geomed/stats/localmoran/localmoran.html
-
