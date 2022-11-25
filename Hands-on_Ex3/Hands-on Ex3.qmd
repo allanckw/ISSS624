@@ -304,7 +304,7 @@ Statistics called Local Indicators of Spatial Association, or LISA, assess wheth
 
 Local clusters in the rates, for example, indicate that some census tracts in a given city have greater or lower rates than would be predicted by chance alone; that is, the values observed are higher or lower than those of a random distribution in space.
 
-We will use relevant ***Local Indicators for Spatial Association (LISA)***, particularly ***local Moran'I,*** in this section to identify clusters and/or outliers in the GDP per capita 2012 figures for Hunan Province.
+We will use relevant ***Local Indicators for Spatial Association (LISA)***, particularly ***local Moran,*** in this section to identify clusters and/or outliers in the GDP per capita 2012 figures for Hunan Province.
 
 ### Computing local Moran's I
 
@@ -328,15 +328,7 @@ head(localMI)
 
 -   *Pr*: the **p-value** of local Moran statistic where it investigate
 
--   *E.Ii:* the expectation of local moran statistic under the randomization hypothesis
-
--   *Var.Ii:* the variance of local moran statistic under the randomization hypothesis
-
--   *Z.Ii*: the standard deviate of local moran statistic
-
--   *Pr*: the p-value of local moran statistic
-
-We can print the localmoran matrix by `printCoefmat`
+We can print the local Moran's matrix by `printCoefmat`
 
 ```{r}
 printCoefmat(data.frame(localMI[fips,], 
@@ -357,7 +349,7 @@ After creating the the new data frame `hunan.localMI`, we can use the **tmap** p
 
 ```{r}
 tm_shape(hunan.localMI) + 
-  tm_fill(col="Ii", #note that actual value is li
+  tm_fill(col="Ii", #note that actual value is Ii
           style="pretty", palette = "PuRd", title = "Local Moran's I Statistics") + 
   tm_borders(alpha = 0.5)
 
@@ -372,7 +364,7 @@ By using breaks and fixed style, we can determine which are the areas that are s
 
 ```{r}
 tm_shape(hunan.localMI) + 
-  tm_fill(col="Pr.Ii", #note that p value is Pr.li
+  tm_fill(col="Pr.Ii", #note that p value is Pr.Ii
           breaks=c(-Inf, 0.001, 0.01, 0.05, Inf),
           style="fixed",
           palette = "-Greens", title = "Local Moran's I p values") +   tm_borders(alpha = 0.5)
@@ -568,8 +560,6 @@ A cold spot is a location place where low values cluster together
 • They only indicate clustering
 
 • Cannot tell if these are hot spots, cold spots, or both
-
-To overcome the limitations, we could use LISA maps to identify hot and cold spots.
 
 ### Getis and Ord's G-Statistics
 

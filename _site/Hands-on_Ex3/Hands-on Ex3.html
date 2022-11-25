@@ -677,7 +677,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <h2 class="anchored" data-anchor-id="cluster-and-outlier-analysis">Cluster and Outlier Analysis</h2>
 <p>Statistics called Local Indicators of Spatial Association, or LISA, assess whether clusters exist in the spatial arrangement of a given variable.</p>
 <p>Local clusters in the rates, for example, indicate that some census tracts in a given city have greater or lower rates than would be predicted by chance alone; that is, the values observed are higher or lower than those of a random distribution in space.</p>
-<p>We will use relevant <strong><em>Local Indicators for Spatial Association (LISA)</em></strong>, particularly <strong><em>local Moran’I,</em></strong> in this section to identify clusters and/or outliers in the GDP per capita 2012 figures for Hunan Province.</p>
+<p>We will use relevant <strong><em>Local Indicators for Spatial Association (LISA)</em></strong>, particularly <strong><em>local Moran,</em></strong> in this section to identify clusters and/or outliers in the GDP per capita 2012 figures for Hunan Province.</p>
 <section id="computing-local-morans-i" class="level3">
 <h3 class="anchored" data-anchor-id="computing-local-morans-i">Computing local Moran’s I</h3>
 <p>The <code>localmoran()</code> function of <strong>spdep</strong> will be used to calculate local Moran’s I. Given a collection of <em>l_i</em> values,&nbsp;<em>z_i</em> values and a <em>listw</em> object with neighbour weighting details for the polygon associated with the <em>z_i</em> values.</p>
@@ -702,12 +702,8 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <li><p><em>Var.Ii:</em> the <strong>variance</strong> of local Moran statistic under the randomization hypothesis</p></li>
 <li><p><em>Z.Ii</em>: the <strong>standard deviation</strong> of local Moran statistic</p></li>
 <li><p><em>Pr</em>: the <strong>p-value</strong> of local Moran statistic where it investigate</p></li>
-<li><p><em>E.Ii:</em> the expectation of local moran statistic under the randomization hypothesis</p></li>
-<li><p><em>Var.Ii:</em> the variance of local moran statistic under the randomization hypothesis</p></li>
-<li><p><em>Z.Ii</em>: the standard deviate of local moran statistic</p></li>
-<li><p><em>Pr</em>: the p-value of local moran statistic</p></li>
 </ul>
-<p>We can print the localmoran matrix by <code>printCoefmat</code></p>
+<p>We can print the local Moran’s matrix by <code>printCoefmat</code></p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">printCoefmat</span>(<span class="fu">data.frame</span>(localMI[fips,], </span>
 <span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>                        <span class="at">row.names=</span>hunan<span class="sc">$</span>County[fips]), </span>
@@ -814,7 +810,7 @@ Zixing        -7.6849e-01 -8.8210e-02  9.4057e-01 -7.0144e-01         0.4830</co
 <p>After creating the the new data frame <code>hunan.localMI</code>, we can use the <strong>tmap</strong> package to plot the local Moran’s I values</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(hunan.localMI) <span class="sc">+</span> </span>
-<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_fill</span>(<span class="at">col=</span><span class="st">"Ii"</span>, <span class="co">#note that actual value is li</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_fill</span>(<span class="at">col=</span><span class="st">"Ii"</span>, <span class="co">#note that actual value is Ii</span></span>
 <span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">style=</span><span class="st">"pretty"</span>, <span class="at">palette =</span> <span class="st">"PuRd"</span>, <span class="at">title =</span> <span class="st">"Local Moran's I Statistics"</span>) <span class="sc">+</span> </span>
 <span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
@@ -828,7 +824,7 @@ Zixing        -7.6849e-01 -8.8210e-02  9.4057e-01 -7.0144e-01         0.4830</co
 <p>By using breaks and fixed style, we can determine which are the areas that are statistically significant</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(hunan.localMI) <span class="sc">+</span> </span>
-<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_fill</span>(<span class="at">col=</span><span class="st">"Pr.Ii"</span>, <span class="co">#note that p value is Pr.li</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_fill</span>(<span class="at">col=</span><span class="st">"Pr.Ii"</span>, <span class="co">#note that p value is Pr.Ii</span></span>
 <span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">breaks=</span><span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>, <span class="fl">0.001</span>, <span class="fl">0.01</span>, <span class="fl">0.05</span>, <span class="cn">Inf</span>),</span>
 <span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>          <span class="at">style=</span><span class="st">"fixed"</span>,</span>
 <span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">palette =</span> <span class="st">"-Greens"</span>, <span class="at">title =</span> <span class="st">"Local Moran's I p values"</span>) <span class="sc">+</span>   <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1004,7 +1000,6 @@ Zixing        -7.6849e-01 -8.8210e-02  9.4057e-01 -7.0144e-01         0.4830</co
 <p>• Moran’s I and Geary’s C cannot distinguish them</p>
 <p>• They only indicate clustering</p>
 <p>• Cannot tell if these are hot spots, cold spots, or both</p>
-<p>To overcome the limitations, we could use LISA maps to identify hot and cold spots.</p>
 </section>
 <section id="getis-and-ords-g-statistics" class="level3">
 <h3 class="anchored" data-anchor-id="getis-and-ords-g-statistics">Getis and Ord’s G-Statistics</h3>
