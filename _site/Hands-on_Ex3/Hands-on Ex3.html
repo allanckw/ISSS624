@@ -492,7 +492,7 @@ alternative hypothesis: greater</code></pre>
 <p><img src="Hands-on-Ex3_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
-<p>======= <strong>Analysis:</strong></p>
+<p><strong>Analysis:</strong></p>
 <p>The reason why abline is set to 0 is because it must fall between [-1, 1].</p>
 <p>Negative correlation is -1, No correlation is 0, Positive correlation is 1</p>
 <p>There is a positive correlation based on the result of the histogram for Moran’s I Statistics</p>
@@ -524,8 +524,7 @@ Geary C statistic       Expectation          Variance
 </section>
 <section id="computing-spatial-autocorrelation-gearys-c-with-monte-carlo-simulation" class="level4">
 <h4 class="anchored" data-anchor-id="computing-spatial-autocorrelation-gearys-c-with-monte-carlo-simulation">Computing Spatial Autocorrelation: Geary’s C with Monte Carlo simulation</h4>
-<p>In order to further confirm that the null hypothesis is false, we could use Monte Carlo simulation to predict potential outcomes of the event by using geary<code>.mc()</code> function of the <strong>spdep</strong> package. We will use 1000 simulations for this test.</p>
-<p>======= #### Computing Spatial Autocorrelation: Geary’s C with Monte Carlo simulation</p>
+<p>In order to further confirm that the null hypothesis is false, we could use Monte Carlo simulation to predict potential outcomes of the event by using geary<code>.mc()</code> function of the <strong>spdep</strong> package. We will use 1000 simulations for this test</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">908</span>)</span>
 <span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -592,7 +591,7 @@ alternative hypothesis: greater</code></pre>
 <p><img src="Hands-on-Ex3_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
-<p>======= <strong>Analysis:</strong></p>
+<p><strong>Analysis:</strong></p>
 <p>The reason why abline is set to 1 is because it must fall between [0, 2].</p>
 <p>Negative correlation is 2, No correlation is 1, Positive correlation is 0, notice that it is essentially the opposite from Moran’s I</p>
 <p>In Moran I the smaller the number, indicates negative correlation (small -&gt; -ve), in contrast in Geary’s C the smaller the number indicates positive correlation (small -&gt; +ve)</p>
