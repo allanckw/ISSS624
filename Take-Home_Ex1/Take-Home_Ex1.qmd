@@ -5,3 +5,84 @@ editor: visual
 ---
 
 ## Overview
+
+For humanity, water is a valuable resource. To maintain good health, people need access to clean water. It guarantees peace and security, creates a healthy environment, and supports a sustainable economy. However, there is insufficient clean water for more than 40% of the world's population. UN-Water predicts that by 2025, 1.8 billion people would reside in areas with a complete water shortage. Food security is one of the many areas that are seriously threatened by the water crisis. About 70% of the freshwater that is available on Earth is used for agriculture.
+
+Water scarcities and poor water quality are worst in developing nations. Inadequate water and sanitation systems are a contributing factor in up to 80% of diseases in impoverished countries.
+
+Despite technological advancements, supplying clean water to rural communities remains a significant development challenge in many nations worldwide, particularly in those of the continent of Africa.
+
+In this study, appropriate global and local measures of spatial Association techniques will be employed to reveal the spatial patterns of **Not Functional water points**. In this assignment, we will investigate Nigeria's Local Government Area (LGA)
+
+## Getting Started
+
+First, the required packages are loaded into the R environment . The required packages are **sf**, **spdep**, **tmap** & **tidyverse** with the code below:
+
+```{r}
+pacman::p_load(sf,tidyverse,spdep, tmap)
+```
+
+### Spatial Data
+
+The spatial dataset used in this assignment is the Nigeria Level-2 Administrative Boundary spatial dataset downloaded from [The Humanitarian Data Exchange portal](https://data.humdata.org/)
+
+We will load the spatial features by using `st_read()` from the sf package
+
+```{r}
+nigeria_lga_sf = st_read(dsn="data/geospatial", layer="Nigeria_Admin_Level_2")
+```
+
+We examine how the base map looks like by using the plotting it using functions in the **tmap** package
+
+```{r}
+tm_shape(nigeria_lga_sf) + 
+  
+  tm_borders(alpha=0.5) + 
+  tm_compass(type="8star", size=2) +
+  tm_scale_bar() +
+  tm_grid (alpha=0.2) +
+  tm_layout(main.title="Map of Nigeria LGA", 
+            main.title.position="center", 
+            main.title.size=1.2, 
+            legend.height = 0.35, 
+            legend.width = 0.35, 
+            frame = TRUE) 
+  
+
+```
+
+### Aspatial Data
+
+The aspatial dataset used in this assignment is the water point data exchange dataset found in [WPdx Global Data Repositories](https://www.waterpointdata.org/access-data/)
+
+A subset of the countries for which WPdx has access to sufficient data to enable the decision support tools is covered by the WPdx+ dataset, which is an improved version of the WPdx-Basic dataset. If WPdx can receive a representative dataset, these improvements can be made for any country.
+
+As the dataset is huge, first level cleaning is done on the excel file leaving only the following columns.
+
+LGA, State, functional, management, quality, waterSource, waterTechCategory, lon_deg, lat_deg
+
+As we are only interested in the functionality of the water point, it is important to capture fields that may affect the functionality
+
+-   LGA: The area we are interested in
+
+-   State: The state of the LGA of Nigeria
+
+-   management: who manages it,
+
+-   Quality: what is the quality?
+
+-   WaterSource: where it come from?
+
+-   WaterTechCategory: What technology is used?
+
+-   lon_deg : longitude
+
+-   lat_deg: latitude
+
+However, after first level cleaning, we will need to further aggregate the data points into functional and non functional water points in order to obtain meaningful analysis.
+
+To load the data file, we use the `read_csv` function
+
+```{r}
+wpdx = read_csv("data/aspatial/NigeriaWaterPoints.csv")
+```
