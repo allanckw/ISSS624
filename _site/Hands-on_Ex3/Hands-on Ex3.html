@@ -702,12 +702,8 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <li><p><em>Var.Ii:</em> the <strong>variance</strong> of local Moran statistic under the randomization hypothesis</p></li>
 <li><p><em>Z.Ii</em>: the <strong>standard deviation</strong> of local Moran statistic</p></li>
 <li><p><em>Pr</em>: the <strong>p-value</strong> of local Moran statistic where it investigate</p></li>
-<li><p><em>E.Ii:</em> the expectation of local moran statistic under the randomization hypothesis</p></li>
-<li><p><em>Var.Ii:</em> the variance of local moran statistic under the randomization hypothesis</p></li>
-<li><p><em>Z.Ii</em>: the standard deviate of local moran statistic</p></li>
-<li><p><em>Pr</em>: the p-value of local moran statistic</p></li>
 </ul>
-<p>We can print the localmoran matrix by <code>printCoefmat</code></p>
+<p>We can print the local Moran’s matrix by <code>printCoefmat</code></p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">printCoefmat</span>(<span class="fu">data.frame</span>(localMI[fips,], </span>
 <span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>                        <span class="at">row.names=</span>hunan<span class="sc">$</span>County[fips]), </span>

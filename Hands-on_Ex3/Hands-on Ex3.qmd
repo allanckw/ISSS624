@@ -328,15 +328,7 @@ head(localMI)
 
 -   *Pr*: the **p-value** of local Moran statistic where it investigate
 
--   *E.Ii:* the expectation of local moran statistic under the randomization hypothesis
-
--   *Var.Ii:* the variance of local moran statistic under the randomization hypothesis
-
--   *Z.Ii*: the standard deviate of local moran statistic
-
--   *Pr*: the p-value of local moran statistic
-
-We can print the localmoran matrix by `printCoefmat`
+We can print the local Moran's matrix by `printCoefmat`
 
 ```{r}
 printCoefmat(data.frame(localMI[fips,], 
