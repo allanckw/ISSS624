@@ -252,7 +252,7 @@ They are graphs of some measure of autocorrelation (Moran's I or Geary's C) agai
 
 ### Computing Moran's I correlogram
 
-# We use `sp.correlogram()` of **spdep** package to compute a 6-lag spatial correlogram of GDPPC. The global spatial autocorrelation used in Moran's I
+We use `sp.correlogram()` of **spdep** package to compute a 6-lag spatial correlogram of GDPPC. The global spatial autocorrelation used in Moran's I
 
 They are graphs of some measure of autocorrelation (Moran's I or Geary's c) against distance and they demonstrate how correlated pairs of spatial observations are as one increase the distance (lag) between them.
 
@@ -322,19 +322,17 @@ head(localMI)
 
 -   *Ii*: the local Moran's I statistics
 
--   *E.Ii:* the expectation (**mean**) of local Moran statistic under the randomization hypothesis
+-   *E.Ii:* the **expectation** (**mean**) of local Moran statistic under the randomization hypothesis
 
 -   *Var.Ii:* the **variance** of local Moran statistic under the randomization hypothesis
 
 -   *Z.Ii*: the **standard deviation** of local Moran statistic
 
--   *Pr*: the **p-value** of local Moran statistic
+-   *Pr*: the **p-value** of local Moran statistic where it investigate
 
-# We can print the local Moran matrix by `printCoefmat`
+-   *E.Ii:* the expectation of local moran statistic under the randomization hypothesis
 
--   *E.Ii:* the expectation of local moran statistic under the randomisation hypothesis
-
--   *Var.Ii:* the variance of local moran statistic under the randomisation hypothesis
+-   *Var.Ii:* the variance of local moran statistic under the randomization hypothesis
 
 -   *Z.Ii*: the standard deviate of local moran statistic
 
@@ -555,7 +553,7 @@ tmap_arrange(gdppc, LISAMap, asp=1, ncol=2)
 
 For reference, the figure below was previously discussed in the Local Moran's Section.
 
-![](images/paste-FBE3E7C5.png){width="470"}lies,
+![](images/paste-FBE3E7C5.png){width="470"}
 
 ### Hot Spot and Cold Spot Area Analysis
 
@@ -605,7 +603,9 @@ We must first specify a new set of neighbours. While the spatial autocorrelation
 
 2.  adaptive distance weight matrix.
 
-To get our longitude values we map the *st_centroid()* function over the geometry column of us.bound and access the longitude value through double bracket notation \[\[\]\] and 1. This allows us to get only the longitude, which is the first value in each centroid.
+To get our longitude values we map the *`st_centroid()`* function over the geometry column of us.bound and access the longitude value through double bracket notation \[\[\]\] and 1. This allows us to get only the longitude, which is the first value in each centroid.
+
+The reason why G statistics requires centroids is because it is **based on point pattern analysis logic**, which is very different from LISA or Local Moran's I that compares local-global correlation.
 
 ```{r}
 longitude = map_dbl(hunan$geometry, ~st_centroid(.x)[[1]])
@@ -674,11 +674,11 @@ coord = cbind(longitude, latitude)
 
 ## Computing Gi statistics
 
-### Gi statistics using fixed distance
+### Gi statistics using fixed distance (G Statistics)
 
 ```{r}
 fips = order(hunan$County)
-gi.fixed = localG(hunan$GDPPC, wm62_lw)
+gi.fixed = localG(hunan$GDPPC, wm62_lw, return_internals = TRUE)
 gi.fixed
 ```
 
@@ -705,25 +705,37 @@ the field name of the gi values is renamed to *gstat_fixed* by using `rename().`
 We plot the map and the gimap side by side for analysis
 
 ```{r}
-Gimap = tm_shape(hunan.gi) +
+Gimap_fixed = tm_shape(hunan.gi) +
           tm_fill(col = "gstat_fixed", 
           style = "pretty",
           palette="-RdBu",
           title = "local Gi") +
   tm_borders(alpha = 0.5)
 
-tmap_arrange(gdppc, Gimap, asp=1, ncol=2)
+tmap_arrange(gdppc, Gimap_fixed, asp=1, ncol=2)
 ```
 
 #### **Analysis**
 
-### Mapping Gi values with adaptive distance weights
+Comparing with Local Moran's map that was discussed below, we can see that the dissimilar areas were classified as a hot spot.
+
+Conversely, the spatial outliers in Cluster B and C were groups as cold spots in the G Statistics Map.
+
+![](images/paste-FBE3E7C5.png){width="470"}
+
+The reason for this phenomenon is that the G statistics does not take into account outliers as it does not consider spatial correlation. It only take into account hot spots & cold spots.
+
+From the result, we can infer that the GDPPC of the hot spot regions has high GDPPC, while the cold spot regions has low GDPPC.
+
+### Mapping Gi values with adaptive distance weights (G\* Statistics)
 
 The code below is used to compute the Gi values for GDPPC 2012 by using an adaptive distance weight matrix (i.e *`knb_lw`*).
 
 ```{r}
 fips = order(hunan$County)
-gi.adaptive = localG(hunan$GDPPC, knn_lw)
+gi.adaptive = localG(hunan$GDPPC, knn_lw, return_internals = TRUE)
+gi.adaptive
+
 hunan.gi = cbind(hunan, as.matrix(gi.adaptive)) %>% #pipe
             rename(gstat_adaptive = as.matrix.gi.adaptive.)
 ```
@@ -731,17 +743,31 @@ hunan.gi = cbind(hunan, as.matrix(gi.adaptive)) %>% #pipe
 We plot the map and the gimap side by side for analysis
 
 ```{r}
-Gimap = tm_shape(hunan.gi) +
+Gimap_adaptive = tm_shape(hunan.gi) +
           tm_fill(col = "gstat_adaptive", 
           style = "pretty",
           palette="-RdBu",
           title = "local Gi") +
   tm_borders(alpha = 0.5)
 
-tmap_arrange(gdppc, Gimap, asp=1, ncol=2)
+tmap_arrange(gdppc, Gimap_adaptive, asp=1, ncol=2)
+```
+
+```{r}
+tmap_arrange(Gimap_fixed, Gimap_adaptive, asp=1, ncol=2)
 ```
 
 #### **Analysis**
+
+The G Statistics using fixed weight is simply the spatial lag, while the G\* statistics using adaptive weights is the weighted average of neighbour value at region i
+
+This allow us to find how much weight one need to give the location relative to its neighbours.
+
+With the G\* statistics, we could tell that the hotspot has shrunk and became more intense, as relative weights were assigned, this method is more robust as compared to the G statistics which uses a consistent weight across its analysis.
+
+From the result, we can infer that the GDPPC of the hot spot regions has high GDPPC, while the cold spot regions has low GDPPC.
+
+Based on this exercise, the Local Moran Statistics, LISA Map and G Statistical test has gave consistent results with regards to Cluster A. Thus, we can draw the conclusion that Cluster A is likely to be an urban area with higher degree of economic activity than the rest of Hunan, which leads to a higher GDPPC.
 
 ## Reference
 
