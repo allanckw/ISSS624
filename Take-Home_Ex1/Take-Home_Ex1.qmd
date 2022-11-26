@@ -61,6 +61,12 @@ tm_shape(nga) +
             frame = TRUE) 
 ```
 
+As the map is really big with close to 800 polygons involved, we will change the tmap mode to interactive viewing by calling `ttm()` in **tmap** package
+
+```{r}
+ttm()
+```
+
 ### Aspatial Data
 
 #### Cleaning the Data
@@ -214,7 +220,7 @@ Functions from the **tmap** packages is used to produce the map
 ```{r}
 wp_total = tm_shape(nga_wp) + 
   tm_fill("total wpt", 
-          palette ="Reds", breaks = c(0, 45, 96, 127, 168, 894)) + 
+          palette ="Reds", breaks = c(0, 45, 96, 168, 894)) + 
   tm_borders(alpha=0.5) + 
   #tm_compass(type="8star", size=2) +
   #tm_scale_bar() +
