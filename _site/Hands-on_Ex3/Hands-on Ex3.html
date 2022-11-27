@@ -171,6 +171,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <a class="dropdown-item" href="../In-Class_Ex1/In-class_Ex1.html">
  <span class="dropdown-text">In Class Exercise Week 1 - Ch 3 Applications of Spatial Weights</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="../In-Class_Ex2/In-class_Ex2.html">
+ <span class="dropdown-text">In Class Exercise Week 2 - Do functionally similar water points positively co-occur in Nigeria?</span></a>
+  </li>  
     </ul>
   </li>
   <li class="nav-item dropdown ">
@@ -920,7 +924,9 @@ Zixing        -7.6849e-01 -8.8210e-02  9.4057e-01 -7.0144e-01         0.4830</co
 </div></li>
 <li><p>Center the variable of interest around its mean</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>DV <span class="ot">=</span> hunan<span class="sc">$</span>GDPPC <span class="sc">-</span> <span class="fu">mean</span>(hunan<span class="sc">$</span>GDPPC)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>hunan<span class="sc">$</span>lag_GDPPC <span class="ot">=</span> <span class="fu">lag.listw</span>(rs_wm_q, hunan<span class="sc">$</span>GDPPC)</span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>DV <span class="ot">=</span> hunan<span class="sc">$</span>lag_GDPPC</span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a><span class="co">#DV = hunan$GDPPC - mean(hunan$GDPPC)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div></li>
 <li><p>Center the local Moran’s I value around the mean</p>
 <div class="cell">
@@ -934,10 +940,10 @@ Zixing        -7.6849e-01 -8.8210e-02  9.4057e-01 -7.0144e-01         0.4830</co
 <li><p>Define the quadrants levels</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="co">#C_MI = Local Moran I</span></span>
-<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>quadrant[DV <span class="sc">&gt;</span> <span class="dv">0</span> <span class="sc">&amp;</span> C_MI <span class="sc">&gt;</span> <span class="dv">0</span>] <span class="ot">=</span> <span class="dv">4</span> <span class="co">#C_MI &gt; 0 -&gt; cluster, DV &gt; 0 high-high pattern</span></span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>quadrant[DV <span class="sc">&lt;</span> <span class="dv">0</span> <span class="sc">&amp;</span> C_MI <span class="sc">&gt;</span> <span class="dv">0</span>] <span class="ot">=</span> <span class="dv">1</span> <span class="co">#C_MI &gt; 0 -&gt; cluster, DV &lt; 0 low-low pattern</span></span>
 <span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>quadrant[DV <span class="sc">&lt;</span> <span class="dv">0</span> <span class="sc">&amp;</span> C_MI <span class="sc">&lt;</span> <span class="dv">0</span>] <span class="ot">=</span> <span class="dv">2</span> <span class="co">#C_MI &lt; 0 -&gt; outlier,  DV &lt; 0 Low High</span></span>
-<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a>quadrant[DV <span class="sc">&lt;</span> <span class="dv">0</span> <span class="sc">&amp;</span> C_MI <span class="sc">&gt;</span> <span class="dv">0</span>] <span class="ot">=</span> <span class="dv">1</span> <span class="co">#C_MI &gt; 0 -&gt; cluster, DV &lt; 0 low-low pattern</span></span>
-<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a>quadrant[DV <span class="sc">&gt;</span> <span class="dv">0</span> <span class="sc">&amp;</span> C_MI <span class="sc">&lt;</span> <span class="dv">0</span>] <span class="ot">=</span> <span class="dv">3</span> <span class="co">#C_MI &lt; 0 -&gt; outlier,  DV &lt; 0 High Low</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a>quadrant[DV <span class="sc">&gt;</span> <span class="dv">0</span> <span class="sc">&amp;</span> C_MI <span class="sc">&lt;</span> <span class="dv">0</span>] <span class="ot">=</span> <span class="dv">3</span> <span class="co">#C_MI &lt; 0 -&gt; outlier,  DV &lt; 0 High Low</span></span>
+<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a>quadrant[DV <span class="sc">&gt;</span> <span class="dv">0</span> <span class="sc">&amp;</span> C_MI <span class="sc">&gt;</span> <span class="dv">0</span>] <span class="ot">=</span> <span class="dv">4</span> <span class="co">#C_MI &gt; 0 -&gt; cluster, DV &gt; 0 high-high pattern</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div></li>
 <li><p>Place non significant Moran into category 0</p>
 <div class="cell">

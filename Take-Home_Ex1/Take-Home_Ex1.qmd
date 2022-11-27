@@ -19,21 +19,23 @@ In this study, appropriate global and local measures of spatial Association tech
 
 ## Getting Started
 
-First, the required packages are loaded into the R environment . The required packages are **sf**, **spdep**, **tmap** & **tidyverse, funModeling** with the code below:
+First, the required packages are loaded into the R environment . The required packages are **sf,** **tidyverse**, **spdep**, **tmap**, & **funModeling**
+
+with the code below:
 
 ```{r}
-pacman::p_load(sf,tidyverse,spdep, tmap, funModeling)
+pacman::p_load(sf, tidyverse, spdep, tmap, funModeling)
 ```
 
 ### Spatial Data
 
-The spatial dataset used in this assignment is the Nigeria Level-2 Administrative Boundary spatial dataset
+The spatial dataset used in this assignment is the Nigeria Level-2 Administrative Boundary spatial dataset downloaded from Center for Humanitarian Data - [Nigeria - Subnational Administrative Boundaries](https://data.humdata.org/dataset/cod-ab-nga)
 
-We will load the spatial features by using `st_read()` from the sf package
+We will load the spatial features by using `st_read()` from the **sf** package
 
-As the data is in WSG-84 format, we set *crs* to 4326.
+As the data we want is in WSG-84 format, we set *crs* to 4326.
 
-As we need to perform the intersect function later to combine the water points data, we will not use `st_transform()` as it may produce outputs with missing points post transformation.
+To perform the intersect function later to combine the water points data, we will not use `st_transform()` as it may produce outputs with missing points post transformation, which will distort our analysis.
 
 ```{r}
 nga = st_read(dsn = "data/geospatial",
@@ -41,10 +43,16 @@ nga = st_read(dsn = "data/geospatial",
                crs = 4326)
 
 #nigeria_lga_sf = st_transform(nigeria_lga_sf, crs=4326) cause missing points
+
+```
+
+We could use `st_crs()`to verify the coordinate system from the object.
+
+```{r}
 st_crs(nga)
 ```
 
-We can examine how the base map looks like by using the **tmap** package
+At the end, we can examine how the base map looks like by using the **tmap** package
 
 ```{r}
 tm_shape(nga) + 
@@ -61,7 +69,7 @@ tm_shape(nga) +
             frame = TRUE) 
 ```
 
-As the map is really big with close to 800 polygons involved, we will change the tmap mode to interactive viewing by calling `ttm()` in **tmap** package
+As the map is really big with close to 800 polygons involved, we will change the tmap mode to interactive viewing by calling `ttm()` in **tmap** package, otherwise, it will too small for any form of analysis
 
 ```{r}
 ttm()
@@ -137,7 +145,7 @@ wpdx_clean = readRDS("data/aspatial/wpdx_clean.rds")
 
 #### Converting csv data into spatial features
 
-We can use `st_as_sf`to create a dataframe from the longitude (*x*) and latitude (*y*) values. The EPSG 4326 code is used as the dataset is referencing WGS84 geographic coordinate system
+We can use `st_as_sf`to create a dataframe from the longitude (*x*) and latitude (*y*) values. The EPSG 4326 code is used as the dataset is referencing WGS84 geographic coordinate system. We could use `st_crs()`to verify the coordinate system from the object.
 
 ```{r}
 wpdx_clean_sf = st_as_sf(wpdx_clean, coords = c("longitude", "latitude"), crs=4326)
@@ -160,7 +168,7 @@ The code below uses `freq()` of the **funModeling** package to display the distr
 freq(data=wpdx_clean_sf, input = 'Functional')
 ```
 
-After finding its classification, we will need to aggregate them into functional, non functional and unknown. We will create new data frame to store them by using the `filter` function
+After finding its classification, we will need to aggregate them into functional, non functional and unknown. We will create new data frames to store them by using the `filter` function
 
 ```{r}
 func_list = c("Functional", "Functional but needs repair", "Functional but not in use")
@@ -174,7 +182,7 @@ wpt_unknown = wpdx_clean_sf %>%
   filter(Functional %in% "Unknown")
 ```
 
-We can use `st_intersects()` to find common data points between geographical datasets. In our case we need to find the common points in between the Nigeria's LGA and the water points
+We can use `st_intersects()` to find common data points between geographical datasets. In our case we need to find the common points in the Nigeria's LGA spatial dataset and the water point aspatial dataset
 
 The below code does 4 things
 
@@ -204,9 +212,9 @@ nga_wp <- nga %>%
   select(3:4, 9:10, 18:23)
 ```
 
-## Visualising the spatial dsitribution of water points
+## Visualizing the spatial distribution of water points
 
-We will find breaks of the respective distributions by using the summary statistics using percentiles
+We can find breaks of the respective distributions by using the summary statistics using percentiles, this is to help us find out the distribution of water points in each quantile.
 
 ```{r}
 summary(nga_wp$`total wpt`)
@@ -284,4 +292,14 @@ Finally, we will use the `tmap_arrange()` method to create a 2x2 matrix to displ
 tmap_arrange(wp_functional, wp_nonfunctional, wp_Unknown, wp_total, asp=1, ncol=2)
 ```
 
-TBC
+### Observations
+
+In order to make observations, lets first divide the map into 6 sectors for easy reference
+
+Sector 1 will be from (2, 10) to (4, 12), Sector 2 will be from (6, 10) to (8, 12),
+
+Sector 3 will be from (10, 10) to (14, 12), Sector 4 will be from (2, 4) to (4, 10),
+
+Sector 5 will be from (6, 4) to (8,10) and lastly sector 6 from (10, 4) to (14, 8)
+
+![Figure 1: Sectoral Division of Map Of Nigeria LGA](basemap.png){fig-align="center"}

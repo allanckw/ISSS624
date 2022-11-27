@@ -466,7 +466,9 @@ The global Moran's I is estimated from the slope of the regression line. The rel
 2.  Center the variable of interest around its mean
 
     ```{r}
-    DV = hunan$GDPPC - mean(hunan$GDPPC)
+    hunan$lag_GDPPC = lag.listw(rs_wm_q, hunan$GDPPC)
+    DV = hunan$lag_GDPPC
+    #DV = hunan$GDPPC - mean(hunan$GDPPC)
     ```
 
 3.  Center the local Moran's I value around the mean
@@ -486,10 +488,10 @@ The global Moran's I is estimated from the slope of the regression line. The rel
 
     ```{r}
     #C_MI = Local Moran I
-    quadrant[DV > 0 & C_MI > 0] = 4 #C_MI > 0 -> cluster, DV > 0 high-high pattern
-    quadrant[DV < 0 & C_MI < 0] = 2 #C_MI < 0 -> outlier,  DV < 0 Low High
     quadrant[DV < 0 & C_MI > 0] = 1 #C_MI > 0 -> cluster, DV < 0 low-low pattern
+    quadrant[DV < 0 & C_MI < 0] = 2 #C_MI < 0 -> outlier,  DV < 0 Low High
     quadrant[DV > 0 & C_MI < 0] = 3 #C_MI < 0 -> outlier,  DV < 0 High Low
+    quadrant[DV > 0 & C_MI > 0] = 4 #C_MI > 0 -> cluster, DV > 0 high-high pattern
     ```
 
 6.  Place non significant Moran into category 0

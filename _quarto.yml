@@ -20,6 +20,8 @@ website:
         menu: 
           - text: In Class Exercise Week 1 - Ch 3 Applications of Spatial Weights
             href: In-Class_Ex1\In-class_Ex1.qmd
+          - text: In Class Exercise Week 2 - Do functionally similar water points positively co-occur in Nigeria?
+            href: In-Class_Ex2\In-class_Ex2.qmd
             
       - text: Take Home Exercises    
         menu: 
