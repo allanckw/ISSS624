@@ -259,13 +259,6 @@ nga_wp <- nga %>%
   select(3:4, 8:9, 18:23)
 ```
 
-We did not adjust the projection from WSG84 in the earlier part because we needed to perform `st_transform()`. Since the spatial feature data frame has been fully constructed, we can now use `st_transform()` to update the appropriate projection system. The Nigeria Mid Belt Coordinate System (26392) will be applied, and `st crs()` is used to confirm the transformation was completed.
-
-```{r}
-wpdx_clean_sf = st_transform(wpdx_clean_sf, crs=26392)
-st_crs(wpdx_clean_sf)
-```
-
 ## Visualizing the spatial distribution of water points
 
 We could use breaks of the summary statistics by using percentiles, this is to help us find out the distribution of water points in each quantile.
@@ -370,9 +363,266 @@ The north-eastern region of Nigeria has few to no water points, which suggests t
 
 ## Spatially Constrained Cluster Analysis
 
-### The Null Hypothesis of Local Moran's I Statistics
+### Computing Spatial Weights
 
-The null hypothesis of Local Moran's I statistics is that there is no correlation between the value at one site and the values at other locations close by. (Long, n.d.)
+We need to find the spatial weights first before we can compute global spatial correlation statistics. The spatial weights is used to define the neighbourhood relationships between the geographical units
+
+We use `poly2nb()` of **spdep** package to compute the contiguity weight matrix. The function builds a neighbour list based on regions with contiguous boundaries. Using queen\'s contiguity weight matrix, we have
+
+```{r}
+wm_q = poly2nb(nga_wp)
+summary(wm_q)
+```
+
+From the results, there are 774 regions in Hunan,
+
+Using the Queen\'s method, 1 of them has 14 neighbours, 1 of them is an isolate (no neighbour), and 2 of them only has 1 neighbour
+
+### Building the weights matrix
+
+After computing the spatial weights, we will need to build the weights matrix. From the result, of the neighbour list, there exist an isolated island. With this island, it is not recommended to use contiguity weight matrix as we want to find out if there is spatial correlation for non functional water points.
+
+With that in mind, we will use distance based weight matrix instead.
+
+By using `dnearneigh()` of **spdep** package, we can determine the distance based weight matrix. The function looks for neighbours of regions points by Euclidean distance between the *lower (\>=) and upper (\<=) bound* or with the parameter `longlat = True` by great circle distance in km
+
+### Building the distance based weight matrix
+
+#### Fixed Weight distance matrix
+
+The steps involved:
+
+1.  Using the k nearest neighbour (knn) algorithm, we can return a matrix with indices of points that belongs to the set of k nearest neighbours of each others by using `knearneigh()` of **spdep**
+
+2.  Convert the knn objects into a neighbours list of class nb with a list of integer vectors containing neighbour region number ids by using `knn2nb()`
+
+3.  Return the length of neighbour relationship edges by using `nbdists()` of **spdep**. The function returns in the units of coordinates if the coordinates are projected, in km otherwise.
+
+4.  Remove the list structure of the return objects by using `unlist()`
+
+Before we can start building the matrix, we first need to find the coordinates
+
+-   The longitude is the first variable in each centroid, this enables us to obtain only the longitude.
+
+-   The latitude is the second variable in each centroid, this enables us to obtain only the latitude
+
+Using the double bracket notation \[\[\]\] and the index, we can access the latitude & longitude values.
+
+```{r}
+longitude = map_dbl(nga_wp$geometry, ~st_centroid(.x)[[1]]) #longitude index 1
+latitude = map_dbl(nga_wp$geometry, ~st_centroid(.x)[[2]]) #latitude index 2
+```
+
+After getting the longitude and latitudes, we can form the coordinates object named `coord` using `cbind`.Using the `head` function, we can inspect the elements of `coord` to verify if they are correctly formatted
+
+```{r}
+coord = cbind(longitude, latitude)
+head(coord)
+```
+
+##### Find the lower and upper bounds
+
+```{r}
+k1 = knn2nb(knearneigh(coord)) #returns a list of nb objects from the result of k nearest neighbours matrix, Step 1 & 2
+k1dist = unlist(nbdists(k1, coord, longlat = TRUE)) #return the length of neighbour relationship edges and remove the list structures, Step 3 & 4
+summary(k1dist)
+```
+
+From the result, the largest first nearest neighbour is 71.66 km, hence by using this as the upper bound, we can be certain that all units will have at least 1 neighbour
+
+##### Creating the fixed distanced weight matrix
+
+`dnearneigh` will be used to compute the distance weight matrix
+
+```{r}
+wm_d72 = dnearneigh(coord, 0, 72, longlat = TRUE)
+wm_d72
+```
+
+The average number of links denotes the number of non zero links divided by the number of regions. In this case, a region has about on average between 24 neighbours
+
+We will display the structure of the weight matrix is to combine `table()` and `card()` of spdep.
+
+-   The `card()` function counts the neighboring regions in the neighbours list.
+
+-   `table()` creates a contingency table of the counts for each combination of factor levels using cross-classifying factors.
+
+```{r}
+table(nga_wp$ADM2_EN, card(wm_d72))
+```
+
+To get the number of disconnected connected subgraphs in the wmd72weight matrix, we can use the `n.comp.nb()` function of the **spdep** package.
+
+```{r}
+n_comp <- n.comp.nb(wm_d72)
+n_comp$nc
+```
+
+The results confirms that there is an isolated island in the result,
+
+we can plot the map of neighbours by using the `plot` function to determine if the generated map is of good use.
+
+```{r}
+plot(nga_wp$geometry, border="lightblue")
+plot(wm_d72, coord, add=TRUE)
+plot(nga_wp$geometry, border="lightblue")
+plot(k1, coord, add=TRUE, col="red", length = 0.1)
+```
+
+-   The black lines show the links of neighbours within the cut-off distance of 72km.
+
+-   The red lines show the links of 1st nearest neighbours
+
+It looks like it is not wise to use fixed weight distance matrix as some LGAs has alot of neighbours within 72km, it could really skew the spatial correlation giving them more weights to these areas based on the resultant map. We will work with adaptive distance weight matrix instead.
+
+#### Adaptive Weight distance matrix
+
+By enforcing symmetry or accepting asymmetric neighbours, as shown in the code below, it is possible to control the number of neighbours of each region using the k nearest neighbour (knn) algorithm. In this case we set k to 8 as discussed in class. We use `str()` to display the result
+
+```{r}
+knn8 = knn2nb(knearneigh(coord, k=8))
+str(knn8)
+```
+
+#### Plotting distance based neighbours
+
+```{r}
+plot(nga_wp$geometry, border="lightblue")
+plot(knn8, coord, pch = 19, cex = 0.6, add = TRUE, col = "red")
+knn8
+```
+
+This is a much better plot than the fixed distance matrix, as symmetry is enforced.
+
+## Computing Spatial Autocorrelation
+
+Now that we are ready we our weight matrix, we can begin to compute spatial autocorrelation
+We will start with ***GLOBAL*** spatial autocorrelation statistics and to perform spatial complete randomness test for global spatial correlation
+
+### Computing Spatial Autocorrelation: Moran\'s I
+
+#### Moran's I - The Null Hypothesis 
+
+*The null hypothesis is to assume that non functional water points are randomly distributed between the different LGAs.*
+
+#### Computing Moran's I
+
+We will perform Moran\'s I statistical test with `moran.test()` of the **spdep** package. We will need to convert the knn8 weight matrix to a listw object first using `nb2listw()`
+
+```{r}
+knn8ListW = nb2listw(knn8)
+moran.test(nga_wp$`wpt non functional`, listw = knn8ListW, zero.policy = TRUE, na.action = na.omit)
+```
+
+Based on the result, we will ***reject*** the null hypothesis as the p-value is less than 0.05. In fact as the p-value is less than 0.01, we can consider that as **highly significant.** The non functional water points are spatially clustered based on Moran\'s I statistics and are not random.
+
+#### Computing Spatial Autocorrelation: Moran\'s I with Monte Carlo simulation
+
+In order to confirm that the null hypothesis is false, we could use Monte Carlo simulation to predict potential outcomes of the event by using `moran.mc()` function of the **spdep** package. We will use 1000 simulations for this test and are not random.
+
+```{r}
+set.seed(1234)
+global_moran_mc = moran.mc(nga_wp$`wpt non functional`, listw = knn8ListW, nsim=999, zero.policy = TRUE, na.action = na.omit)
+global_moran_mc
+```
+
+Based on the simulation result, we will ***reject*** the null hypothesis as the p-value is less than 0.05. In fact as the p-value is 0.01, we can consider that as **highly significant.**
+
+The non functional water points in the LGAs are not randomly distributed. Thus, since the Moran I statistics (0.38) is greater than 0, they are spatially clustered.
+
+#### Visualizing Monte Carlo Moran\'s I
+
+We will examine the simulated Moran\'s I test statistics in detail. This can be done by computing the mean, variance and standard deviation and summary statistics
+
+```{r}
+mean(global_moran_mc$res[1:999]) #compute mean
+var(global_moran_mc$res[1:999]) #compute variance
+sd(global_moran_mc$res[1:999]) #compute std dev.
+summary(global_moran_mc$res[1:999])
+```
+
+We can plot the statistical values as a histogram using ggplot, however we need to convert the result into a data frame first
+
+```{r}
+df = data.frame(global_moran_mc$res) #convert to data frame
+
+ggplot(df, aes(global_moran_mc$res)) + #aes = column name
+  geom_histogram(bins=100, 
+                 color="White", 
+                 fill="lightblue") +
+  labs(x = "Simulated Moran's I",
+       y = "Frequency") + 
+  xlim(-0.07, 0.07) + ylim(0, 50) +
+  geom_vline(aes(xintercept=0),   
+               color="red", linetype="dashed", size=1)
+```
+
+Based on the histogram, we can conclude that there is a positive correlation based on the result of the histogram for Moran\'s I Statistics, i.e. non functional water points in NGAs are clustered, and not disperse
+
+### Computing Spatial Autocorrelation: Geary\'s C
+
+#### Geary's C - The Null Hypothesis 
+
+*The null hypothesis is to assume that non functional water points are clustering for either similar or dissimilar values are random.*
+
+#### Computing Geary's C 
+
+We will perform Geary\'s C statistical test with `geary.test()` of the **spdep** package.
+
+```{r}
+geary.test(nga_wp$`wpt non functional`, listw = knn8ListW)
+```
+
+Based on the result, we will ***reject*** the null hypothesis as the p-value is less than 0.05. In fact as the p-value is less than 0.01, we can consider that as **highly significant.**
+
+Therefore, we can conclude that the non functional water points are clustering for either similar or dissimilar values, they are not randomly distributed based on Geary\'s C statistics
+
+#### Computing Spatial Autocorrelation: Geary's C with Monte Carlo simulation
+
+In order to further confirm that the null hypothesis is false, we could use Monte Carlo simulation to predict potential outcomes of the event by using geary`.mc()` function of the **spdep** package. We will use 1000 simulations for this test
+
+```{r}
+set.seed(1234)
+global_geary_mc = geary.mc(nga_wp$`wpt non functional`, listw = knn8ListW, nsim=999)
+global_geary_mc
+```
+
+Based on the simulation result, we will ***reject*** the null hypothesis as the p-value is less than 0.05. In fact as the p-value is 0.01, we can consider that as **highly significant.**
+
+The non functional water points in the LGAs are clustering for either similar or dissimilar values, they are not randomly distributed. Thus, since the Geary's C statistics (0.61) is lesser than 1, they are spatially clustered.
+
+#### Visualizing Monte Carlo Geary's C 
+
+We will examine the simulated Geary's C test statistics in detail. This can be done by computing the mean, variance and standard deviation and summary statistics
+
+```{r}
+mean(global_geary_mc$res[1:999]) #compute mean
+var(global_geary_mc$res[1:999]) #compute variance
+sd(global_geary_mc$res[1:999]) #compute std dev.
+summary(global_geary_mc$res[1:999])
+```
+
+We can plot the statistical values as a histogram using ggplot, however we need to convert the result into a data frame first
+
+```{r}
+df_G = data.frame(global_geary_mc$res) #convert to data frame
+
+ggplot(df_G, aes(global_geary_mc$res)) + #aes = column name
+  geom_histogram(bins=100, 
+                 color="White", 
+                 fill="lightblue") +
+  labs(x = "Simulated Geary's C",
+       y = "Frequency") +
+  xlim(0.9, 1.1) + ylim(0, 50) +
+  geom_vline(aes(xintercept=1),   
+               color="red", linetype="dashed", size=1)
+```
+
+Based on the histogram, we can conclude that there is a positive correlation based on the result of the histogram for Geary\'s C Statistics, i.e. non functional water points in NGAs are clustered
+
+It is interesting to note that in Moran I the smaller the number, indicates negative correlation (small -\> -ve), in contrast in Geary\'s C the smaller the number indicates positive correlation (small -\> +ve)
+
+## Spatial Correlogram
 
 ## Reference
 
