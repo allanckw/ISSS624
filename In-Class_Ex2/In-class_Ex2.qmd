@@ -118,9 +118,9 @@ Most of the columns are irrelevant, so we will perform the following:
 
 ```{r}
 #| eval: false
-retain_cols <- c('#clean_adm2', '#clean_adm1', '#status_clean', '#management_clean', '#subjective_quality', '#fecal_coliform_presence', '#water_source_category', '#water_tech_category', '#lat_deg', '#lon_deg' )
+retain_cols = c('#clean_adm2', '#clean_adm1', '#status_clean', '#management_clean', '#subjective_quality', '#fecal_coliform_presence', '#water_source_category', '#water_tech_category', '#lat_deg', '#lon_deg' )
 
-new_col_names <- c('LGA', 'State', 'Functional', 'Management', 'Quality', 'presence_of_fecal_coliform', 'Water_Source_Category', 'Water_Tech_Category', 'latitude', 'longitude')
+new_col_names = c('LGA', 'State', 'Functional', 'Management', 'Quality', 'presence_of_fecal_coliform', 'Water_Source_Category', 'Water_Tech_Category', 'latitude', 'longitude')
 
 wpdx_clean = subset(wpdx_raw, select = (names(wpdx_raw) %in% retain_cols)) %>%  rename_with(~ new_col_names, all_of(retain_cols)) %>% 
 replace_na(list(Functional = "Unknown", Management = "Unknown", Quality = "Unknown", Water_Source_Category = "Unknown", Water_Tech_Category = "Unknown"))
@@ -195,7 +195,7 @@ The below code does 4 things
 4.  Select appropriate columns required which are the LGA area and LGA code (Column 3 & 4), Administration Level 1 Area and Administration Level 1 Code (Column 9 & 10), the columns that were added as explained in steps 2 & 3 and the geometry multipolygon objects (Column 18 to 23).
 
 ```{r}
-nga_wp <- nga %>% 
+nga_wp = nga %>% 
   #combine nga with water point sf
   mutate(`total wpt` = lengths(
     st_intersects(nga, wpdx_clean_sf))) %>%
@@ -256,7 +256,7 @@ wp_functional = tm_shape(nga_wp) +
 
 wp_nonfunctional = tm_shape(nga_wp) + 
   tm_fill("wpt non functional", 
-          palette ="Reds", breaks = c(0, 17, 46, 67, 88)) + 
+          palette ="Reds", breaks = c(0, 13, 34, 42, 61, 278)) + 
   tm_borders(alpha=0.5) + 
   #tm_compass(type="8star", size=2) +
   #tm_scale_bar() +
@@ -308,10 +308,12 @@ The following observations can be made:
 
 -   From the *wp_functional* map, it can be seen that the number of functional water points that is in the upper quantile tend to congregate in Sector 2 and the parts of sector 4 between (5, 8) and (6, 10)
 
--   From the *wp_nonfunctional* map, it can be seen that the most of the non functional water points in the upper quantile tend to congregate in sector 5. Some of them also tend to congregate at the bottom of sector 3 in (10, 10) and part of Sector 4 in (4, 8), and part of sector 6 between (10, 6) and (10, 8)
+-   From the *wp_nonfunctional* map, it can be seen that the most of the non functional water points in the upper quantile tend to congregate the following areas: In Sector 4 in (4, 8), Sector 5 in (8, 6) and Sector 6 between (10, 6) and (10, 8), and stretching to sector 3 all the way to (10, 10)
 
--   From the *wp_Unknown map,* it can be seen that the most of the water points with unknown status in the upper quantile congregate in Sector 4 between (2, 6) and (4, 6), in Sector 5 between (6, 4) and (8, 4) and in (8, 8) and sector 6 between (10, 6) and (10, 8).
+-   From the *wp_Unknown map,* it can be seen that the most of the water points with unknown status in the upper quantile congregate in Sector 4 between (2, 6) and (4, 6), in Sector 5 between (6, 4) and (8, 4) and in (8, 8) and in sector 6 between (10, 6) and (10, 8).
 
--   From the *wp_total* map, it can be seen that most of the water points regardless of status, its upper quantile congregate in sector 5 between (8, 4) and (8,6) and in sector 6 (10, 6) and (10, 8)
+-   From the *wp_total* map, it can be seen that most of the water points regardless of status, its upper quantile congregate in sector 5 between (8, 4) and (8,6) and in sector 6 between (10, 6) and (10, 8)
 
 -   From the *wp_total* map, it can also be seen that in the areas (8, 12), (10, 12) and (12, 12), there are sometimes no water point at all or very few of them.
+
+#### 
