@@ -68,7 +68,7 @@ freq(data=nga, input = 'ADM1_EN')
 
 For a meaningful analysis, there are just too many LGAs, both large and little.
 
-Calling `ttm()` in the **tmap** package will switch the tmap's viewing mode to interactive viewing, which will help us better visualize the map. Without this change, the tmap will be too small for any type of analysis. Additionally, we'll base the map's plot on States (Level 1 Administration Area)
+Calling `ttm()` in the **tmap** package will switch the tmap's viewing mode to interactive viewing, which will help us better visualize the map. Without this change, the generated map will be too small for any type of analysis. Additionally, we'll base the map's plot on States (Level 1 Administration Area)
 
 Given that there are 37 states, we must raise the maximum number of categories from the default value of 30 to 37. Using `tmap_options(max.categories = 37)`, the threshold can be set.
 
@@ -138,9 +138,9 @@ Most of the columns are irrelevant, so we will perform the following:
 
 ```{r}
 #| eval: false
-retain_cols <- c('#clean_adm2', '#clean_adm1', '#status_clean', '#management_clean', '#subjective_quality', '#fecal_coliform_presence', '#water_source_category', '#water_tech_category', '#lat_deg', '#lon_deg' )
+retain_cols = c('#clean_adm2', '#clean_adm1', '#status_clean', '#management_clean', '#subjective_quality', '#fecal_coliform_presence', '#water_source_category', '#water_tech_category', '#lat_deg', '#lon_deg' )
 
-new_col_names <- c('LGA', 'State', 'Functional', 'Management', 'Quality', 'presence_of_fecal_coliform', 'Water_Source_Category', 'Water_Tech_Category', 'latitude', 'longitude')
+new_col_names = c('LGA', 'State', 'Functional', 'Management', 'Quality', 'presence_of_fecal_coliform', 'Water_Source_Category', 'Water_Tech_Category', 'latitude', 'longitude')
 
 wpdx_clean = subset(wpdx_raw, select = (names(wpdx_raw) %in% retain_cols)) %>%  rename_with(~ new_col_names, all_of(retain_cols)) %>% 
 replace_na(list(Functional = "Unknown", Management = "Unknown", Quality = "Unknown", Water_Source_Category = "Unknown", Water_Tech_Category = "Unknown"))
@@ -241,7 +241,7 @@ The below code does 4 things
 4.  Select appropriate columns required which are the LGA area and LGA code (Column 3 & 4), Administration Level 1 Area and Administration Level 1 Code (Column 8 & 9) which represent states, the columns that were added as explained in steps 2 & 3 and the geometry multipolygon objects (Column 18 to 23) using `select()`
 
 ```{r}
-nga_wp <- nga %>% 
+nga_wp = nga %>% 
   #combine nga with water point sf
   mutate(`total wpt` = lengths(
     st_intersects(nga, wpdx_clean_sf))) %>%
@@ -367,20 +367,20 @@ The north-eastern region of Nigeria has few to no water points, which suggests t
 
 We need to find the spatial weights first before we can compute global spatial correlation statistics. The spatial weights is used to define the neighbourhood relationships between the geographical units
 
-We use `poly2nb()` of **spdep** package to compute the contiguity weight matrix. The function builds a neighbour list based on regions with contiguous boundaries. Using queen\'s contiguity weight matrix, we have
+We use `poly2nb()` of **spdep** package to compute the contiguity weight matrix. The function builds a neighbour list based on regions with contiguous boundaries. Using queen's contiguity weight matrix, we have
 
 ```{r}
 wm_q = poly2nb(nga_wp)
 summary(wm_q)
 ```
 
-From the results, there are 774 regions in Hunan,
+From the results, there are 774 regions in Nigeria,
 
-Using the Queen\'s method, 1 of them has 14 neighbours, 1 of them is an isolate (no neighbour), and 2 of them only has 1 neighbour
+Using the Queen's method, 1 of them has 14 neighbours, 1 of them is an isolated island (no neighbour), and 2 of them only has 1 neighbour
 
 ### Building the weights matrix
 
-After computing the spatial weights, we will need to build the weights matrix. From the result, of the neighbour list, there exist an isolated island. With this island, it is not recommended to use contiguity weight matrix as we want to find out if there is spatial correlation for non functional water points.
+After computing the spatial weights, we will need to build the weights matrix. From the result, of the neighbour list, there exist an isolated island. With this island, it is not recommended to use contiguity weight matrix as this island will have no neighbours at all.
 
 With that in mind, we will use distance based weight matrix instead.
 
@@ -420,17 +420,19 @@ coord = cbind(longitude, latitude)
 head(coord)
 ```
 
-##### Find the lower and upper bounds
+#### Find the lower and upper bounds
 
 ```{r}
-k1 = knn2nb(knearneigh(coord)) #returns a list of nb objects from the result of k nearest neighbours matrix, Step 1 & 2
-k1dist = unlist(nbdists(k1, coord, longlat = TRUE)) #return the length of neighbour relationship edges and remove the list structures, Step 3 & 4
+#returns a list of nb objects from the result of k nearest neighbours matrix, Step 1 & 2
+k1 = knn2nb(knearneigh(coord)) 
+#return the length of neighbour relationship edges and remove the list structures, Step 3 & 4
+k1dist = unlist(nbdists(k1, coord, longlat = TRUE)) 
 summary(k1dist)
 ```
 
 From the result, the largest first nearest neighbour is 71.66 km, hence by using this as the upper bound, we can be certain that all units will have at least 1 neighbour
 
-##### Creating the fixed distanced weight matrix
+#### Creating the fixed distanced weight matrix
 
 `dnearneigh` will be used to compute the distance weight matrix
 
@@ -451,33 +453,18 @@ We will display the structure of the weight matrix is to combine `table()` and `
 table(nga_wp$ADM2_EN, card(wm_d72))
 ```
 
-To get the number of disconnected connected subgraphs in the wmd72weight matrix, we can use the `n.comp.nb()` function of the **spdep** package.
+To get the number of disconnected connected subgraphs in the *wmd72* weight matrix, we can use the `n.comp.nb()` function of the **spdep** package.
 
 ```{r}
-n_comp <- n.comp.nb(wm_d72)
+n_comp = n.comp.nb(wm_d72)
 n_comp$nc
 ```
 
-The results confirms that there is an isolated island in the result,
-
-we can plot the map of neighbours by using the `plot` function to determine if the generated map is of good use.
-
-```{r}
-plot(nga_wp$geometry, border="lightblue")
-plot(wm_d72, coord, add=TRUE)
-plot(nga_wp$geometry, border="lightblue")
-plot(k1, coord, add=TRUE, col="red", length = 0.1)
-```
-
--   The black lines show the links of neighbours within the cut-off distance of 72km.
-
--   The red lines show the links of 1st nearest neighbours
-
-It looks like it is not wise to use fixed weight distance matrix as some LGAs has alot of neighbours within 72km, it could really skew the spatial correlation giving them more weights to these areas based on the resultant map. We will work with adaptive distance weight matrix instead.
+The results confirms that there is an isolated island in the result. and hence we will not used fixed weight matrix.It looks like it is not wise to use fixed weight distance matrix as some LGAs has alot of neighbours within 72km, it could really skew the spatial correlation giving them more weights to these areas based on the resultant map. We will work with adaptive distance weight matrix instead.
 
 #### Adaptive Weight distance matrix
 
-By enforcing symmetry or accepting asymmetric neighbours, as shown in the code below, it is possible to control the number of neighbours of each region using the k nearest neighbour (knn) algorithm. In this case we set k to 8 as discussed in class. We use `str()` to display the result
+By enforcing symmetry or accepting asymmetric neighbours, as shown in the code below, it is possible to control the number of neighbours of each region using the k nearest neighbour (knn) algorithm. In this case we set k to 8 as discussed in class. This can be accomplished by calling `knn2nb()` and `knearneigh()`. We will use `str()` to display the result
 
 ```{r}
 knn8 = knn2nb(knearneigh(coord, k=8))
@@ -492,31 +479,39 @@ plot(knn8, coord, pch = 19, cex = 0.6, add = TRUE, col = "red")
 knn8
 ```
 
-This is a much better plot than the fixed distance matrix, as symmetry is enforced.
+We did not adjust the projection from WSG84 in the earlier part because we needed to perform `st_transform()` which requires the data to be in WGS84 format.
+
+Since the spatial feature data frame has been fully constructed, we can now use `st_transform()` to update the appropriate projection system. The Nigeria Mid Belt Coordinate System (26392) will be applied, and `st crs()` is used to confirm the transformation was completed.
+
+```{r}
+nga = st_transform(nga, crs=26392)
+st_crs(nga)
+nga_wp = st_transform(nga_wp, crs=26392)
+st_crs(nga_wp)
+```
 
 ## Computing Spatial Autocorrelation
 
-Now that we are ready we our weight matrix, we can begin to compute spatial autocorrelation
-We will start with ***GLOBAL*** spatial autocorrelation statistics and to perform spatial complete randomness test for global spatial correlation
+Now that we are ready with our weight matrix, we can begin to compute spatial autocorrelation We will start with ***GLOBAL*** spatial autocorrelation statistics and to perform spatial complete randomness test for global spatial correlation
 
-### Computing Spatial Autocorrelation: Moran\'s I
+### Computing Spatial Autocorrelation: Moran's I
 
-#### Moran's I - The Null Hypothesis 
+#### Moran's I - The Null Hypothesis
 
 *The null hypothesis is to assume that non functional water points are randomly distributed between the different LGAs.*
 
 #### Computing Moran's I
 
-We will perform Moran\'s I statistical test with `moran.test()` of the **spdep** package. We will need to convert the knn8 weight matrix to a listw object first using `nb2listw()`
+We will perform Moran's I statistical test with `moran.test()` of the **spdep** package. We will need to convert the knn8 weight matrix to a listw object first using `nb2listw()`
 
 ```{r}
 knn8ListW = nb2listw(knn8)
 moran.test(nga_wp$`wpt non functional`, listw = knn8ListW, zero.policy = TRUE, na.action = na.omit)
 ```
 
-Based on the result, we will ***reject*** the null hypothesis as the p-value is less than 0.05. In fact as the p-value is less than 0.01, we can consider that as **highly significant.** The non functional water points are spatially clustered based on Moran\'s I statistics and are not random.
+Based on the result, we will ***reject*** the null hypothesis as the p-value is less than 0.05. In fact as the p-value is less than 0.01, we can consider that as **highly significant.** The non functional water points are spatially clustered based on Moran's I statistics and are not random.
 
-#### Computing Spatial Autocorrelation: Moran\'s I with Monte Carlo simulation
+#### Computing Spatial Autocorrelation: Moran's I with Monte Carlo simulation
 
 In order to confirm that the null hypothesis is false, we could use Monte Carlo simulation to predict potential outcomes of the event by using `moran.mc()` function of the **spdep** package. We will use 1000 simulations for this test and are not random.
 
@@ -530,9 +525,9 @@ Based on the simulation result, we will ***reject*** the null hypothesis as the 
 
 The non functional water points in the LGAs are not randomly distributed. Thus, since the Moran I statistics (0.38) is greater than 0, they are spatially clustered.
 
-#### Visualizing Monte Carlo Moran\'s I
+#### Visualizing Monte Carlo Moran's I
 
-We will examine the simulated Moran\'s I test statistics in detail. This can be done by computing the mean, variance and standard deviation and summary statistics
+We will examine the simulated Moran's I test statistics in detail. This can be done by computing the mean, variance and standard deviation and summary statistics
 
 ```{r}
 mean(global_moran_mc$res[1:999]) #compute mean
@@ -557,17 +552,17 @@ ggplot(df, aes(global_moran_mc$res)) + #aes = column name
                color="red", linetype="dashed", size=1)
 ```
 
-Based on the histogram, we can conclude that there is a positive correlation based on the result of the histogram for Moran\'s I Statistics, i.e. non functional water points in NGAs are clustered, and not disperse
+Based on the histogram, we can conclude that there is a positive correlation based on the result of the histogram for Moran's I Statistics, i.e. non functional water points in NGAs are clustered, and not disperse
 
-### Computing Spatial Autocorrelation: Geary\'s C
+### Computing Spatial Autocorrelation: Geary's C
 
-#### Geary's C - The Null Hypothesis 
+#### Geary's C - The Null Hypothesis
 
 *The null hypothesis is to assume that non functional water points are clustering for either similar or dissimilar values are random.*
 
-#### Computing Geary's C 
+#### Computing Geary's C
 
-We will perform Geary\'s C statistical test with `geary.test()` of the **spdep** package.
+We will perform Geary's C statistical test with `geary.test()` of the **spdep** package.
 
 ```{r}
 geary.test(nga_wp$`wpt non functional`, listw = knn8ListW)
@@ -575,7 +570,7 @@ geary.test(nga_wp$`wpt non functional`, listw = knn8ListW)
 
 Based on the result, we will ***reject*** the null hypothesis as the p-value is less than 0.05. In fact as the p-value is less than 0.01, we can consider that as **highly significant.**
 
-Therefore, we can conclude that the non functional water points are clustering for either similar or dissimilar values, they are not randomly distributed based on Geary\'s C statistics
+Therefore, we can conclude that the non functional water points are clustering for either similar or dissimilar values, they are not randomly distributed based on Geary's C statistics
 
 #### Computing Spatial Autocorrelation: Geary's C with Monte Carlo simulation
 
@@ -591,7 +586,7 @@ Based on the simulation result, we will ***reject*** the null hypothesis as the 
 
 The non functional water points in the LGAs are clustering for either similar or dissimilar values, they are not randomly distributed. Thus, since the Geary's C statistics (0.61) is lesser than 1, they are spatially clustered.
 
-#### Visualizing Monte Carlo Geary's C 
+#### Visualizing Monte Carlo Geary's C
 
 We will examine the simulated Geary's C test statistics in detail. This can be done by computing the mean, variance and standard deviation and summary statistics
 
@@ -618,13 +613,332 @@ ggplot(df_G, aes(global_geary_mc$res)) + #aes = column name
                color="red", linetype="dashed", size=1)
 ```
 
-Based on the histogram, we can conclude that there is a positive correlation based on the result of the histogram for Geary\'s C Statistics, i.e. non functional water points in NGAs are clustered
+Based on the histogram, we can conclude that there is a positive correlation based on the result of the histogram for Geary's C Statistics, i.e. non functional water points in NGAs are clustered
 
-It is interesting to note that in Moran I the smaller the number, indicates negative correlation (small -\> -ve), in contrast in Geary\'s C the smaller the number indicates positive correlation (small -\> +ve)
+It is interesting to note that in Moran I the smaller the number, indicates negative correlation (small -\> -ve), in contrast in Geary's C the smaller the number indicates positive correlation (small -\> +ve)
 
 ## Spatial Correlogram
 
+Spatial correlograms make it easy to examine spatial autocorrelation patterns in the data.
+
+They are graphs of some measure of autocorrelation (Moran's I or Geary's c) against distance and they demonstrate how correlated pairs of spatial observations are as one increase the distance (lag) between them.
+
+### Computing Moran's I correlogram
+
+We use `sp.correlogram()` of **spdep** package to compute a 8-lag spatial correlogram of non functional water points. The global spatial autocorrelation used in Moran's I
+
+We use `zero.policy = TRUE` because there is an isolated island, if we don't use it, an error will be thrown to say there is no neighbours. We use order of 8 as we are using adaptive weight matrix of 8 neighbours. We also use binary weights for the style as it is more robust.
+
+```{r}
+MI_Corr = sp.correlogram(wm_q, nga_wp$`wpt non functional`, order = 8, method = "I", style = "B", zero.policy = TRUE)
+plot(MI_Corr)
+```
+
+Plotting the output might not allow us to provide complete interpretation, this is because not all autocorrelation values are statistically significant. Hence we should analyze the report by printing out the result
+
+```{r}
+print(MI_Corr)
+```
+
+-   The p value is \< 0.01 and hence is highly statically significant for all values except the 7th neighbour.
+
+-   We can conclude that non functional water points is positively correlated for LGAs up to a distance of 6 neighbours, and negatively correlated from the 8th neighbour onwards.
+
+-   As the 7th degree neighbour is not statistically significant, we will **not reject** the null hypothesis of it being random.
+
+### Computing Geary's C correlogram
+
+Similarly to Moran's I correlogram, we use `sp.correlogram()` of **spdep** package to compute a 8-lag spatial correlogram of non functional water points
+
+We use `zero.policy = TRUE` because there is an isolated island, if we don't use it, an error will be thrown to say there is no neighbours. We use order of 8 as we are using adaptive weight matrix of 8 neighbours. We also use binary weights for the style as it is more robust.
+
+```{r}
+GC_Corr = sp.correlogram(wm_q, nga_wp$`wpt non functional`, order = 8, method = "C", style = "B", zero.policy = TRUE)
+plot(GC_Corr)
+```
+
+Plotting the output might not allow us to provide complete interpretation, this is because not all autocorrelation values are statistically significant. Hence we should analyze the report by printing out the result
+
+```{r}
+print(GC_Corr)
+```
+
+-   In this case, it is only statistically significant for the 1st to 4th degree and 8th degree neighbour for non functional water points to be correlated by distance. The rest of the neighbours are insignificant and appears to be random for the Geary's C statistics.
+
+-   In order to build higher order neighbour lists, we can use the `nblag()` function, where higher order neighbours are only lags links apart from one another on the graph defined by the input neighbours list. (Treglia, 2015).
+
+    To do so, we can iterate through the neighbour lists (*nb8*) with `sapply()` and find the distance between the point of lag (y) and the coordinate using `nbdists()`, unlist them using `unlist()`, and find the mean using `mean()`.
+
+```{r}
+#find spatial lag up to 8 neighbours
+nb8 <- nblag(wm_q, 8)
+#sapply to iterate, passing each value as y
+#Find the distance between y and the coordinates
+#unlist them and find the mean
+correlogram_dist = sapply(nb8, function(y) mean(unlist(nbdists(y, coord, longlat = TRUE))))
+correlogram_dist
+```
+
+From spatial lag 1 to 4 (from 36.62 km - 155.79 km), the non-functional water points are clustered, and from lag 8 onwards, they are dispersed, beginning at 356.66 km.
+
+## Cluster and Outlier Analysis
+
+Statistics called Local Indicators of Spatial Association, or LISA, assess whether clusters exist in the spatial arrangement of a given variable.
+
+We will use relevant ***Local Indicators for Spatial Association (LISA)***, particularly ***local Moran,*** in this section to identify clusters and/or outliers in the number of non functional water points in Nigeria.
+
+### Computing Local Moran's I Statistics
+
+The `localmoran()` function of **spdep** will be used to calculate local Moran's I. Given a collection of *l_i* values, *z_i* values and a *listw* object with neighbour weighting details for the polygon associated with the *z_i* values.
+
+```{r}
+fips = order(nga_wp$`wpt non functional`)
+localMI = localmoran(nga_wp$`wpt non functional`, knn8ListW)
+head(localMI)
+
+
+```
+
+Before mapping the local Moran\'s I map, we need to append the local Moran\'s I data frame (`localMI`) onto the nga_wp spatial polygon data frame by using `cbind()` and renaming the columns by Prefixing Pr.
+
+```{r}
+nga_wp.localMI = cbind(nga_wp, localMI) %>% #pipe
+                rename(Pr.Ii = Pr.z....E.Ii..)
+
+nga_wp.localMI_pValue = nga_wp.localMI
+```
+
+After creating the the new data frame `nga_wp.localMI`, we can use the **tmap** package to plot the local Moran\'s I values with a multi layer map
+
+1.  We use `tm_shape()` `+ tm_fill("ADM1_EN")` to form Layer 1 of the map to form the 37 states of the map. The *Pastel1* palette is used because it is difficult to read different shades of the same two to three colors; Pastel1 has more colors, making states more distinct.
+
+2.  We use `tm_shape()` `+ tm_fill("wpt non functional")` to form layer 2 of the map to plot the number of non functional water point.
+
+3.  Next we use `tm_shape()` `+ tm_shape(nga_wp.localMI)` to form Layer 3 of the map which are the local Moran values. The palette used in this case is Purple Red such that areas with very little water points are shaded with a very light colour, in order to be consistent with our analysis, we use *kmeans* style and *n=6*
+
+    As we expect that the choropleth map shows that there is evidence for both positive & negative li values, we need to consider the p-values for each of these values to determine if they are statistically significant
+
+4.   We use `tm_shape()` `+ tm_shape(nga_wp.localMI_pValue)`to form Layer 4 of the map which are the local Moran p values. The palette used in this case is Green with fixed breaks denoting the various p value of confidence interval. Since we are only interested in values that are statistically significant, we stop at 0.05
+
+We may switch between layers on the interactive map to superimpose the nonfunctional water locations. With so many polygons, putting it side by side can be challenging to interpret. We use the Green palette so that it can be contrasting when we toggle between maps
+
+```{r}
+tm_shape(nga) + 
+  tm_fill("ADM1_EN", palette = "Pastel1") +
+  tm_borders(alpha=0.5) + 
+  tm_grid (alpha=0.2) +
+  
+tm_shape(nga_wp) + 
+  tm_fill("wpt non functional", 
+          palette ="Blues", style="kmeans", n=6) +  
+  tm_borders(alpha=0.5) + 
+  tm_grid (alpha=0.2) +
+
+
+tm_shape(nga_wp.localMI) + 
+  tm_fill(col="Ii", #note that actual value is Ii
+          palette = "PuRd", title = "Local Moran's I Statistics",
+          style="kmeans", n=6) + 
+  tm_borders(alpha = 0.5) +
+  
+tm_shape(nga_wp.localMI_pValue) + 
+  tm_fill(col="Pr.Ii", #note that p value is Pr.Ii
+          breaks=c(-Inf, 0.001, 0.01, 0.05,  Inf),
+          style="fixed",
+          palette = "-Greens", title = "Local Moran's I p values") +   tm_borders(alpha = 0.5)
+
+```
+
+#### Analysis of Results of Local Moran\'s I Statistics - Dissimilar Features (\< 0)
+
+blah blah blah
+
+#### 
+Analysis of Results of Local Moran\'s I Statistics - Similar Features (\>= 0)
+
+blah blah blah
+
+### Plotting Moran Scatterplot
+
+-   A helpful visual tool for exploratory analysis is the Moran scatter plot, which helps one to judge how similar an observed value is to its nearby observations.
+
+-   The y axis, also referred to as the response axis , is dependent on the values of the observations.
+
+-   Based on the weighted average or spatial lag of the corresponding observation on the X axis, the Y axis is constructed.
+
+```{r}
+nci = moran.plot(nga_wp$`wpt non functional`, knn8ListW, 
+                 labels=as.character(nga_wp$ADM2_EN),
+                 xlab = "Non functional water points",
+                 ylab="Spatially lag Non functional water points"
+)
+```
+
+### Preparing LISA map classes
+
+1.  Create the quadrants
+
+    ```{r}
+    quadrant = vector(mode="numeric",length=nrow(localMI))
+    ```
+
+2.  Compute the spatially lagged variable of interest (i.e. Non functional water points) and centers the spatially lagged variable around its mean.
+
+    ```{r}
+    nga_wp$`lag_wpt non functional` = lag.listw(knn8ListW, nga_wp$`wpt non functional`)
+    DV = nga_wp$`lag_wpt non functional` - mean(nga_wp$`lag_wpt non functional`) 
+    ```
+
+3.  Center the local Moran\'s I value around the mean
+
+    ```{r}
+    #local moran
+    LM_I <- localMI[,1] - mean(localMI[,1])    
+    ```
+
+4.  Setup the statistically significant levels for the local Moran
+
+    ```{r}
+    signif = 0.05
+    ```
+
+5.  Define the quadrants levels
+
+    ```{r}
+    #C_MI = Local Moran I
+    quadrant[DV < 0 & LM_I > 0] = 1 #C_MI > 0 -> cluster, DV < 0 low-low pattern
+    quadrant[DV < 0 & LM_I < 0] = 2 #C_MI < 0 -> outlier,  DV < 0 Low High
+    quadrant[DV > 0 & LM_I < 0] = 3 #C_MI < 0 -> outlier,  DV < 0 High Low
+    quadrant[DV > 0 & LM_I > 0] = 4 #C_MI > 0 -> cluster, DV > 0 high-high pattern
+    ```
+
+6.  Place non significant Moran into category 0
+
+    ```{r}
+    quadrant[localMI[,5]>signif] = 0
+    ```
+
+7.  Plotting the LISA Map
+
+    ```{r}
+    nga_wp.localMI$quadrant = quadrant
+    colors = c("white", "#2c7bb6", "#abd9e9", "#fdae61", "#d7191c")
+    clusters = c("insignificant", "low-low", "low-high", "high-low", "high-high")
+
+
+    tm_shape(nga) + 
+      tm_fill("ADM1_EN", palette = "Pastel1") +
+      tm_borders(alpha=0.5) + 
+      tm_grid (alpha=0.2) +
+      
+    tm_shape(nga_wp) + 
+      tm_fill("wpt non functional", 
+              palette ="Blues", style="kmeans", n=6) +  
+      tm_borders(alpha=0.5) + 
+      tm_grid (alpha=0.2) +
+        
+    tm_shape(nga_wp.localMI) + 
+      tm_fill(col="quadrant", style="cat", 
+              palette = colors[c(sort(unique(quadrant)))+1], 
+              labels = clusters[c(sort(unique(quadrant)))+1]) +
+              
+              tm_borders(alpha=0.5) +
+      
+    tm_shape(nga_wp.localMI_pValue) + 
+      tm_fill(col="Pr.Ii", #note that p value is Pr.Ii
+              breaks=c(-Inf, 0.001, 0.01, 0.05,  Inf),
+              style="fixed",
+              palette = "-Greens", title = "Local Moran's I p values") +  
+      tm_borders(alpha = 0.5)
+    ```
+
+## Hot Spot and Cold Spot Area Analysis
+
+A region or value that is higher than its surrounds is referred to as a "hot spot", while value lower than its surrounding are known as cold spot in a variety of fields. Moran's I and Geary's C cannot distinguish them as they only indicate clustering, it is not possible to tell whether a cluster is a hot spot, cold spot or both.
+
+### Getis and Ord's G-Statistics
+
+The G statistic distinguishes between hot spots and cold spots. It identifies **spatial concentrations.**
+
+> *It must be noted that the G Statistics is not able to detect spatial outliers as it does not take cross products like local Moran.*
+
+The General G statistic is interpreted relative to its mean value. The value for which there is no spatial association
+
+-   G \> mean implies potential clusters of "hot spots"
+
+-   G \< mean implies potential clusters of "cold spots"
+
+The analysis consists of three steps:
+
+1.  Deriving spatial weight matrix, which we already have done, *wm_d72* is the fixed distance matrix and *knn8* is the adaptive weight matrix
+
+2.  Computing Gi statistics
+
+3.  Mapping Gi statistics
+
+### Gi statistics using adaptive distance
+
+We can use `localG()` to compute the Gi statistics. The output of `localG()` is a vector of G or Gstar values, with attributes \"`gstari`\" set to TRUE or FALSE, \"call\" set to the function call, and class \"localG\".
+
+As we previously discussed, due to the fact there is an isolated island, we will not used fixed weights
+
+```{r}
+fips = order(nga_wp$`wpt non functional`)
+gi.adaptive = localG(nga_wp$`wpt non functional`, knn8ListW, return_internals = TRUE)
+gi.adaptive
+```
+
+The Gi statistics is represented as a Z-score. Greater values represent a greater intensity of clustering and the direction (positive or negative) indicates high or low clusters.
+
+Next, we will join the Gi values to their corresponding nga_wp sf data frame by converting the output vector (i.e. `gi.fixed`) into r matrix object by using `as.matrix()` and join the nga_wp data frame into with the produced matrix with `cbind()` Lastly, the field name of the gi values is renamed to *gstat_fixed* by using `rename()`
+
+```{r}
+nga_wp.gi = cbind(nga_wp, as.matrix(gi.adaptive)) %>% #pipe
+          rename(gstat_adaptive = as.matrix.gi.adaptive.)
+```
+
+Using the same way we plot multi layer map we previously discussed, we plot nigeria map at layer 1 as Nigeria Level 1 administration area, layer 2 as non functional water points, layer 3 as the G statistics and layer 4 as the local Moran I statistics to make our analysis with **tmap** functions below
+
+```{r}
+tm_shape(nga) + 
+  tm_fill("ADM1_EN", palette = "Pastel1") +
+  tm_borders(alpha=0.5) + 
+  tm_grid (alpha=0.2) +
+  
+tm_shape(nga_wp) + 
+  tm_fill("wpt non functional", 
+          palette ="Greens", style="kmeans", n=6) +  
+  tm_borders(alpha=0.5) + 
+  tm_grid (alpha=0.2) +
+
+tm_shape(nga_wp.gi) +
+          tm_fill(col = "gstat_adaptive", 
+          style = "pretty",
+          palette="-RdBu",
+          title = "local Gi") +
+  tm_borders(alpha = 0.5) +
+  
+tm_shape(nga_wp.localMI) + 
+  tm_fill(col="quadrant", style="cat", 
+          palette = colors[c(sort(unique(quadrant)))+1], 
+          labels = clusters[c(sort(unique(quadrant)))+1]) +
+          
+          tm_borders(alpha=0.5) 
+```
+
+#### Analysis of G Statistics 
+
+blah blah blah
+
+#### Comparing Local Moran I to G Statistics 
+
+blah blah blah
+
 ## Reference
+
+Harris N, Goldman E, Gabris C, Nordling J, Minnemeyer S, Ansari S, Lippmann M, Bennett L, Raad M, Hansen M, Potapov P (2017), *Using spatial statistics to identify emerging hot spots of forest loss*, T2 - Environmental Research Letters
+
+https://dx.doi.org/10.1088/1748-9326/aa5a2f
 
 Kassambara A (n.d) . *K-Means Clustering in R: Algorithm and Practical Example*s
 
@@ -633,3 +947,11 @@ https://www.datanovia.com/en/lessons/k-means-clustering-in-r-algorith-and-practi
 Long, A (n.d.), Local Moran
 
 http://ceadserv1.nku.edu/longa//geomed/stats/localmoran/localmoran.html
+
+Treglia M (2015), *A simple correlogram using sp.correlogram with data(meuse)*
+
+https://rpubs.com/erikaaldisa/spatialweights
+
+R Coder (2022) *sapply function in R*
+
+https://r-coder.com/sapply-function-r/
