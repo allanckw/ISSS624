@@ -224,7 +224,7 @@ From the results, we can conclude that
 
 -   Most of the non functional water points uses pumps, we could ask the question if there is an issue with the pumps and if there is a lack of expertise to repair or replace them when they fail.
 
--   97.72% of such non functional water points are made up of wells. We could ask the question if we could improve things by providing other forms of sources such as pipe water. How much cost will it take to bring pipe water to the various state of Nigeria?
+-   97.72% of such non functional water points are made up of wells. We could ask the question if we could improve things by providing other forms of sources such as piped water. How much cost will it take to bring pipe water to the various state of Nigeria?
 
 ## Combining Spatial & Aspatial Data
 
@@ -672,7 +672,7 @@ To do so, we can iterate through the neighbour lists (*nb8*) with `sapply()` and
 
 ```{r}
 #find spatial lag up to 8 neighbours
-nb8 <- nblag(wm_q, 8)
+nb8 = nblag(wm_q, 8)
 #sapply to iterate, passing each value as y
 #Find the distance between y and the coordinates
 #unlist them and find the mean
@@ -978,7 +978,7 @@ The number of High-Lows is not as many as the number of Low-Highs when we compar
 
     ```{r}
     #local moran
-    LM_I <- localMI[,1] - mean(localMI[,1])    
+    LM_I = localMI[,1] - mean(localMI[,1])    
     ```
 
 4.  Setup the statistically significant levels for the local Moran
@@ -991,10 +991,10 @@ The number of High-Lows is not as many as the number of Low-Highs when we compar
 
     ```{r}
     #L_MI = Local Moran I ard mean
-    quadrant[DV < 0 & LM_I > 0] = 1 #L_MI > 0 -> cluster, DV < 0 low-low pattern
-    quadrant[DV < 0 & LM_I < 0] = 2 #L_MI < 0 -> outlier,  DV < 0 Low High
-    quadrant[DV > 0 & LM_I < 0] = 3 #L_MI < 0 -> outlier,  DV < 0 High Low
-    quadrant[DV > 0 & LM_I > 0] = 4 #L_MI > 0 -> cluster, DV > 0 high-high pattern
+    quadrant[DV <0 & LM_I>0] = 1
+    quadrant[DV >0 & LM_I<0] = 2
+    quadrant[DV <0 & LM_I<0] = 3  
+    quadrant[DV >0 & LM_I>0] = 4 
     ```
 
 6.  Place non significant Moran into category 0

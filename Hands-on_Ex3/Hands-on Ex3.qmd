@@ -486,13 +486,14 @@ The global Moran's I is estimated from the slope of the regression line. The rel
 
 5.  Define the quadrants levels
 
+    These four command lines define the low-low (1), low-high (2), high-low (3) and high-high (4) categories.
+
     ```{r}
     #L_MI = Local Moran I ard mean
-    quadrant[DV < 0 & LM_I > 0] = 1 #L_MI > 0 -> cluster, DV < 0 low-low pattern
-    quadrant[DV < 0 & LM_I < 0] = 2 #L_MI < 0 -> outlier,  DV < 0 Low High
-    quadrant[DV > 0 & LM_I < 0] = 3 #L_MI < 0 -> outlier,  DV < 0 High Low
-    quadrant[DV > 0 & LM_I > 0] = 4 #L_MI > 0 -> cluster, DV > 0 high-high pattern
-
+    quadrant[DV <0 & LM_I>0] = 1
+    quadrant[DV >0 & LM_I<0] = 2
+    quadrant[DV <0 & LM_I<0] = 3  
+    quadrant[DV >0 & LM_I>0] = 4 
     ```
 
 6.  Place non significant Moran into category 0
@@ -516,6 +517,8 @@ The global Moran's I is estimated from the slope of the regression line. The rel
               
               tm_borders(alpha=0.5)
     ```
+
+![](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAaCAYAAADFTB7LAAAAa0lEQVR42u3OywnAIBBAwcXSUoCW5D11xDoNCBGNv0MOecJOBSOi1OZMsJ4dvFxEJ1OQnMxBarIKEpNNkJbsBknJYZCSnAYJyVVQziNig7/nZkFEbhTE5HpBVO4dxOXKIDL3BLG5BJ1T6rsbMfep2CaMN00AAAAASUVORK5CYII= "Run Current Chunk")
 
 For effective interpretation, it is better to plot both the LISA map and its GDPPC map next to each other.
 

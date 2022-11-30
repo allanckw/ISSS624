@@ -941,12 +941,13 @@ Zixing        -7.6849e-01 -8.8210e-02  9.4057e-01 -7.0144e-01         0.4830</co
 <div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>signif <span class="ot">=</span> <span class="fl">0.05</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div></li>
 <li><p>Define the quadrants levels</p>
+<p>These four command lines define the low-low (1), low-high (2), high-low (3) and high-high (4) categories.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="co">#L_MI = Local Moran I ard mean</span></span>
-<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>quadrant[DV <span class="sc">&lt;</span> <span class="dv">0</span> <span class="sc">&amp;</span> LM_I <span class="sc">&gt;</span> <span class="dv">0</span>] <span class="ot">=</span> <span class="dv">1</span> <span class="co">#L_MI &gt; 0 -&gt; cluster, DV &lt; 0 low-low pattern</span></span>
-<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>quadrant[DV <span class="sc">&lt;</span> <span class="dv">0</span> <span class="sc">&amp;</span> LM_I <span class="sc">&lt;</span> <span class="dv">0</span>] <span class="ot">=</span> <span class="dv">2</span> <span class="co">#L_MI &lt; 0 -&gt; outlier,  DV &lt; 0 Low High</span></span>
-<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a>quadrant[DV <span class="sc">&gt;</span> <span class="dv">0</span> <span class="sc">&amp;</span> LM_I <span class="sc">&lt;</span> <span class="dv">0</span>] <span class="ot">=</span> <span class="dv">3</span> <span class="co">#L_MI &lt; 0 -&gt; outlier,  DV &lt; 0 High Low</span></span>
-<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a>quadrant[DV <span class="sc">&gt;</span> <span class="dv">0</span> <span class="sc">&amp;</span> LM_I <span class="sc">&gt;</span> <span class="dv">0</span>] <span class="ot">=</span> <span class="dv">4</span> <span class="co">#L_MI &gt; 0 -&gt; cluster, DV &gt; 0 high-high pattern</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>quadrant[DV <span class="sc">&lt;</span><span class="dv">0</span> <span class="sc">&amp;</span> LM_I<span class="sc">&gt;</span><span class="dv">0</span>] <span class="ot">=</span> <span class="dv">1</span></span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>quadrant[DV <span class="sc">&gt;</span><span class="dv">0</span> <span class="sc">&amp;</span> LM_I<span class="sc">&lt;</span><span class="dv">0</span>] <span class="ot">=</span> <span class="dv">2</span></span>
+<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a>quadrant[DV <span class="sc">&lt;</span><span class="dv">0</span> <span class="sc">&amp;</span> LM_I<span class="sc">&lt;</span><span class="dv">0</span>] <span class="ot">=</span> <span class="dv">3</span>  </span>
+<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a>quadrant[DV <span class="sc">&gt;</span><span class="dv">0</span> <span class="sc">&amp;</span> LM_I<span class="sc">&gt;</span><span class="dv">0</span>] <span class="ot">=</span> <span class="dv">4</span> </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div></li>
 <li><p>Place non significant Moran into category 0</p>
 <div class="cell">
@@ -970,6 +971,7 @@ Zixing        -7.6849e-01 -8.8210e-02  9.4057e-01 -7.0144e-01         0.4830</co
 </div>
 </div></li>
 </ol>
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAaCAYAAADFTB7LAAAAa0lEQVR42u3OywnAIBBAwcXSUoCW5D11xDoNCBGNv0MOecJOBSOi1OZMsJ4dvFxEJ1OQnMxBarIKEpNNkJbsBknJYZCSnAYJyVVQziNig7/nZkFEbhTE5HpBVO4dxOXKIDL3BLG5BJ1T6rsbMfep2CaMN00AAAAASUVORK5CYII=.png" title="Run Current Chunk" class="img-fluid"></p>
 <p>For effective interpretation, it is better to plot both the LISA map and its GDPPC map next to each other.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>gdppc <span class="ot">&lt;-</span> <span class="fu">qtm</span>(hunan, <span class="st">"GDPPC"</span>)</span>
