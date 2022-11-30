@@ -35,7 +35,7 @@ We will load the spatial features by using `st_read()` from the **sf** package
 
 As the data we want is in WSG-84 format, we set *crs* to 4326.
 
-We won't utilize st transform() at this time because it can result in outputs with missing points after transformation, which would skew our study.
+We won't utilize `st_transform()` at this time because it can result in outputs with missing points after transformation, which would skew our study.
 
 ```{r}
 nga = st_read(dsn = "data/geospatial",
@@ -224,7 +224,7 @@ From the results, we can conclude that
 
 -   Most of the non functional water points uses pumps, we could ask the question if there is an issue with the pumps and if there is a lack of expertise to repair or replace them when they fail.
 
--   97.72% of such non functional water points are made up of wells.
+-   97.72% of such non functional water points are made up of wells. We could ask the question if we could improve things by providing other forms of sources such as pipe water. How much cost will it take to bring pipe water to the various state of Nigeria?
 
 ## Combining Spatial & Aspatial Data
 
@@ -264,10 +264,7 @@ nga_wp = nga %>%
 We could use breaks of the summary statistics by using percentiles, this is to help us find out the distribution of water points in each quantile.
 
 ```{r}
-#summary(nga_wp$`total wpt`)
-#summary(nga_wp$`wpt functional`)
 summary(nga_wp$`wpt non functional`)
-#summary(nga_wp$`wpt unknown`)
 ```
 
 It is recommended not to use the default style with breaks as quantile since the range from the third quantile to the maximum is too wide and could result in a skewed representation. We compute the variance and standard deviation of non-functional water points first to better understand our dataset since we now need to decide which style is appropriate for the map.
@@ -460,7 +457,7 @@ n_comp = n.comp.nb(wm_d72)
 n_comp$nc
 ```
 
-The results confirms that there is an isolated island in the result. and hence we will not used fixed weight matrix.It looks like it is not wise to use fixed weight distance matrix as some LGAs has alot of neighbours within 72km, it could really skew the spatial correlation giving them more weights to these areas based on the resultant map. We will work with adaptive distance weight matrix instead.
+The results confirms that there is an isolated island in the result. and hence we will not used fixed weight matrix. We will work with adaptive distance weight matrix instead.
 
 #### Adaptive Weight distance matrix
 
@@ -473,15 +470,17 @@ str(knn8)
 
 #### Plotting distance based neighbours
 
+We can use `plot()` to plot the distance based neighbours, the result below shows that we have a total of 6192 links to join all 774 polygons.
+
 ```{r}
 plot(nga_wp$geometry, border="lightblue")
 plot(knn8, coord, pch = 19, cex = 0.6, add = TRUE, col = "red")
 knn8
 ```
 
-We did not adjust the projection from WSG84 in the earlier part because we needed to perform `st_transform()` which requires the data to be in WGS84 format.
+Earlier, we did not adjust the projection from WSG84 as we needed to perform `st_transform()` which requires the data to be in WGS84 format.
 
-Since the spatial feature data frame has been fully constructed, we can now use `st_transform()` to update the appropriate projection system. The Nigeria Mid Belt Coordinate System (26392) will be applied, and `st crs()` is used to confirm the transformation was completed.
+Since the spatial feature data frame has been fully constructed, we can now use `st_transform()` to update the appropriate projection system. The Nigeria Mid Belt Coordinate System (26392) will be applied, and `st_crs()` is used to confirm the transformation was completed.
 
 ```{r}
 nga = st_transform(nga, crs=26392)
@@ -552,7 +551,7 @@ ggplot(df, aes(global_moran_mc$res)) + #aes = column name
                color="red", linetype="dashed", size=1)
 ```
 
-Based on the histogram, we can conclude that there is a positive correlation based on the result of the histogram for Moran's I Statistics, i.e. non functional water points in NGAs are clustered, and not disperse
+Based on the histogram, we can conclude that there is a positive correlation based on the result of the histogram for Moran's I Statistics, i.e. non functional water points in NGAs are clustered
 
 ### Computing Spatial Autocorrelation: Geary's C
 
@@ -627,7 +626,7 @@ They are graphs of some measure of autocorrelation (Moran's I or Geary's c) agai
 
 We use `sp.correlogram()` of **spdep** package to compute a 8-lag spatial correlogram of non functional water points. The global spatial autocorrelation used in Moran's I
 
-We use `zero.policy = TRUE` because there is an isolated island, if we don't use it, an error will be thrown to say there is no neighbours. We use order of 8 as we are using adaptive weight matrix of 8 neighbours. We also use binary weights for the style as it is more robust.
+We use `zero.policy = TRUE` because there is an isolated island. We use order of 8 as we are using adaptive weight matrix of 8 neighbours. We also use binary weights for the style as it is more robust.
 
 ```{r}
 MI_Corr = sp.correlogram(wm_q, nga_wp$`wpt non functional`, order = 8, method = "I", style = "B", zero.policy = TRUE)
@@ -665,9 +664,11 @@ print(GC_Corr)
 
 -   In this case, it is only statistically significant for the 1st to 4th degree and 8th degree neighbour for non functional water points to be correlated by distance. The rest of the neighbours are insignificant and appears to be random for the Geary's C statistics.
 
--   In order to build higher order neighbour lists, we can use the `nblag()` function, where higher order neighbours are only lags links apart from one another on the graph defined by the input neighbours list. (Treglia, 2015).
+#### Finding the distance of spatial lags and building higher order neighbour list
 
-    To do so, we can iterate through the neighbour lists (*nb8*) with `sapply()` and find the distance between the point of lag (y) and the coordinate using `nbdists()`, unlist them using `unlist()`, and find the mean using `mean()`.
+In order to build higher order neighbour lists, we can use the `nblag()` function, where higher order neighbours are only lags links apart from one another on the graph defined by the input neighbours list. (Treglia, 2015).
+
+To do so, we can iterate through the neighbour lists (*nb8*) with `sapply()` and find the distance between the point of lag (y) and the coordinate using `nbdists()`, unlist them using `unlist()`, and find the mean using `mean()`.
 
 ```{r}
 #find spatial lag up to 8 neighbours
@@ -679,7 +680,11 @@ correlogram_dist = sapply(nb8, function(y) mean(unlist(nbdists(y, coord, longlat
 correlogram_dist
 ```
 
-From spatial lag 1 to 4 (from 36.62 km - 155.79 km), the non-functional water points are clustered, and from lag 8 onwards, they are dispersed, beginning at 356.66 km.
+**Findings:**
+
+Based on Moran's I Statistics, From spatial lag 1 to 6 (from 36.62 km - 251.08 km), the non-functional water points are positively correlated, and from lag 8 onwards, they are negatively correlated, beginning at 356.66 km.
+
+Based on Geary's C Statistics, From spatial lag 1 to 4 (from 36.62 km - 155.79 km), the non-functional water points are clustered, and from lag 8 onwards, they are dispersed, beginning at 356.66 km.
 
 ## Cluster and Outlier Analysis
 
@@ -699,7 +704,7 @@ head(localMI)
 
 ```
 
-Before mapping the local Moran\'s I map, we need to append the local Moran\'s I data frame (`localMI`) onto the nga_wp spatial polygon data frame by using `cbind()` and renaming the columns by Prefixing Pr.
+Before mapping the local Moran's I map, we need to append the local Moran's I data frame (`localMI`) onto the nga_wp spatial polygon data frame by using `cbind()` and renaming the columns by Prefixing Pr.
 
 ```{r}
 nga_wp.localMI = cbind(nga_wp, localMI) %>% #pipe
@@ -708,17 +713,17 @@ nga_wp.localMI = cbind(nga_wp, localMI) %>% #pipe
 nga_wp.localMI_pValue = nga_wp.localMI
 ```
 
-After creating the the new data frame `nga_wp.localMI`, we can use the **tmap** package to plot the local Moran\'s I values with a multi layer map
+After creating the the new data frame `nga_wp.localMI`, we can use the **tmap** package to plot the local Moran's I values with a multi layer map
 
 1.  We use `tm_shape()` `+ tm_fill("ADM1_EN")` to form Layer 1 of the map to form the 37 states of the map. The *Pastel1* palette is used because it is difficult to read different shades of the same two to three colors; Pastel1 has more colors, making states more distinct.
 
 2.  We use `tm_shape()` `+ tm_fill("wpt non functional")` to form layer 2 of the map to plot the number of non functional water point.
 
-3.  Next we use `tm_shape()` `+ tm_shape(nga_wp.localMI)` to form Layer 3 of the map which are the local Moran values. The palette used in this case is Purple Red such that areas with very little water points are shaded with a very light colour, in order to be consistent with our analysis, we use *kmeans* style and *n=6*
+3.  Next we use `tm_shape()` `+ tm_shape(nga_wp.localMI)` to form Layer 3 of the map which are the local Moran values. The palette used in this case is Purple Red such that areas with very little water points are shaded with a very light colour
 
     As we expect that the choropleth map shows that there is evidence for both positive & negative li values, we need to consider the p-values for each of these values to determine if they are statistically significant
 
-4.   We use `tm_shape()` `+ tm_shape(nga_wp.localMI_pValue)`to form Layer 4 of the map which are the local Moran p values. The palette used in this case is Green with fixed breaks denoting the various p value of confidence interval. Since we are only interested in values that are statistically significant, we stop at 0.05
+4.  We use `tm_shape()` `+ tm_shape(nga_wp.localMI_pValue)`to form Layer 4 of the map which are the local Moran p values. The palette used in this case is Green with fixed breaks denoting the various p value of confidence interval. Since we are only interested in values that are statistically significant, we stop at 0.05
 
 We may switch between layers on the interactive map to superimpose the nonfunctional water locations. With so many polygons, putting it side by side can be challenging to interpret. We use the Green palette so that it can be contrasting when we toggle between maps
 
@@ -738,7 +743,7 @@ tm_shape(nga_wp) +
 tm_shape(nga_wp.localMI) + 
   tm_fill(col="Ii", #note that actual value is Ii
           palette = "PuRd", title = "Local Moran's I Statistics",
-          style="kmeans", n=6) + 
+          style="pretty", n=6) + 
   tm_borders(alpha = 0.5) +
   
 tm_shape(nga_wp.localMI_pValue) + 
@@ -749,14 +754,189 @@ tm_shape(nga_wp.localMI_pValue) +
 
 ```
 
-#### Analysis of Results of Local Moran\'s I Statistics - Dissimilar Features (\< 0)
+#### Analysis of Results of Local Moran's I Statistics - Dissimilar Features
 
-blah blah blah
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| State                     | Findings with statistical significance                                                                                                                                                                                                                                                                                           |
+|                           |                                                                                                                                                                                                                                                                                                                                  |
+| (L1 Admin Area)           |                                                                                                                                                                                                                                                                                                                                  |
++===========================+==================================================================================================================================================================================================================================================================================================================================+
+| Abia                      | There are no statistically significant area                                                                                                                                                                                                                                                                                      |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Adamawa                   | There are no statistically significant area                                                                                                                                                                                                                                                                                      |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Akwa Ibom                 | There are no statistically significant area                                                                                                                                                                                                                                                                                      |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Anambra                   | Oyi and Ihiala are dissimilar with its surroundings, they are not a cluster. They have 28 and 29 non functional water points respectively. Its surrounding LGAS have less than 10 non functional water points                                                                                                                    |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Bauchi                    | Kirfi and Alkaleri are dissimilar with its surrounding. They have relatively lower number (21) of non functional water points (28 and 38 respectively) They might be statistically significant because of its proximity to neighbours with very high number of faulty water points in the state of Gombe                         |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Bayelsa                   | Sagbama, Ekeremor, and Nembe are dissimilar with its surrounding. it has a higher number of non functional water points as compared to its surroundings (44, 29 and 27 respectively), its surrounding LGAS have less than 20 non functional water points                                                                         |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Benue                     | Katsina-Ala and Vandeikya are dissimilar with its surrounding, they each has 53 non functional points which is less than its surrounding neighbours                                                                                                                                                                              |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Borno                     | Jere is dissimilar with its surrounding, it has 37 water non functional water points as compared to 0 in its surroundings.                                                                                                                                                                                                       |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Cross River               | Akamkpa in the cross river state are dissimilar compared to the rest of the nearby. it is highly significant in as it has a p-value of less than 0.001 with 47 non functional water in the area                                                                                                                                  |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Delta                     | There are no statistically significant area                                                                                                                                                                                                                                                                                      |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Ebonyi                    | Abakaliki, Ikwo is a cluster that are dissimilar compared to the rest of the nearby. Each of them has less than 47 non functional water points as compared to nearby LGAs with at least 60 non functional water points                                                                                                           |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Edo                       | There are no statistically significant area                                                                                                                                                                                                                                                                                      |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Enugu                     | Nkanu West is dissimilar with its surrounding, it has 36 non functional water points, higher number as compared to its surroundings. Its surrounding LGAS have less than 10 non functional water points                                                                                                                          |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Etiki                     | Moba, Efon, Ekiti East and Emure are dissimilar with its surrounding. They have a lower number of non functional water points as compared to its surrounding                                                                                                                                                                     |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Federal Capital Territory | There are no statistically significant area                                                                                                                                                                                                                                                                                      |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Gombe                     | In the Gombe LGA of Gombe State. It is dissimilar with its surrounding. It has relatively lower number (39) of non functional water points. It is a tiny LGA surrounded by other larger LGAs with a pretty high number of non functional water points                                                                            |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Imo                       | There are no statistically significant area                                                                                                                                                                                                                                                                                      |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Jigawa                    | There are no statistically significant area                                                                                                                                                                                                                                                                                      |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Kaduna                    | Chikun, Zango-Kataf are dissimilar with its surrounding. it has a relatively lower number (4 & 19 respectively) of non functional water points as compared to its surrounding. Kauru, however, might be statistically significant because of its dissimilarity with Chikun, Zango-Kataf as it has 54 non functional water points |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Kano                      | There are no statistically significant area with negative local Moran Value                                                                                                                                                                                                                                                      |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Katsina                   | Zango is dissimilar with its surrounding. it has a relatively lower number (21) of non functional water points as compared to its surrounding.                                                                                                                                                                                   |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Kebbi                     | Suru and Bagudo are dissimilar with its surrounding. Bagudo has 34 non functional water points, one of the lower one in the region. Suru however might be statistically significant because of its proximity to neighbours with very high number of faulty water points such as Bunza & Dandi (116 & 94 respectively)            |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Kogi                      | Ogori/Magongo is dissimilar with its surroundings, it has a lower number of non functional water points as compared to its surrounding. However its land area is too small to have a many water points anyway, even though it is highly significant                                                                              |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Kwara                     | Ilorin East, Ilorin South, Asa are dissimilar with its surrounding. They have a lower number of non functional water points as compared to its surroundings                                                                                                                                                                      |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Lagos                     | Alimosho and Ikorodu are dissimilar with its surrounding. it has a higher number of non functional water points as compared to its surroundings                                                                                                                                                                                  |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Nasarawa                  | Awe, Akwanga and Wamba are dissimilar with its surrounding. it has a lower number of non functional water points as compared to its surrounding.                                                                                                                                                                                 |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Niger                     | There are no statistically significant area with negative local Moran Value                                                                                                                                                                                                                                                      |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Ogun                      | There are no statistically significant area with negative local Moran Value                                                                                                                                                                                                                                                      |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Ondo                      | There are no statistically significant area with negative local Moran Value                                                                                                                                                                                                                                                      |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Osun                      | Ilesha West is dissimilar with its surroundings, it has a lower number of non functional water points as compared to its surrounding(45) Its neighbours mostly have at least 56 non functional water points                                                                                                                      |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Oyo                       | There are no statistically significant area                                                                                                                                                                                                                                                                                      |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Plateau                   | Jos North, Langtang South & Jose are dissimilar with its surrounding. it has a lower number of non functional water points as compared to its surrounding.                                                                                                                                                                       |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Rivers                    | Obia/Akpor are dissimilar with its surrounding, it has a higher number of non functional water points as compared to its surroundings (44), its surrounding LGAS have less than 10 non functional water points                                                                                                                   |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Sotoko                    | There are no statistically significant area                                                                                                                                                                                                                                                                                      |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Tabara                    | There are no statistically significant area                                                                                                                                                                                                                                                                                      |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Yobe                      | There are no statistically significant area                                                                                                                                                                                                                                                                                      |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Zamfara                   | There are no statistically significant area                                                                                                                                                                                                                                                                                      |
++---------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
-#### 
-Analysis of Results of Local Moran\'s I Statistics - Similar Features (\>= 0)
+#### Analysis of Results of Local Moran's I Statistics - Similar Features
 
-blah blah blah
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| State                     | Findings with statistical significance                                                                                                                                                                                                                                                                                                   |
+|                           |                                                                                                                                                                                                                                                                                                                                          |
+| (L1 Admin Area)           |                                                                                                                                                                                                                                                                                                                                          |
++===========================+==========================================================================================================================================================================================================================================================================================================================================+
+| Abia                      | Umu-Nneochi forms a cluster with a large part of Enugu and Imo with 14 non functional water points                                                                                                                                                                                                                                       |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Adamawa                   | The cluster is formed by Gombi, Hong, Song, Maiha, Mubi, South Mubi, North Michika, Madagali, Fufore, Yola South, Yola North, Girei, Demsa, Jada where they have a low number of non functional water points. The cluster can be said to be part of the cluster that extends from south of borno                                         |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Akwa Ibom                 | There are no statistically significant area                                                                                                                                                                                                                                                                                              |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Anambra                   | Almost the whole state of Anambra is a cluster by itself with very few non functional water points                                                                                                                                                                                                                                       |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Bauchi                    | There are no statistically significant area                                                                                                                                                                                                                                                                                              |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Bayelsa                   | Kolokuma/Opokuma and Yenegoa is a cluster where there are at most 15 non functional water points per LGA in the area, along the borders towards the west of the state Rivers                                                                                                                                                             |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Benue                     | The significant clusters are formed by Konshisha, Buruku Ushongo Kwande with a relative high number of non functional water points in the area. The cluster extends towards north east of cross river                                                                                                                                    |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Borno                     | Almost the whole state is statistically significant, all of the LGAs in this state has a low number of non functional water points. The ony state with a relatively higher LGA is Jere with 37 of them. The clusters extends southwards towards Adamawa                                                                                  |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Cross River               | The cluster consists of Obubra, Ikom, Boki, Ogoja, Etung, Obanliku, Obudu, Bekwara with high number of non functional water points                                                                                                                                                                                                       |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Delta                     | Aniocha North, Oshimili North, Aniocha South, Oshimili South, Ndokwa West along the Anambra borders is a cluster where there are at most 5 non functional water points per LGA in the area                                                                                                                                               |
+|                           |                                                                                                                                                                                                                                                                                                                                          |
+|                           | There is another cluster along the coast of Bight of Benin / Gulf of Guinea                                                                                                                                                                                                                                                              |
+|                           |                                                                                                                                                                                                                                                                                                                                          |
+|                           | Sapele, Okpe, Ethiope East, Ughelli North, Ughelli South, Warri South, Warri South West, Uvwie, Udu, Burutu, Bomadi, Sagbama, Isoko South is a cluster where there are at most 27 non functional water points per LGA in the area                                                                                                        |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Ebonyi                    | In Ebonyi, only Ezza South is statistically significant, however from the raw data it does not seem to be an outlier                                                                                                                                                                                                                     |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Edo                       | There are no statistically significant area                                                                                                                                                                                                                                                                                              |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Enugu                     | Almost the whole of Enugu is made up LGAs with low number of water points. The following areas Isi-Uzo, Enugu East, Nkanu East, Nkanu West and Aninri are however statistically insignificant. It might be because they are near the east border of Plateau, with high number of non functional water points, cancelling each other out. |
+|                           |                                                                                                                                                                                                                                                                                                                                          |
+|                           | The cluster extends north wards towards Igalamela-Odolu, the LGA at the Kogi borders                                                                                                                                                                                                                                                     |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Etiki                     | Moba is listed as a cluster together with the Kwara state even though it has a low number of non functional water points. It is likely due to the fact that almost all of its neighbours has a large number of non functional water points                                                                                               |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Federal Capital Territory | There are no statistically significant area                                                                                                                                                                                                                                                                                              |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Gombe                     | The LGAs Akko, Billiri and Kaltungo are similar in nature. They have a high number of non functional water points                                                                                                                                                                                                                        |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Imo                       | There is a cluster consisting of Orsu, Orlu, Ideato North, Ideato South, Nkwerre, Njaba, Isu, Nwangele, Isiala, Mbano, Mbaitoli, Njaba with at most 14 non functional water points at the southern border of Anambra                                                                                                                     |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Jigawa                    | Sule-Tankarkar is an outlier, it has a relative low number of non functional water points as compared to its neighbours.                                                                                                                                                                                                                 |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Kaduna                    | Giwa, Kudan, Sabon-Gari, Soba & Igabi is a huge cluster with at least 138 non functional water points per LGA. Kaduna North with a tiny area alone already has 70 non functional water points                                                                                                                                            |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Kano                      | There are no statistically significant area                                                                                                                                                                                                                                                                                              |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Katsina                   | Dandume, Danja and Funtua are outliers, it has a relative low number of non functional water points as compared to its neighbours.                                                                                                                                                                                                       |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Kebbi                     | Suru and Bagudo are outliers, they have a relative low number of non functional water points as compared to its neighbours.                                                                                                                                                                                                              |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Kogi                      | Igalamela-Odolu along the north west border of Enugu forms a cluster with Enugu LGAs for with a low number of non functional water points                                                                                                                                                                                                |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Kwara                     | The south east of Kwara have a large number of non functional water points, Edu, Ifelodun, Isin, Irepodun, Oyun, Offa, Oke-Ero                                                                                                                                                                                                           |
+|                           |                                                                                                                                                                                                                                                                                                                                          |
+|                           | This cluster spreads Northwards towards Mokwa of Niger state, and south-west wards towards Surulele of Oyo State,                                                                                                                                                                                                                        |
+|                           |                                                                                                                                                                                                                                                                                                                                          |
+|                           | Odo-Otin, Ila, Olorunda, Ifelodun, Boripe of the Osun state, and southwards towards Moba of the Etiki State                                                                                                                                                                                                                              |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Lagos                     | This is a cluster comprising of Kosofe Shomolu Mushin, Surulere, Lagos Mainland, Ajeromi-Ifelodun, Apapa, Lagos Island, Eti-Osa, Amuwo-Odofin, Ikeja, Oshodi-Isolo, Ifako-Ijaye, Agege which have a low number of non functional water points                                                                                            |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Nasarawa                  | There are no statistically significant area                                                                                                                                                                                                                                                                                              |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Niger                     | Mokwa, Edati and Mokwa have a relative high number of non functional water points as compared to its neighbours. It is part of the Kwara cluster with high number of non functional water points                                                                                                                                         |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Ogun                      | Along the shared borders between Ondo and Kogi, the LGAs Akoko North West, Akoko North East forms a clusters with a large number of non functional water points. The cluster further spreads along the shared borders between Ondo and Edo with LGAs Akoko South West, Akoko South East, Ose                                             |
+|                           |                                                                                                                                                                                                                                                                                                                                          |
+|                           | Along the western borders with Osun, Ile-Oluji-Okeigbo, Ondo East, Ondo West, Idanre has a cluster of non functional water points                                                                                                                                                                                                        |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Ondo                      | Along the shared borders between Ondo and Kogi, the LGAs Akoko North West, Akoko North East forms a clusters with a large number of non functional water points. The cluster further spreads along the shared borders between Ondo and Edo with LGAs Akoko South West, Akoko South East, Ose                                             |
+|                           |                                                                                                                                                                                                                                                                                                                                          |
+|                           | Along the western borders with Osun, Ile-Oluji-Okeigbo, Ondo East, Ondo West, Idanre has a cluster of non functional water points                                                                                                                                                                                                        |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Osun                      | Odo-Otin, Ila, Olorunda, Ifelodun, Boripe along the borders of Kwara, is a cluster. They may be related to the large cluster in Kwara                                                                                                                                                                                                    |
+|                           |                                                                                                                                                                                                                                                                                                                                          |
+|                           | It is interesting to note that almost the entire eastern side of Osun is plaque by non functional water points consisting of Oriade, Atakumosa East, Atakumosa West, Ife Central, Ife East, Ife South and Ife North, Ilesha West, Ilesha East LGAs                                                                                       |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Oyo                       | There is a cluster of a large number of non functional water point at Surulele, which may be attributed to the cluster at Kwara, north east of Oyo                                                                                                                                                                                       |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Plateau                   | Riyom, Bokkos, Jos North, Bokkos, Mangu, Qua'an Pan, Shendam, Mikang, Pankshin, Langtang North is a huge cluster with most of them having more than 90 non functional water points per LGA.                                                                                                                                              |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Rivers                    | Almost the entire state of Rivers is a cluster on its own with very few non functional water points, except for Etche and Obia/Akpor which hasa 44 non functional water points. Etche is probably listed as an outlier due to its proximity to Obia/Akpor even when it has only 9 non functional water points.                           |
+|                           |                                                                                                                                                                                                                                                                                                                                          |
+|                           | It is interesting to note that Okrika, Ogu/Bolo, Gokana & Bonny is highly significant in Rivers. Further investigations reveals that there are only 2 non functional points in this cluster (Okrika, Gokana)                                                                                                                             |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Sotoko                    | There are no statistically significant area                                                                                                                                                                                                                                                                                              |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Tabara                    | Karim-Lamido forms a cluster with LGA south of the state of Gambe and north east of the state of Plateau with at least 72 non functional water points                                                                                                                                                                                    |
+|                           |                                                                                                                                                                                                                                                                                                                                          |
+|                           | Donga, Takum, Kurmi, Ussa form a cluster with at least 78 non functional LGAs in the area                                                                                                                                                                                                                                                |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Yobe                      | Yunusari, Bursari, Geidam, Tarmua, Damaturu, Gujba, Fune are similar in nature. They have a low number of non functional water points                                                                                                                                                                                                    |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Zamfara                   | There are no statistically significant area                                                                                                                                                                                                                                                                                              |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 ### Plotting Moran Scatterplot
 
@@ -769,10 +949,15 @@ blah blah blah
 ```{r}
 nci = moran.plot(nga_wp$`wpt non functional`, knn8ListW, 
                  labels=as.character(nga_wp$ADM2_EN),
+                 
                  xlab = "Non functional water points",
                  ylab="Spatially lag Non functional water points"
 )
 ```
+
+The Moran Scatterplot results shows that most of the points congregate around the Low-Low quadrant and high-high quadrant, implying that most of the non functional water points are positively correlated to its spatial lag.
+
+The number of High-Lows is not as many as the number of Low-Highs when we compare outliers, implying that most of the outliers are low amongst the high
 
 ### Preparing LISA map classes
 
@@ -789,7 +974,7 @@ nci = moran.plot(nga_wp$`wpt non functional`, knn8ListW,
     DV = nga_wp$`lag_wpt non functional` - mean(nga_wp$`lag_wpt non functional`) 
     ```
 
-3.  Center the local Moran\'s I value around the mean
+3.  Center the local Moran's I value around the mean
 
     ```{r}
     #local moran
@@ -805,11 +990,11 @@ nci = moran.plot(nga_wp$`wpt non functional`, knn8ListW,
 5.  Define the quadrants levels
 
     ```{r}
-    #C_MI = Local Moran I
-    quadrant[DV < 0 & LM_I > 0] = 1 #C_MI > 0 -> cluster, DV < 0 low-low pattern
-    quadrant[DV < 0 & LM_I < 0] = 2 #C_MI < 0 -> outlier,  DV < 0 Low High
-    quadrant[DV > 0 & LM_I < 0] = 3 #C_MI < 0 -> outlier,  DV < 0 High Low
-    quadrant[DV > 0 & LM_I > 0] = 4 #C_MI > 0 -> cluster, DV > 0 high-high pattern
+    #L_MI = Local Moran I ard mean
+    quadrant[DV < 0 & LM_I > 0] = 1 #L_MI > 0 -> cluster, DV < 0 low-low pattern
+    quadrant[DV < 0 & LM_I < 0] = 2 #L_MI < 0 -> outlier,  DV < 0 Low High
+    quadrant[DV > 0 & LM_I < 0] = 3 #L_MI < 0 -> outlier,  DV < 0 High Low
+    quadrant[DV > 0 & LM_I > 0] = 4 #L_MI > 0 -> cluster, DV > 0 high-high pattern
     ```
 
 6.  Place non significant Moran into category 0
@@ -819,6 +1004,8 @@ nci = moran.plot(nga_wp$`wpt non functional`, knn8ListW,
     ```
 
 7.  Plotting the LISA Map
+
+    Using the same way we plot multi layer map we previously discussed, we plot Nigeria map at layer 1 as Nigeria Level 1 administration area, layer 2 as non functional water points, layer 3 as the LISA map and layer 4 as the local Moran I p values with **tmap** functions below
 
     ```{r}
     nga_wp.localMI$quadrant = quadrant
@@ -878,7 +1065,7 @@ The analysis consists of three steps:
 
 ### Gi statistics using adaptive distance
 
-We can use `localG()` to compute the Gi statistics. The output of `localG()` is a vector of G or Gstar values, with attributes \"`gstari`\" set to TRUE or FALSE, \"call\" set to the function call, and class \"localG\".
+We can use `localG()` to compute the Gi statistics. The output of `localG()` is a vector of G or Gstar values, with attributes "`gstari`" set to TRUE or FALSE, "call" set to the function call, and class "localG".
 
 As we previously discussed, due to the fact there is an isolated island, we will not used fixed weights
 
@@ -890,14 +1077,14 @@ gi.adaptive
 
 The Gi statistics is represented as a Z-score. Greater values represent a greater intensity of clustering and the direction (positive or negative) indicates high or low clusters.
 
-Next, we will join the Gi values to their corresponding nga_wp sf data frame by converting the output vector (i.e. `gi.fixed`) into r matrix object by using `as.matrix()` and join the nga_wp data frame into with the produced matrix with `cbind()` Lastly, the field name of the gi values is renamed to *gstat_fixed* by using `rename()`
+Next, we will join the Gi values to their corresponding nga_wp sf data frame by converting the output vector (i.e. `gi.adaptive`) into r matrix object by using `as.matrix()` and join the nga_wp data frame into with the produced matrix with `cbind()` Lastly, the field name of the gi values is renamed to *gstat_fixed* by using `rename()`
 
 ```{r}
 nga_wp.gi = cbind(nga_wp, as.matrix(gi.adaptive)) %>% #pipe
           rename(gstat_adaptive = as.matrix.gi.adaptive.)
 ```
 
-Using the same way we plot multi layer map we previously discussed, we plot nigeria map at layer 1 as Nigeria Level 1 administration area, layer 2 as non functional water points, layer 3 as the G statistics and layer 4 as the local Moran I statistics to make our analysis with **tmap** functions below
+Using the same way we plot multi layer map we previously discussed, we plot Nigeria map at layer 1 as Nigeria Level 1 administration area, layer 2 as non functional water points, layer 3 as the G statistics and layer 4 as the local Moran I statistics to make our analysis with **tmap** functions below
 
 ```{r}
 tm_shape(nga) + 
@@ -926,13 +1113,35 @@ tm_shape(nga_wp.localMI) +
           tm_borders(alpha=0.5) 
 ```
 
-#### Analysis of G Statistics 
+#### Analysis of G Statistics
 
-blah blah blah
+**There are 3 significant Cold spots in Nigeria for non functional water points.**
 
-#### Comparing Local Moran I to G Statistics 
+1.  They in the north east of Nigeria in Borno and Adamawa along the borders of Cameroon
 
-blah blah blah
+2.  South of Nigeria Facing Gulf of Guinea in the states. spreading northwards, Edo, Delta, Bayelsa, Rivers, , Akwa Ibom, Abia, Imo, Anambra, Enugu and ends at Kogi.
+
+3.  South west of Nigeria Facing Bight of Benin, in the states Oyo, Ogun and Lagos
+
+**There are 4 hot spots identified by the G Statistics:**
+
+1.  South of Gombe, joining with the South of Bauchi, spreading across the southern borders of Plateau, and north west wards to Kaduna. It also spread from the south of Plateau to Ibi of and Awe of Tabara and Nasarawa.
+
+2.  The borders south east of Nigeria facing Cameroon is another hotspot, the hot spot spread through Tabara, Benue and Cross River
+
+3.  Another hotspot is around the borders of Kwara and Kogi. From Kwara, it is spreading southwards towards Osun and towards north west of Ondo. From Kogi, it is spreading south wards to Osun along the borders of Edo
+
+4.  In Kebbi, Bagudo and Suru are hot spots
+
+#### Comparing Local Moran I to G Statistics
+
+Both methods technically produce the same map patterns where clusters were correctly identified.
+
+The local Gi statistics in the -4 to -2 range correctly identified the majority of the low-low in the LISA map. The 2-6 range of the local Gi statistics was also able to identify the majority of the high-high on the LISA map.
+
+The local Moran LISA Map of spatial clustering was able to detect the outliers in terms of low-high and high-lows. In contrast, the adaptive G Statistics Map was only able to tell where are the hot and cold spots, but not the outliers.
+
+However the G statistics map could produce potential clusters of hot and cold spots in statistically insignificant areas, which the local Moran I map cannot
 
 ## Reference
 

@@ -10,10 +10,10 @@ In Class Exercise 1 - Applications of Spatial Weights, this page describes how t
 
 ## Getting Started
 
-The code chunk below install & load sf, spdep, tmap & tidyverse packages into the R env
+The code chunk below install & load knitr, sf, spdep, tmap & tidyverse packages into the R env
 
 ```{r}
-pacman::p_load(sf,tidyverse,spdep, tmap)
+pacman::p_load(knitr, sf,tidyverse,spdep, tmap)
 
 ```
 
@@ -432,15 +432,14 @@ Before allocating weights in R, we must return to the neighbours structure and a
 
 ```{r}
 wm_q_w_diagonal = wm_q
-include.self(wm_q_w_diagonal)
-
-wm_q_w_diagonal = nb2listw(wm_q_w_diagonal) #compute the weights
-wm_q_w_diagonal
+wm_q_w_diagonal = include.self(wm_q_w_diagonal)
+wm_q_w_diagonal[[1]]
 ```
 
-We will then use `lag.listw()` to create the lag variable from the weight structure and GDPPC variable
+We will then use `nb2listw()` to create the weight variable and `lag.listw()` create the lag variable from the weight structure and GDPPC variable
 
 ```{r}
+wm_q_w_diagonal = nb2listw(wm_q_w_diagonal) #compute the weights
 lag_w_avg_gdppc = lag.listw(wm_q_w_diagonal, hunan$GDPPC)
 lag_w_avg_gdppc
 ```
@@ -468,6 +467,13 @@ win_avg_gdppc = tm_shape(hunan) +
 tmap_arrange(gdppc, win_avg_gdppc)
 ```
 
+To compare the values of lag GDPPC and spatial window average `kable()` of the Knitr package is used
+
+```{r}
+hunan %>% select ("County", "lag GDPPC", "lag_window_avg GDPPC") %>%
+  kable()
+```
+
 ### 4 Spatial window sum
 
 The spatial window sum is the counter part of the window average, but ***without*** using row-standardized weights.
@@ -476,7 +482,7 @@ To do this we assign binary weights to the neighbour structure that includes the
 
 ```{r}
 wm_q_w_diagonal = wm_q
-include.self(wm_q_w_diagonal)
+wm_q_w_diagonal = include.self(wm_q_w_diagonal)
 b_weights_winsum = lapply(wm_q_w_diagonal, function(x) 0*x + 1)
 b_weights_winsum[1]
 ```
@@ -507,6 +513,13 @@ Using the code below, we can append the spatial window sum GDPPC values to the H
 
 ```{r}
 hunan = left_join(hunan, w_sum_gdppc.res)
+```
+
+To compare the values of lag GDPPC and spatial window average `kable()` of the Knitr package is used
+
+```{r}
+hunan %>% select ("County", "lag_sum GDPPC", "w_sum GDPPC") %>%
+  kable()
 ```
 
 We can plot the GDPPC and window sum GDPPC for comparison using the code below

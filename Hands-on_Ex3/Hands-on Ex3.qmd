@@ -467,15 +467,15 @@ The global Moran's I is estimated from the slope of the regression line. The rel
 
     ```{r}
     hunan$lag_GDPPC = lag.listw(rs_wm_q, hunan$GDPPC)
-    DV = hunan$lag_GDPPC
-    #DV = hunan$GDPPC - mean(hunan$GDPPC)
+    DV = hunan$lag_GDPPC - mean(hunan$lag_GDPPC)     
+
     ```
 
 3.  Center the local Moran's I value around the mean
 
     ```{r}
     #local moran
-    C_MI = (localMI[,1] - mean(localMI[,1]))
+    LM_I = (localMI[,1] - mean(localMI[,1]))
     ```
 
 4.  Setup the statistically significant levels for the local Moran
@@ -487,11 +487,12 @@ The global Moran's I is estimated from the slope of the regression line. The rel
 5.  Define the quadrants levels
 
     ```{r}
-    #C_MI = Local Moran I
-    quadrant[DV < 0 & C_MI > 0] = 1 #C_MI > 0 -> cluster, DV < 0 low-low pattern
-    quadrant[DV < 0 & C_MI < 0] = 2 #C_MI < 0 -> outlier,  DV < 0 Low High
-    quadrant[DV > 0 & C_MI < 0] = 3 #C_MI < 0 -> outlier,  DV < 0 High Low
-    quadrant[DV > 0 & C_MI > 0] = 4 #C_MI > 0 -> cluster, DV > 0 high-high pattern
+    #L_MI = Local Moran I ard mean
+    quadrant[DV < 0 & LM_I > 0] = 1 #L_MI > 0 -> cluster, DV < 0 low-low pattern
+    quadrant[DV < 0 & LM_I < 0] = 2 #L_MI < 0 -> outlier,  DV < 0 Low High
+    quadrant[DV > 0 & LM_I < 0] = 3 #L_MI < 0 -> outlier,  DV < 0 High Low
+    quadrant[DV > 0 & LM_I > 0] = 4 #L_MI > 0 -> cluster, DV > 0 high-high pattern
+
     ```
 
 6.  Place non significant Moran into category 0
@@ -507,14 +508,13 @@ The global Moran's I is estimated from the slope of the regression line. The rel
     colors = c("white", "#2c7bb6", "#abd9e9", "#fdae61", "#d7191c")
     clusters = c("insignificant", "low-low", "low-high", "high-low", "high-high")
 
+
     tm_shape(hunan.localMI) + 
       tm_fill(col="quadrant", style="cat", 
               palette = colors[c(sort(unique(quadrant)))+1], 
-              labels = clusters[c(sort(unique(quadrant)))+1],
-              popup.vars = c("")) +
-              tm_view(set.zoom.limits = c(11,17)) +
+              labels = clusters[c(sort(unique(quadrant)))+1]) +
+              
               tm_borders(alpha=0.5)
-
     ```
 
 For effective interpretation, it is better to plot both the LISA map and its GDPPC map next to each other.
