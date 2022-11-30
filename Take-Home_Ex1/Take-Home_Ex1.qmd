@@ -1119,7 +1119,7 @@ tm_shape(nga_wp.localMI) +
 
 1.  They in the north east of Nigeria in Borno and Adamawa along the borders of Cameroon
 
-2.  South of Nigeria Facing Gulf of Guinea in the states. spreading northwards, Edo, Delta, Bayelsa, Rivers, , Akwa Ibom, Abia, Imo, Anambra, Enugu and ends at Kogi.
+2.  South of Nigeria Facing Gulf of Guinea in the states. spreading northwards, Edo, Delta, Bayelsa, Rivers, Akwa Ibom, Abia, Imo, Anambra, Enugu and ends at Kogi.
 
 3.  South west of Nigeria Facing Bight of Benin, in the states Oyo, Ogun and Lagos
 
