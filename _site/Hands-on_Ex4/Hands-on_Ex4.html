@@ -21,6 +21,69 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1.6em;
   vertical-align: middle;
 }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
 </style>
 
 
@@ -146,7 +209,23 @@ ul.task-list li input[type="checkbox"] {
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#getting-started" id="toc-getting-started" class="nav-link" data-scroll-target="#getting-started">Getting Started</a></li>
+  <li><a href="#importing-preparing-the-data" id="toc-importing-preparing-the-data" class="nav-link" data-scroll-target="#importing-preparing-the-data">Importing &amp; preparing the data</a>
+  <ul class="collapse">
+  <li><a href="#geospatial-data" id="toc-geospatial-data" class="nav-link" data-scroll-target="#geospatial-data">Geospatial Data</a></li>
+  <li><a href="#aspatial-data" id="toc-aspatial-data" class="nav-link" data-scroll-target="#aspatial-data">Aspatial Data</a></li>
+  </ul></li>
+  <li><a href="#exploratory-data-analysis-eda" id="toc-exploratory-data-analysis-eda" class="nav-link" data-scroll-target="#exploratory-data-analysis-eda">Exploratory Data Analysis (EDA)</a>
+  <ul class="collapse">
+  <li><a href="#eda-using-statistical-graphics" id="toc-eda-using-statistical-graphics" class="nav-link" data-scroll-target="#eda-using-statistical-graphics">EDA using statistical graphics</a></li>
+  </ul></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -174,8 +253,388 @@ ul.task-list li input[type="checkbox"] {
 
 </header>
 
+<section id="overview" class="level3">
+<h3 class="anchored" data-anchor-id="overview">Overview</h3>
+<p>In this hands-on exercise, we are interested to delineate <a href="https://en.wikipedia.org/wiki/Shan_State">Shan State</a>, <a href="https://en.wikipedia.org/wiki/Myanmar">Myanmar</a> into homogeneous regions by using multiple Information and Communication technology (ICT) measures, namely: Radio, Television, Land line phone, Mobile phone, Computer, and Internet at home.</p>
+</section>
+<section id="getting-started" class="level2">
+<h2 class="anchored" data-anchor-id="getting-started">Getting Started</h2>
+<p>Firstly, we load the required packages in R</p>
+<ul>
+<li><p><strong>Spatial data handling</strong></p>
+<ul>
+<li><strong>sf</strong>, <strong>rgdal</strong> and <strong>spdep</strong></li>
+</ul></li>
+<li><p><strong>Attribute data handling</strong></p>
+<ul>
+<li><strong>knitr, tidyverse</strong>, especially <strong>readr</strong>, <strong>ggplot2</strong> and <strong>dplyr</strong></li>
+</ul></li>
+<li><p><strong>Choropleth mapping</strong></p>
+<ul>
+<li><strong>tmap</strong></li>
+</ul></li>
+<li><p><strong>Multivariate data visualisation and analysis</strong></p>
+<ul>
+<li><strong>coorplot</strong>, <strong>ggpubr</strong>, and <strong>heatmaply</strong></li>
+</ul></li>
+<li><p><strong>Cluster analysis</strong></p>
+<ul>
+<li><p><strong>cluster</strong></p></li>
+<li><p><strong>ClustGeo</strong></p></li>
+</ul></li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(knitr, rgdal, spdep, tmap, sf, </span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>               ggpubr, cluster, factoextra, NbClust,</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>               heatmaply, corrplot, psych, tidyverse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="importing-preparing-the-data" class="level2">
+<h2 class="anchored" data-anchor-id="importing-preparing-the-data">Importing &amp; preparing the data</h2>
+<section id="geospatial-data" class="level3">
+<h3 class="anchored" data-anchor-id="geospatial-data">Geospatial Data</h3>
+<p>In this section, we will import Myanmar Township Boundary GIS data and its associated attrbiute table into the R environment.</p>
+<p>The Myanmar Township Boundary GIS data is in ESRI shapefile format. It will be imported into R environment by using the <a href="https://www.rdocumentation.org/packages/sf/versions/0.7-2/topics/st_read"><code>st_read()</code></a> function of <strong>sf</strong>.</p>
+<p>As we are only interested in Shan State, we will filter only values that represents the Shan State.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>shan_sf <span class="ot">=</span> <span class="fu">st_read</span>(<span class="at">dsn=</span><span class="st">"data/geospatial"</span>, <span class="at">layer=</span><span class="st">"myanmar_township_boundaries"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(ST <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"Shan (East)"</span>, <span class="st">"Shan (North)"</span>, <span class="st">"Shan (South)"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `myanmar_township_boundaries' from data source 
+  `D:\Allanckw\ISSS624\Hands-on_Ex4\data\geospatial' using driver `ESRI Shapefile'
+Simple feature collection with 330 features and 14 fields
+Geometry type: MULTIPOLYGON
+Dimension:     XY
+Bounding box:  xmin: 92.17275 ymin: 9.671252 xmax: 101.1699 ymax: 28.54554
+Geodetic CRS:  WGS 84</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>shan_sf</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Simple feature collection with 55 features and 14 fields
+Geometry type: MULTIPOLYGON
+Dimension:     XY
+Bounding box:  xmin: 96.15107 ymin: 19.29932 xmax: 101.1699 ymax: 24.15907
+Geodetic CRS:  WGS 84
+First 10 features:
+   OBJECTID           ST ST_PCODE       DT   DT_PCODE        TS  TS_PCODE
+1       163 Shan (North)   MMR015  Mongmit MMR015D008   Mongmit MMR015017
+2       203 Shan (South)   MMR014 Taunggyi MMR014D001   Pindaya MMR014006
+3       240 Shan (South)   MMR014 Taunggyi MMR014D001   Ywangan MMR014007
+4       106 Shan (South)   MMR014 Taunggyi MMR014D001  Pinlaung MMR014009
+5        72 Shan (North)   MMR015  Mongmit MMR015D008    Mabein MMR015018
+6        40 Shan (South)   MMR014 Taunggyi MMR014D001     Kalaw MMR014005
+7       194 Shan (South)   MMR014 Taunggyi MMR014D001     Pekon MMR014010
+8       159 Shan (South)   MMR014 Taunggyi MMR014D001  Lawksawk MMR014008
+9        61 Shan (North)   MMR015  Kyaukme MMR015D003 Nawnghkio MMR015013
+10      124 Shan (North)   MMR015  Kyaukme MMR015D003   Kyaukme MMR015012
+                 ST_2            LABEL2 SELF_ADMIN ST_RG T_NAME_WIN T_NAME_M3
+1  Shan State (North)    Mongmit\n61072       &lt;NA&gt; State   rdk;rdwf      မိုးမိတ်
+2  Shan State (South)    Pindaya\n77769       Danu State     yif;w,     ပင်းတယ
+3  Shan State (South)    Ywangan\n76933       Danu State      &amp;GmiH       ရွာငံ
+4  Shan State (South)  Pinlaung\n162537       Pa-O State  yifavmif;   ပင်လောင်း
+5  Shan State (North)     Mabein\n35718       &lt;NA&gt; State     rbdrf;      မဘိမ်း
+6  Shan State (South)     Kalaw\n163138       &lt;NA&gt; State       uavm      ကလော
+7  Shan State (South)      Pekon\n94226       &lt;NA&gt; State     z,fcHk       ဖယ်ခုံ
+8  Shan State (South)          Lawksawk       &lt;NA&gt; State   &amp;yfapmuf    ရပ်စောက်
+9  Shan State (North) Nawnghkio\n128357       &lt;NA&gt; State  aemifcsdK    နောင်ချို
+10 Shan State (North)   Kyaukme\n172874       &lt;NA&gt; State   ausmufrJ    ကျောက်မဲ
+       AREA                       geometry
+1  2703.611 MULTIPOLYGON (((96.96001 23...
+2   629.025 MULTIPOLYGON (((96.7731 21....
+3  2984.377 MULTIPOLYGON (((96.78483 21...
+4  3396.963 MULTIPOLYGON (((96.49518 20...
+5  5034.413 MULTIPOLYGON (((96.66306 24...
+6  1456.624 MULTIPOLYGON (((96.49518 20...
+7  2073.513 MULTIPOLYGON (((97.14738 19...
+8  5145.659 MULTIPOLYGON (((96.94981 22...
+9  3271.537 MULTIPOLYGON (((96.75648 22...
+10 3920.869 MULTIPOLYGON (((96.95498 22...</code></pre>
+</div>
+</div>
+<p>We can then use <em><code>glimpse()</code></em> to verify each field’s data type &amp; available values.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(shan_sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 55
+Columns: 15
+$ OBJECTID   &lt;dbl&gt; 163, 203, 240, 106, 72, 40, 194, 159, 61, 124, 71, 155, 101…
+$ ST         &lt;chr&gt; "Shan (North)", "Shan (South)", "Shan (South)", "Shan (Sout…
+$ ST_PCODE   &lt;chr&gt; "MMR015", "MMR014", "MMR014", "MMR014", "MMR015", "MMR014",…
+$ DT         &lt;chr&gt; "Mongmit", "Taunggyi", "Taunggyi", "Taunggyi", "Mongmit", "…
+$ DT_PCODE   &lt;chr&gt; "MMR015D008", "MMR014D001", "MMR014D001", "MMR014D001", "MM…
+$ TS         &lt;chr&gt; "Mongmit", "Pindaya", "Ywangan", "Pinlaung", "Mabein", "Kal…
+$ TS_PCODE   &lt;chr&gt; "MMR015017", "MMR014006", "MMR014007", "MMR014009", "MMR015…
+$ ST_2       &lt;chr&gt; "Shan State (North)", "Shan State (South)", "Shan State (So…
+$ LABEL2     &lt;chr&gt; "Mongmit\n61072", "Pindaya\n77769", "Ywangan\n76933", "Pinl…
+$ SELF_ADMIN &lt;chr&gt; NA, "Danu", "Danu", "Pa-O", NA, NA, NA, NA, NA, NA, NA, NA,…
+$ ST_RG      &lt;chr&gt; "State", "State", "State", "State", "State", "State", "Stat…
+$ T_NAME_WIN &lt;chr&gt; "rdk;rdwf", "yif;w,", "&amp;GmiH", "yifavmif;", "rbdrf;", "uavm…
+$ T_NAME_M3  &lt;chr&gt; "မိုးမိတ်", "ပင်းတယ", "ရွာငံ", "ပင်လောင်း", "မဘိမ်း", "ကလော", "ဖယ်ခုံ", "…
+$ AREA       &lt;dbl&gt; 2703.611, 629.025, 2984.377, 3396.963, 5034.413, 1456.624, …
+$ geometry   &lt;MULTIPOLYGON [°]&gt; MULTIPOLYGON (((96.96001 23..., MULTIPOLYGON (…</code></pre>
+</div>
+</div>
+</section>
+<section id="aspatial-data" class="level3">
+<h3 class="anchored" data-anchor-id="aspatial-data">Aspatial Data</h3>
+<section id="loading-the-data" class="level4">
+<h4 class="anchored" data-anchor-id="loading-the-data">Loading the Data</h4>
+<p>To load the raw data file, we use the <code>read_csv</code> function The imported InfoComm variables are extracted from <strong>The 2014 Myanmar Population and Housing Census Myanmar</strong>. The attribute data set is called <em>ict</em>. It is saved in R’s * tibble data.frame* format.</p>
+<p>We can view the summary statistics with <code>summary()</code></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>ict <span class="ot">=</span> <span class="fu">read_csv</span>(<span class="st">"data/aspatial/Shan-ICT.csv"</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Rows: 55 Columns: 11
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (4): District Pcode, District Name, Township Pcode, Township Name
+dbl (7): Total households, Radio, Television, Land line phone, Mobile phone,...
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(ict)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> District Pcode     District Name      Township Pcode     Township Name     
+ Length:55          Length:55          Length:55          Length:55         
+ Class :character   Class :character   Class :character   Class :character  
+ Mode  :character   Mode  :character   Mode  :character   Mode  :character  
+                                                                            
+                                                                            
+                                                                            
+ Total households     Radio         Television    Land line phone 
+ Min.   : 3318    Min.   :  115   Min.   :  728   Min.   :  20.0  
+ 1st Qu.: 8711    1st Qu.: 1260   1st Qu.: 3744   1st Qu.: 266.5  
+ Median :13685    Median : 2497   Median : 6117   Median : 695.0  
+ Mean   :18369    Mean   : 4487   Mean   :10183   Mean   : 929.9  
+ 3rd Qu.:23471    3rd Qu.: 6192   3rd Qu.:13906   3rd Qu.:1082.5  
+ Max.   :82604    Max.   :30176   Max.   :62388   Max.   :6736.0  
+  Mobile phone      Computer      Internet at home
+ Min.   :  150   Min.   :  20.0   Min.   :   8.0  
+ 1st Qu.: 2037   1st Qu.: 121.0   1st Qu.:  88.0  
+ Median : 3559   Median : 244.0   Median : 316.0  
+ Mean   : 6470   Mean   : 575.5   Mean   : 760.2  
+ 3rd Qu.: 7177   3rd Qu.: 507.0   3rd Qu.: 630.5  
+ Max.   :48461   Max.   :6705.0   Max.   :9746.0  </code></pre>
+</div>
+</div>
+<p>There are a total of 11 fields and 55 observation in the tibble data.frame.</p>
+</section>
+<section id="derive-new-variables-with-dplyr-package" class="level4">
+<h4 class="anchored" data-anchor-id="derive-new-variables-with-dplyr-package">Derive new variables with <strong>dplyr</strong> package</h4>
+<p>The number of households is used as the measurement unit for the values. The underlying total number of households will influence the results when these statistics are used directly. Typically, the townships with a larger proportion of total households will also have a larger proportion of homes with radio, TV, etc.</p>
+<p>We shall calculate the penetration rate of <em>each ICT variable</em> to address this issue by dividing it by the total number of households and multiply by 1000 and adding it to the data frame by using <code>mutate()</code> of <strong>dplyr</strong> package and renaming the column using <code>rename_with()</code></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>new_col_names <span class="ot">=</span> <span class="fu">c</span>(<span class="st">'DT_PCODE'</span>, <span class="st">'DT'</span>, <span class="st">'TS_PCODE'</span>, <span class="st">'TS'</span>, <span class="st">'TT_HOUSEHOLDS'</span>, <span class="st">'RADIO'</span>, <span class="st">'TV'</span>, <span class="st">'LLPHONE'</span>, <span class="st">'MPHONE'</span>, <span class="st">'COMPUTER'</span>,  <span class="st">'INTERNET'</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>old_col_names <span class="ot">=</span> <span class="fu">c</span>(<span class="st">'District Pcode'</span>, <span class="st">'District Name'</span>, <span class="st">'Township Pcode'</span>, <span class="st">'Township Name'</span>, <span class="st">'Total households'</span>, <span class="st">'Radio'</span>, <span class="st">'Television'</span>, <span class="st">'Land line phone'</span>, <span class="st">'Mobile phone'</span>, <span class="st">'Computer'</span>, <span class="st">'Internet at home'</span>)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>ict_derived <span class="ot">=</span> ict <span class="sc">%&gt;%</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="st">`</span><span class="at">RADIO_PR</span><span class="st">`</span> <span class="ot">=</span> <span class="st">`</span><span class="at">Radio</span><span class="st">`</span><span class="sc">/</span><span class="st">`</span><span class="at">Total households</span><span class="st">`</span><span class="sc">*</span><span class="dv">1000</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="st">`</span><span class="at">TV_PR</span><span class="st">`</span> <span class="ot">=</span> <span class="st">`</span><span class="at">Television</span><span class="st">`</span><span class="sc">/</span><span class="st">`</span><span class="at">Total households</span><span class="st">`</span><span class="sc">*</span><span class="dv">1000</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="st">`</span><span class="at">LLPHONE_PR</span><span class="st">`</span> <span class="ot">=</span> <span class="st">`</span><span class="at">Land line phone</span><span class="st">`</span><span class="sc">/</span><span class="st">`</span><span class="at">Total households</span><span class="st">`</span><span class="sc">*</span><span class="dv">1000</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="st">`</span><span class="at">MPHONE_PR</span><span class="st">`</span> <span class="ot">=</span> <span class="st">`</span><span class="at">Mobile phone</span><span class="st">`</span><span class="sc">/</span><span class="st">`</span><span class="at">Total households</span><span class="st">`</span><span class="sc">*</span><span class="dv">1000</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="st">`</span><span class="at">COMPUTER_PR</span><span class="st">`</span> <span class="ot">=</span> <span class="st">`</span><span class="at">Computer</span><span class="st">`</span><span class="sc">/</span><span class="st">`</span><span class="at">Total households</span><span class="st">`</span><span class="sc">*</span><span class="dv">1000</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="st">`</span><span class="at">INTERNET_PR</span><span class="st">`</span> <span class="ot">=</span> <span class="st">`</span><span class="at">Internet at home</span><span class="st">`</span><span class="sc">/</span><span class="st">`</span><span class="at">Total households</span><span class="st">`</span><span class="sc">*</span><span class="dv">1000</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename_with</span>(<span class="sc">~</span> new_col_names, <span class="fu">all_of</span>(old_col_names)) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Reviewing the summary statistics of the newly derived penetration rates</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(ict_derived)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   DT_PCODE              DT              TS_PCODE              TS           
+ Length:55          Length:55          Length:55          Length:55         
+ Class :character   Class :character   Class :character   Class :character  
+ Mode  :character   Mode  :character   Mode  :character   Mode  :character  
+                                                                            
+                                                                            
+                                                                            
+ TT_HOUSEHOLDS       RADIO             TV           LLPHONE      
+ Min.   : 3318   Min.   :  115   Min.   :  728   Min.   :  20.0  
+ 1st Qu.: 8711   1st Qu.: 1260   1st Qu.: 3744   1st Qu.: 266.5  
+ Median :13685   Median : 2497   Median : 6117   Median : 695.0  
+ Mean   :18369   Mean   : 4487   Mean   :10183   Mean   : 929.9  
+ 3rd Qu.:23471   3rd Qu.: 6192   3rd Qu.:13906   3rd Qu.:1082.5  
+ Max.   :82604   Max.   :30176   Max.   :62388   Max.   :6736.0  
+     MPHONE         COMPUTER         INTERNET         RADIO_PR     
+ Min.   :  150   Min.   :  20.0   Min.   :   8.0   Min.   : 21.05  
+ 1st Qu.: 2037   1st Qu.: 121.0   1st Qu.:  88.0   1st Qu.:138.95  
+ Median : 3559   Median : 244.0   Median : 316.0   Median :210.95  
+ Mean   : 6470   Mean   : 575.5   Mean   : 760.2   Mean   :215.68  
+ 3rd Qu.: 7177   3rd Qu.: 507.0   3rd Qu.: 630.5   3rd Qu.:268.07  
+ Max.   :48461   Max.   :6705.0   Max.   :9746.0   Max.   :484.52  
+     TV_PR         LLPHONE_PR       MPHONE_PR       COMPUTER_PR    
+ Min.   :116.0   Min.   :  2.78   Min.   : 36.42   Min.   : 3.278  
+ 1st Qu.:450.2   1st Qu.: 22.84   1st Qu.:190.14   1st Qu.:11.832  
+ Median :517.2   Median : 37.59   Median :305.27   Median :18.970  
+ Mean   :509.5   Mean   : 51.09   Mean   :314.05   Mean   :24.393  
+ 3rd Qu.:606.4   3rd Qu.: 69.72   3rd Qu.:428.43   3rd Qu.:29.897  
+ Max.   :842.5   Max.   :181.49   Max.   :735.43   Max.   :92.402  
+  INTERNET_PR     
+ Min.   :  1.041  
+ 1st Qu.:  8.617  
+ Median : 22.829  
+ Mean   : 30.644  
+ 3rd Qu.: 41.281  
+ Max.   :117.985  </code></pre>
+</div>
+</div>
+</section>
+</section>
+</section>
+<section id="exploratory-data-analysis-eda" class="level2">
+<h2 class="anchored" data-anchor-id="exploratory-data-analysis-eda">Exploratory Data Analysis (EDA)</h2>
+<section id="eda-using-statistical-graphics" class="level3">
+<h3 class="anchored" data-anchor-id="eda-using-statistical-graphics">EDA using statistical graphics</h3>
+<p>We can plot the distribution of the variables (i.e.&nbsp;Number of households with radio) by using appropriate Exploratory Data Analysis (EDA) methods by using functions in <strong>ggplot2.</strong> We will also place the mean and median lines with <code>geom_vline</code></p>
+<p>A Histogram is useful to identify the overall distribution of the data values (i.e.&nbsp;left skew, right skew or normal distribution)</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data =</span> ict_derived, <span class="fu">aes</span>(<span class="at">x=</span><span class="st">`</span><span class="at">RADIO</span><span class="st">`</span>)) <span class="sc">+</span> </span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>      <span class="fu">geom_histogram</span>(<span class="at">bins=</span><span class="dv">30</span>, <span class="at">color=</span><span class="st">"black"</span>, <span class="at">fill=</span><span class="st">"light blue"</span>) <span class="sc">+</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Radio"</span>, <span class="at">y =</span> <span class="st">"Frequency"</span>) <span class="sc">+</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="fu">aes</span>(<span class="at">xintercept =</span> <span class="fu">mean</span>(ict_derived<span class="sc">$</span>RADIO)),   </span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>               <span class="at">color=</span><span class="st">"red"</span>, <span class="at">linetype=</span><span class="st">"dashed"</span>, <span class="at">linewidth=</span><span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="fu">aes</span>(<span class="at">xintercept=</span><span class="fu">median</span>(ict_derived<span class="sc">$</span>RADIO)),   </span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>               <span class="at">color=</span><span class="st">"brown"</span>, <span class="at">linetype=</span><span class="st">"dashed"</span>, <span class="at">linewidth=</span><span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Use of `ict_derived$RADIO` is discouraged.
+ℹ Use `RADIO` instead.
+Use of `ict_derived$RADIO` is discouraged.
+ℹ Use `RADIO` instead.</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="Hands-on_Ex4_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>From the histogram, we can tell it is positively skewed, with an outlier at the 30k mark.</p>
+<p>We can also use boxplot to detect outliers</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data=</span>ict_derived, </span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>(<span class="at">x=</span><span class="st">`</span><span class="at">RADIO</span><span class="st">`</span>)) <span class="sc">+</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>(<span class="at">color=</span><span class="st">"black"</span>, </span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>               <span class="at">fill=</span><span class="st">"light blue"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Hands-on_Ex4_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>From the boxplot, we can infer that there are 3 outliers, we can find the outliers and display them using <code>kable()</code> below from the code below</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>ict_derived_outliers_radio <span class="ot">=</span> ict_derived <span class="sc">%&gt;%</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(RADIO <span class="sc">&gt;</span> <span class="dv">12000</span>)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>ict_derived_outliers_radio <span class="sc">%&gt;%</span> <span class="fu">select</span> (<span class="st">'DT_PCODE'</span>, <span class="st">'DT'</span>, <span class="st">'TS_PCODE'</span>, <span class="st">'TS'</span>, <span class="st">'TT_HOUSEHOLDS'</span>, <span class="st">'RADIO'</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table table-sm table-striped">
+<thead>
+<tr class="header">
+<th style="text-align: left;">DT_PCODE</th>
+<th style="text-align: left;">DT</th>
+<th style="text-align: left;">TS_PCODE</th>
+<th style="text-align: left;">TS</th>
+<th style="text-align: right;">TT_HOUSEHOLDS</th>
+<th style="text-align: right;">RADIO</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">MMR014D001</td>
+<td style="text-align: left;">Taunggyi</td>
+<td style="text-align: left;">MMR014001</td>
+<td style="text-align: left;">Taunggyi</td>
+<td style="text-align: right;">82604</td>
+<td style="text-align: right;">30176</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MMR014D001</td>
+<td style="text-align: left;">Taunggyi</td>
+<td style="text-align: left;">MMR014002</td>
+<td style="text-align: left;">Nyaungshwe</td>
+<td style="text-align: right;">42634</td>
+<td style="text-align: right;">13801</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MMR015D001</td>
+<td style="text-align: left;">Lashio</td>
+<td style="text-align: left;">MMR015001</td>
+<td style="text-align: left;">Lashio</td>
+<td style="text-align: right;">64932</td>
+<td style="text-align: right;">15307</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Next, we will plot the histogram of the newly derived variables (i.e.&nbsp;Radio penetration rate) by using the code below. We will also place the mean and median lines with <code>geom_vline</code></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data =</span> ict_derived, <span class="fu">aes</span>(<span class="at">x=</span><span class="st">`</span><span class="at">RADIO_PR</span><span class="st">`</span>)) <span class="sc">+</span> </span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>      <span class="fu">geom_histogram</span>(<span class="at">bins=</span><span class="dv">30</span>, <span class="at">color=</span><span class="st">"black"</span>, <span class="at">fill=</span><span class="st">"light blue"</span>) <span class="sc">+</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Radio"</span>, <span class="at">y =</span> <span class="st">"Frequency"</span>) <span class="sc">+</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="fu">aes</span>(<span class="at">xintercept =</span> <span class="fu">mean</span>(ict_derived<span class="sc">$</span>RADIO_PR)),   </span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>               <span class="at">color=</span><span class="st">"red"</span>, <span class="at">linetype=</span><span class="st">"dashed"</span>, <span class="at">linewidth=</span><span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="fu">aes</span>(<span class="at">xintercept=</span><span class="fu">median</span>(ict_derived<span class="sc">$</span>RADIO_PR)),   </span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>               <span class="at">color=</span><span class="st">"brown"</span>, <span class="at">linetype=</span><span class="st">"dashed"</span>, <span class="at">linewidth=</span><span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Use of `ict_derived$RADIO_PR` is discouraged.
+ℹ Use `RADIO_PR` instead.
+Use of `ict_derived$RADIO_PR` is discouraged.
+ℹ Use `RADIO_PR` instead.</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="Hands-on_Ex4_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>From the histogram, we can tell it is positively skewed, with an outliers after the 450 mark.</p>
+<p>We can also use boxplot to detect outliers</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data=</span>ict_derived, </span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>(<span class="at">x=</span><span class="st">`</span><span class="at">RADIO_PR</span><span class="st">`</span>)) <span class="sc">+</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>(<span class="at">color=</span><span class="st">"black"</span>, </span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>               <span class="at">fill=</span><span class="st">"light blue"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Hands-on_Ex4_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>From the boxplot, we can infer that there are 1 outlier, we can find the outlier and display it using <code>kable()</code> below from the code below</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>ict_derived_outliers_radio <span class="ot">=</span> ict_derived <span class="sc">%&gt;%</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(RADIO_PR <span class="sc">&gt;</span> <span class="dv">450</span>)</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>ict_derived_outliers_radio <span class="sc">%&gt;%</span> <span class="fu">select</span> (<span class="st">'DT_PCODE'</span>, <span class="st">'DT'</span>, <span class="st">'TS_PCODE'</span>, <span class="st">'TS'</span>, <span class="st">'TT_HOUSEHOLDS'</span>, <span class="st">'RADIO_PR'</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table table-sm table-striped">
+<thead>
+<tr class="header">
+<th style="text-align: left;">DT_PCODE</th>
+<th style="text-align: left;">DT</th>
+<th style="text-align: left;">TS_PCODE</th>
+<th style="text-align: left;">TS</th>
+<th style="text-align: right;">TT_HOUSEHOLDS</th>
+<th style="text-align: right;">RADIO_PR</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">MMR014D001</td>
+<td style="text-align: left;">Taunggyi</td>
+<td style="text-align: left;">MMR014007</td>
+<td style="text-align: left;">Ywangan</td>
+<td style="text-align: right;">18348</td>
+<td style="text-align: right;">484.5215</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 
 
+</section>
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

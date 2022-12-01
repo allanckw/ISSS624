@@ -3,3 +3,183 @@ title: "Hands On Exercise 3.1 - Geographical Segmentation with Spatially Constra
 author: "Allan Chong"
 editor: visual
 ---
+
+### Overview
+
+In this hands-on exercise, we are interested to delineate [Shan State](https://en.wikipedia.org/wiki/Shan_State), [Myanmar](https://en.wikipedia.org/wiki/Myanmar) into homogeneous regions by using multiple Information and Communication technology (ICT) measures, namely: Radio, Television, Land line phone, Mobile phone, Computer, and Internet at home.
+
+## Getting Started
+
+Firstly, we load the required packages in R
+
+-   **Spatial data handling**
+
+    -   **sf**, **rgdal** and **spdep**
+
+-   **Attribute data handling**
+
+    -   **knitr, tidyverse**, especially **readr**, **ggplot2** and **dplyr**
+
+-   **Choropleth mapping**
+
+    -   **tmap**
+
+-   **Multivariate data visualisation and analysis**
+
+    -   **coorplot**, **ggpubr**, and **heatmaply**
+
+-   **Cluster analysis**
+
+    -   **cluster**
+
+    -   **ClustGeo**
+
+```{r}
+pacman::p_load(knitr, rgdal, spdep, tmap, sf, 
+               ggpubr, cluster, factoextra, NbClust,
+               heatmaply, corrplot, psych, tidyverse)
+```
+
+## Importing & preparing the data
+
+### Geospatial Data
+
+In this section, we will import Myanmar Township Boundary GIS data and its associated attrbiute table into the R environment.
+
+The Myanmar Township Boundary GIS data is in ESRI shapefile format. It will be imported into R environment by using the [`st_read()`](https://www.rdocumentation.org/packages/sf/versions/0.7-2/topics/st_read) function of **sf**.
+
+As we are only interested in Shan State, we will filter only values that represents the Shan State.
+
+```{r}
+shan_sf = st_read(dsn="data/geospatial", layer="myanmar_township_boundaries") %>%
+  filter(ST %in% c("Shan (East)", "Shan (North)", "Shan (South)"))
+shan_sf
+```
+
+We can then use *`glimpse()`* to verify each field's data type & available values.
+
+```{r}
+glimpse(shan_sf)
+```
+
+### Aspatial Data
+
+#### Loading the Data
+
+To load the raw data file, we use the `read_csv` function The imported InfoComm variables are extracted from **The 2014 Myanmar Population and Housing Census Myanmar**. The attribute data set is called *ict*. It is saved in R's \* tibble data.frame\* format.
+
+We can view the summary statistics with `summary()`
+
+```{r}
+ict = read_csv("data/aspatial/Shan-ICT.csv") 
+summary(ict)
+```
+
+There are a total of 11 fields and 55 observation in the tibble data.frame.
+
+#### Derive new variables with **dplyr** package
+
+The number of households is used as the measurement unit for the values. The underlying total number of households will influence the results when these statistics are used directly. Typically, the townships with a larger proportion of total households will also have a larger proportion of homes with radio, TV, etc.
+
+We shall calculate the penetration rate of *each ICT variable* to address this issue by dividing it by the total number of households and multiply by 1000 and adding it to the data frame by using `mutate()` of **dplyr** package and renaming the column using `rename_with()`
+
+```{r}
+new_col_names = c('DT_PCODE', 'DT', 'TS_PCODE', 'TS', 'TT_HOUSEHOLDS', 'RADIO', 'TV', 'LLPHONE', 'MPHONE', 'COMPUTER',  'INTERNET')
+
+old_col_names = c('District Pcode', 'District Name', 'Township Pcode', 'Township Name', 'Total households', 'Radio', 'Television', 'Land line phone', 'Mobile phone', 'Computer', 'Internet at home')
+
+ict_derived = ict %>%
+  mutate(`RADIO_PR` = `Radio`/`Total households`*1000) %>%
+  mutate(`TV_PR` = `Television`/`Total households`*1000) %>%
+  mutate(`LLPHONE_PR` = `Land line phone`/`Total households`*1000) %>%
+  mutate(`MPHONE_PR` = `Mobile phone`/`Total households`*1000) %>%
+  mutate(`COMPUTER_PR` = `Computer`/`Total households`*1000) %>%
+  mutate(`INTERNET_PR` = `Internet at home`/`Total households`*1000) %>%
+  rename_with(~ new_col_names, all_of(old_col_names)) 
+```
+
+Reviewing the summary statistics of the newly derived penetration rates
+
+```{r}
+summary(ict_derived)
+```
+
+## Exploratory Data Analysis (EDA)
+
+### EDA using statistical graphics
+
+We can plot the distribution of the variables (i.e. Number of households with radio) by using appropriate Exploratory Data Analysis (EDA) methods by using functions in **ggplot2.** We will also place the mean and median lines with `geom_vline`
+
+A Histogram is useful to identify the overall distribution of the data values (i.e. left skew, right skew or normal distribution)
+
+```{r}
+ggplot(data = ict_derived, aes(x=`RADIO`)) + 
+      geom_histogram(bins=30, color="black", fill="light blue") +
+      
+  labs(x = "Radio", y = "Frequency") +
+
+  geom_vline(aes(xintercept = mean(ict_derived$RADIO)),   
+               color="red", linetype="dashed", linewidth=1) +
+  
+  geom_vline(aes(xintercept=median(ict_derived$RADIO)),   
+               color="brown", linetype="dashed", linewidth=1)
+
+
+```
+
+From the histogram, we can tell it is positively skewed, with an outlier at the 30k mark.
+
+We can also use boxplot to detect outliers
+
+```{r}
+ggplot(data=ict_derived, 
+       aes(x=`RADIO`)) +
+  geom_boxplot(color="black", 
+               fill="light blue")
+```
+
+From the boxplot, we can infer that there are 3 outliers, we can find the outliers and display them using `kable()` below from the code below
+
+```{r}
+ict_derived_outliers_radio = ict_derived %>%
+  filter(RADIO > 12000)
+ict_derived_outliers_radio %>% select ('DT_PCODE', 'DT', 'TS_PCODE', 'TS', 'TT_HOUSEHOLDS', 'RADIO') %>%
+  kable()
+
+```
+
+Next, we will plot the histogram of the newly derived variables (i.e. Radio penetration rate) by using the code below. We will also place the mean and median lines with `geom_vline`
+
+```{r}
+ggplot(data = ict_derived, aes(x=`RADIO_PR`)) + 
+      geom_histogram(bins=30, color="black", fill="light blue") +
+      
+  labs(x = "Radio", y = "Frequency") +
+
+  geom_vline(aes(xintercept = mean(ict_derived$RADIO_PR)),   
+               color="red", linetype="dashed", linewidth=1) +
+  
+  geom_vline(aes(xintercept=median(ict_derived$RADIO_PR)),   
+               color="brown", linetype="dashed", linewidth=1)
+
+```
+
+From the histogram, we can tell it is positively skewed, with an outliers after the 450 mark.
+
+We can also use boxplot to detect outliers
+
+```{r}
+ggplot(data=ict_derived, 
+       aes(x=`RADIO_PR`)) +
+  geom_boxplot(color="black", 
+               fill="light blue")
+```
+
+From the boxplot, we can infer that there are 1 outlier, we can find the outlier and display it using `kable()` below from the code below
+
+```{r}
+ict_derived_outliers_radio = ict_derived %>%
+  filter(RADIO_PR > 450)
+ict_derived_outliers_radio %>% select ('DT_PCODE', 'DT', 'TS_PCODE', 'TS', 'TT_HOUSEHOLDS', 'RADIO_PR') %>%
+  kable()
+```
