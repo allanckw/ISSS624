@@ -1,0 +1,327 @@
+---
+title: "Take Home Exercise 2 - Regionalization of Nigeria with Water points"
+author: "Allan Chong"
+editor: visual
+execute: 
+  warning: false
+  message: false
+---
+
+## Overview
+
+Water is a crucial resource for humanity. People must have access to clean water in order to be healthy. It promotes a healthy environment, peace and security, and a sustainable economy. However, more than 40% of the world's population lacks access to enough clean water. According to UN-Water, 1.8 billion people would live in places with a complete water shortage by 2025. One of the many areas that the water problem gravely threatens is food security. Agriculture uses over 70% of the freshwater that is present on Earth.
+
+The severe water shortages and water quality issues are seen in underdeveloped countries. Up to 80% of infections in developing nations are attributed to inadequate water and sanitation infrastructure.
+
+Despite technological advancement, providing rural people with clean water continues to be a key development concern in many countries around the world, especially in those on the continent of Africa.
+
+The spatial patterns of non-functional water points will be shown in this study by using the proper global and local spatial association methodologies. We look at Nigeria's in this assignment.
+
+## Getting Started
+
+First, the required packages are loaded into the R environment . The required packages are **sf,** **tidyverse**, **spdep**, **tmap**, & **funModeling**
+
+with the code below:
+
+```{r}
+pacman::p_load(sf, tidyverse, spdep, tmap, funModeling)
+```
+
+### Spatial Data
+
+The spatial dataset used in this assignment is the Nigeria Level-2 Administrative Boundary spatial dataset downloaded from Center for Humanitarian Data - [Nigeria - Subnational Administrative Boundaries](https://data.humdata.org/dataset/cod-ab-nga)
+
+We will load the spatial features by using `st_read()` from the **sf** package
+
+As the data we want is in WSG-84 format, we set *crs* to 4326.
+
+We won't utilize `st_transform()` at this time because it can result in outputs with missing points after transformation, which would skew our study.
+
+```{r}
+nga = st_read(dsn = "data/geospatial",
+               layer = "nga_admbnda_adm2_osgof_20190417",
+               crs = 4326)
+
+#nigeria_lga_sf = st_transform(nigeria_lga_sf, crs=4326) cause missing points
+
+```
+
+We could use `st_crs()`to verify the coordinate system from the object.
+
+```{r}
+st_crs(nga)
+```
+
+Before we start analyzing the data, lets us take a look at some characteristics of the spatial features to have a sense of what we are dealing with. We can use *`glimpse()`* to determine to accomplish that
+
+```{r}
+glimpse(nga)
+```
+
+We can use `freq()` of the **funModeling** package to display the distribution of Level 1 administration (Which are states in Nigeria) instead and only zooming in on the micro level when we perform the water point analysis.
+
+```{r}
+freq(data=nga, input = 'ADM1_EN')
+```
+
+774 Local Government Areas (LGA) make up Nigeria's 37 states, with Kano having the most LGAs overall.
+
+For a meaningful analysis, there are just too many LGAs, both large and little.
+
+Calling `ttm()` in the **tmap** package will switch the tmap's viewing mode to interactive viewing, which will help us better visualize the map. Without this change, the generated map will be too small for any type of analysis. Additionally, we'll base the map's plot on States (Level 1 Administration Area)
+
+Given that there are 37 states, we must raise the maximum number of categories from the default value of 30 to 37. Using `tmap_options(max.categories = 37)`, the threshold can be set.
+
+```{r}
+ttm()
+tmap_options(max.categories = 37)
+```
+
+Now, we are ready to build our map with the functions in the **tmap** package
+
+```{r}
+
+tm_shape(nga) + 
+ 
+  tm_polygons("ADM1_EN") +
+  tm_borders(alpha=0.5) + 
+  tm_scale_bar() +
+  tm_grid (alpha=0.2) +
+  tm_layout(main.title="Map of Nigeria LGA", 
+            main.title.position="center", 
+            main.title.size=1.2, 
+            legend.height = 0.35, 
+            legend.width = 0.35, 
+            frame = TRUE) 
+```
+
+### Aspatial Data
+
+#### Cleaning the Data
+
+The aspatial dataset used in this assignment is the water point data exchange dataset found in [WPdx Global Data Repositories](https://www.waterpointdata.org/access-data/). Data is filtered on the web portal to only keep Nigeria and the file is saved as *NigeriaWaterPoints_Raw.csv*
+
+As we are only interested in the functionality of the water point, it is important to capture fields that may affect the functionality
+
+-   LGA: The area we are interested in
+
+-   State: The state of the LGA of Nigeria
+
+-   Functional: Whether it is functional or not
+
+-   management: who manages it?
+
+-   Quality: what is the quality?
+
+-   Water Source Category: where the water came from?
+
+-   Water Tech Category: What technology is used?
+
+-   latitude
+
+-   longitude
+
+To load the raw data file, we use the `read_csv` function
+
+```{r}
+#| eval: false
+wpdx_raw = read_csv("data/aspatial/NigeriaWaterPoints_Raw.csv") 
+```
+
+Most of the columns are irrelevant, so we will perform the following:
+
+-   keep the columns we want to clean it up by specifying the columns with one to retain with `subset`
+
+-   renaming the columns using `rename_with`
+
+-   Replace all the NA with unknown for columns with NA value present
+
+```{r}
+#| eval: false
+retain_cols = c('#clean_adm2', '#clean_adm1', '#status_clean', '#management_clean', '#subjective_quality', '#fecal_coliform_presence', '#water_source_category', '#water_tech_category', '#lat_deg', '#lon_deg' )
+
+new_col_names = c('LGA', 'State', 'Functional', 'Management', 'Quality', 'presence_of_fecal_coliform', 'Water_Source_Category', 'Water_Tech_Category', 'latitude', 'longitude')
+
+wpdx_clean = subset(wpdx_raw, select = (names(wpdx_raw) %in% retain_cols)) %>%  rename_with(~ new_col_names, all_of(retain_cols)) %>% 
+replace_na(list(Functional = "Unknown", Management = "Unknown", Quality = "Unknown", Water_Source_Category = "Unknown", Water_Tech_Category = "Unknown"))
+
+
+
+```
+
+We save the clean file with `saveRDS()`, the file will be reduced to 1.6MB from the 144MB raw file that we downloaded.
+
+```{r}
+#| eval: false
+saveRDS(wpdx_clean, "data/aspatial/wpdx_clean.rds")
+```
+
+We can then delete the raw file from the project and retrieve the saved RDS file using `readRDS()`
+
+```{r}
+wpdx_clean = readRDS("data/aspatial/wpdx_clean.rds")
+
+```
+
+#### Converting csv data into spatial features
+
+We can use `st_as_sf`to create a dataframe from the longitude (*x*) and latitude (*y*) values. The EPSG 4326 code is used as the dataset is referencing WGS84 geographic coordinate system. We could use `st_crs()`to verify the coordinate system from the object.
+
+```{r}
+wpdx_clean_sf = st_as_sf(wpdx_clean, coords = c("longitude", "latitude"), crs=4326)
+st_crs(wpdx_clean_sf)
+```
+
+We can then use *`glimpse()`* to verify each field's data type & available values.
+
+There are 95, 008 water points in the LGAs. The results also shows that the longitude and latitude values have been converted to a geometry object consisting of the longitude and latitude values as points, with both columns now dropped.
+
+```{r}
+glimpse(wpdx_clean_sf)
+```
+
+#### Aggregate the Data
+
+We can use `freq()` of the **funModeling** package to display the distribution of *functional* field in *wpdx_clean_sf*. This is to help us aggregate the data as the dataset provide breakdowns of functional status. In order to only look at non functional water points, we will need to aggregate the different categories into simply functional, non functional and unknowns.
+
+```{r}
+freq(data=wpdx_clean_sf, input = 'Functional')
+```
+
+To aggregate them into functional, non functional and unknown, we will create new data frames to store them by using the `filter` function
+
+```{r}
+func_list = c("Functional", "Functional but needs repair", "Functional but not in use")
+wpt_functional = wpdx_clean_sf %>%
+  filter(Functional %in% func_list)
+
+wpt_non_functional = wpdx_clean_sf %>%
+  filter(!Functional %in% c(func_list, "Unknown"))
+
+wpt_unknown = wpdx_clean_sf %>%
+  filter(Functional %in% "Unknown")
+```
+
+Out of the 32, 204, records, we can gain some insights on why it might be non functional, is it due to management? Is it due to technology? Is it due to the source of the water?
+
+Similarly, like how we aggregate functional data points, we could use `freq()` of the **funModeling** package to find out
+
+```{r}
+freq(data=wpt_non_functional, input = 'Management')
+```
+
+```{r}
+freq(data=wpt_non_functional, input = 'Water_Tech_Category')
+```
+
+```{r}
+freq(data=wpt_non_functional, input = 'Water_Source_Category')
+```
+
+From the results, we can conclude that
+
+-   More than half of the non functional water points have an unknown management, we could ask if these water points are even managed.
+
+-   Most of the non functional water points uses pumps, we could ask the question if there is an issue with the pumps and if there is a lack of expertise to repair or replace them when they fail.
+
+-   97.72% of such non functional water points are made up of wells. We could ask the question if we could improve things by providing other forms of sources such as piped water. How much cost will it take to bring pipe water to the various state of Nigeria?
+
+## Combining Spatial & Aspatial Data
+
+We can use `st_intersects()` to find common data points between geographical datasets. In our case we need to find the common points in the Nigeria's LGA spatial dataset and the water point aspatial dataset
+
+The below code does 4 things
+
+1.  It intersects the Nigeria LGA dataset (*nga* dataframe) with the water point dataset (*wpdx_clean_sf* dataframe) and produce a new column to denote the total number of water points in the area (*Total wpt*) by using `mutate()` and `lengths()`
+
+2.  Similar to step 1, the result of step 1 is piped to add 3 columns to denote the number of functional, non functional and unknown water points in the area to produce *wpt functional*, *wpt non functional* and *wpt unknown* respectively
+
+3.  We also add 2 new columns to find the percentage of functional and non functional water points by using `mutate()`
+
+4.  Select appropriate columns required which are the LGA area and LGA code (Column 3 & 4), Administration Level 1 Area and Administration Level 1 Code (Column 8 & 9) which represent states, the columns that were added as explained in steps 2 & 3 and the geometry multipolygon objects (Column 18 to 23) using `select()`
+
+```{r}
+nga_wp = nga %>% 
+  #combine nga with water point sf
+  mutate(`total wpt` = lengths(
+    st_intersects(nga, wpdx_clean_sf))) %>%
+  #add columns to produce no. of functional, non functional and unknown points
+  mutate(`wpt functional` = lengths(
+    st_intersects(nga, wpt_functional))) %>%
+  mutate(`wpt non functional` = lengths(
+    st_intersects(nga, wpt_non_functional))) %>%
+  mutate(`wpt unknown` = lengths(
+    st_intersects(nga, wpt_unknown))) %>%
+  
+  #add columns to compute %
+  mutate(pct_functional = `wpt functional`/`total wpt`) %>%
+  mutate(`pct_non-functional` = `wpt non functional`/`total wpt`) %>%
+  select(3:4, 8:9, 18:23)
+```
+
+## Visualizing the spatial distribution of water points
+
+We could use breaks of the summary statistics by using percentiles, this is to help us find out the distribution of water points in each quantile.
+
+```{r}
+summary(nga_wp$`wpt non functional`)
+```
+
+It is recommended not to use the default style with breaks as quantile since the range from the third quantile to the maximum is too wide and could result in a skewed representation. We compute the variance and standard deviation of non-functional water points first to better understand our dataset since we now need to decide which style is appropriate for the map.
+
+```{r}
+var(nga_wp$`wpt non functional`)
+sd(nga_wp$`wpt non functional`) 
+```
+
+It appears that this dataset has a very large variance.  Since the variance is so high, we would like to lower it. Using the *kmeans* style is one method to do this. *n = 6* is choosen as after some experimentation, it appears that 6 is the optimal number of clusters.
+
+Functions from the **tmap** packages is used to produce the map
+
+First we use `tm_shape()` `+ tm_fill("ADM1_EN")` to form Layer 1 of the map to form the 37 states of the map. The *Pastel1* palette is used because it is difficult to read different shades of the same two to three colors; Pastel1 has more colors, making states more distinct.
+
+Next we use `tm_shape()` `+ tm_fill("wpt non functional")` to form Layer 2 of the map which are the non functional water points. The palette used in this case is Purple Red such that areas with very little water points are shaded with a very light colour.
+
+We may switch between layers on the interactive map to superimpose the nonfunctional water locations. With so many polygons, putting it side by side can be challenging to interpret.
+
+```{r}
+tm_shape(nga) + 
+ 
+  tm_fill("ADM1_EN", palette = "Pastel1") +
+  tm_borders(alpha=0.5) + 
+  tm_grid (alpha=0.2) +
+
+  tm_shape(nga_wp) + 
+  tm_fill("wpt non functional", 
+          palette ="PuRd", style="kmeans", n=6) +  
+  tm_borders(alpha=0.5) + 
+  tm_grid (alpha=0.2) +
+  tm_layout(main.title="non functional WP - 2 Layer map", 
+            main.title.position="center", 
+            main.title.size=1.2, 
+            #legend.height = 0.35, 
+            #legend.width = 0.35, 
+            frame = TRUE) 
+
+
+```
+
+Using **dplyr** package, we can summarize find out which States has the most number non functional water points and which are the states that has the most number of LGAs by using the functions `group_by`, `summarise` and `arrange`
+
+```{r}
+#Sum of non functional water points 
+nga_wp %>% 
+  group_by(ADM1_EN) %>% 
+   summarise(NF_Frequency = sum(`wpt non functional`), 
+             #F_Frequency = sum(`wpt functional`),
+             Total_Freq = sum(`total wpt`),
+             NF_Ratio = (NF_Frequency / Total_Freq) * 100
+             ) %>% 
+    arrange(desc(NF_Frequency))
+
+#sum of LGAs by states 
+nga_wp %>% 
+  group_by(ADM1_EN) %>% 
+  summarise(count = n())%>% 
+    arrange(desc(count))
+```
