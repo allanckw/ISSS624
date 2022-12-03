@@ -1,5 +1,5 @@
 ---
-title: "Hands On Exercise 3.1 - Geographical Segmentation with Spatially Constrained Clustering Techniques"
+title: "In class Exercise 3.1 - Spatially constrained clustering - Clustgeo method"
 author: "Allan Chong"
 editor: visual
 execute: 
@@ -11,7 +11,9 @@ execute:
 
 In this hands-on exercise, we are interested to delineate [Shan State](https://en.wikipedia.org/wiki/Shan_State), [Myanmar](https://en.wikipedia.org/wiki/Myanmar) into homogeneous regions by using multiple Information and Communication technology (ICT) measures, namely: Radio, Television, Land line phone, Mobile phone, Computer, and Internet at home.
 
-This is a continuation from Hands On Exercise 4: Skip to
+**This is a continuation from Hands On Exercise 4:**
+
+**Skip to [Spatially constrained clustering clustgeo method](https://mitb-isss624-ackw-gis-analytics.netlify.app/in-class_ex3/in-class_ex3#spatially-constrained-clustering-clustgeo-method)**
 
 ------------------------------------------------------------------------
 
@@ -44,7 +46,7 @@ Firstly, we load the required packages in R
 ```{r}
 pacman::p_load(knitr, rgdal, spdep, tmap, sf, 
                ggpubr, cluster, funModeling,
-               factoextra, NbClust, 
+               factoextra, NbClust, ClustGeo,
                heatmaply, corrplot, psych, tidyverse)
 #factoextra factor analysis, NbClust access clustering results
 ```
@@ -610,14 +612,14 @@ heatmaply(normalize(shan_ict_mat),
           dist_method = "euclidean",
           hclust_method = "ward.D",
           seriate = "OLO",
-          colors=PuRd,
+          colors=Blues,
           k_row = 6,
-          margins= c(NA, 100, 50, NA),
+          margins= c(NA, 50, 50, NA),
           fontsize_row = 4,
           fontsize_col = 5,
           main = "Segmentation of Shan State by ICT indicators",
           xlab = "ICT Indicators",
-          ylab = "Township of Shan State'"
+          ylab = "Township of Shan State"
           
           )
 ```
@@ -773,11 +775,11 @@ We can display the content of the result using `str()`
 str(clust6)
 ```
 
-The groups vector, which contains the labels of the cluster to which each observation belongs, is the most interesting part of this list structure (as before, the label itself is arbitary). 
+The groups vector, which contains the labels of the cluster to which each observation belongs, is the most interesting part of this list structure (as before, the label itself is arbitrary). 
 
 The summary for each of the clusters in the edges.groups list is then provided. To show the impact of each cut on the overall criterion, sum of squares measurements are given as *ssto* for the total and *ssw* for each cut individually.
 
-We can check the cluster assignment by using the conde chunk below.
+We can check the cluster assignment by using the code chunk below.
 
 ```{r}
 ccs6 = clust6$groups
@@ -796,8 +798,8 @@ Finally, we can also plot the pruned tree that shows the five clusters on top of
 plot(shan_sp, border=gray(.5))
 plot(clust6,
      coordinates(shan_sp),
-     cex.lab=0.7,
-     groups.colors=c("red","green","blue", "brown", "purple"),
+     cex.lab=0.5,
+     groups.colors=c("red","green","blue", "brown", "orange"),
      cex.circles=0.005, 
      add=TRUE
      )
@@ -836,3 +838,97 @@ tmap_arrange(hclust.map, shclust.map,
 ```
 
 ## Spatially Constrained Clustering - ClustGeo Method
+
+We will discover how to do both spatially constrained and non-spatially constrained hierarchical cluster analyses using functions available by the **ClustGeo** package
+
+### 5.9.1 Ward-like hierarchical clustering: ClustGeo
+
+Similar to the `hclust()` method discussed in the previous section, the **ClustGeo** package contains a function named `hclustgeo()` to carry out a typical **Ward-like** hierarchical clustering.
+
+The sole input requirement for non-spatially constrained hierarchical clustering is a dissimilarity matrix, as can be seen in the code snippet below.
+
+*Note that the dissimilarity matrix must be an object of class `dist`, i.e. an object obtained with the function `dist()`, refer to section of Determine the proximity matrix.*
+
+```{r}
+nongeo_cluster = hclustgeo(proxmat)
+plot(nongeo_cluster, cex=0.5)
+rect.hclust(nongeo_cluster, k=6, border = 2:5)
+```
+
+#### Mapping the clusters formed
+
+Similarly, by applying the techniques we discovered in *Mapping the clusters formed*, we may plot the clusters on a categorical area shaded map.
+
+```{r}
+groups = as.factor(cutree(nongeo_cluster, k=6))
+
+shan_sf_ngeo_cluster = cbind(shan_sf, as.matrix(groups)) %>%
+  rename(`CLUSTER` = `as.matrix.groups.`)
+
+default_ngeo_clustered_map = tm_shape(shan_sf_ngeo_cluster) + 
+  tm_polygons("CLUSTER") +
+  tm_borders(alpha = 0.5) 
+
+default_ngeo_clustered_map
+```
+
+### Spatially Constrained Hierarchical Clustering
+
+Prior to starting the spatially constrained hierarchical clustering process, a spatial distance matrix will need to be derived by using [`st_distance()`](https://r-spatial.github.io/sf/reference/geos_measures.html) of **sf** package.
+
+```{r}
+dist = st_distance(shan_sf, shan_sf)
+distmat = as.dist(dist)
+```
+
+`as.dist()` is used to convert the data frame into a matrix.
+
+Our goal is to as much as possible **retain the attribute homogeneity** as much as possible but also **introduce spatial homogeneity**. In order to balance this, we can alpha using the `choicealpha()` function.
+
+```{r}
+cr = choicealpha(proxmat, distmat, range.alpha = seq(0,1, 0.05), K=6, graph=T)
+
+```
+
+As the data is highly skewed as we have explored in our EDA, we will use the QNorm graph based on normalized values.
+
+We can observe that when alpha is raised from 0.1 to 0.2, the homogeneity of d1 (which is our spatial relationship (contiguity matrix), gain significantly from about 30% to 65%. And for d0 (which is our attribute), the homogeneity loss is slightly less than 20%.
+
+At alpha = 0.3, the homogeneity of d1 continues to raise to about 75%, while d0 homogeneity loss is about 20%.
+
+We will use alpha as 0.3 to build our cluster
+
+```{r}
+clustG = hclustgeo(proxmat, distmat, alpha = 0.3)
+```
+
+We then use `cutree()` to derive the cluster object, and join it back to the *shan_sf* polygon feature data frame by using `cbind()`
+
+```{r}
+groups = as.factor(cutree(clustG, k=6))
+shan_sf_Gcluster  = cbind(shan_sf, as.matrix(groups)) %>%
+  rename(`CLUSTER` = `as.matrix.groups.`)
+```
+
+We can now plot the map of the newly delineated spatially constraints clusters using functions of **tmap**
+
+```{r}
+spatially_constraint_clustered_map = 
+  tm_shape(shan_sf_Gcluster) + 
+  tm_polygons("CLUSTER") +
+  tm_borders(alpha = 0.5) 
+
+spatially_constraint_clustered_map
+```
+
+We can now compare the maps by placing it side by side
+
+```{r}
+tmap_arrange(default_ngeo_clustered_map,spatially_constraint_clustered_map)
+```
+
+**Analysis**
+
+We can see that without considering spatial relationships, the clusters are not linked spatially. Take for example cluster 2 of *default_ngeo_clustered_map*, without spatial constraints, the regions forming the clusters are all over the place; One of the region is in the far west, another at the south and so on. This is sub optimal as there may be real world consideration that that necessitates the regionalization of geographies into distinct regions, such as urban planning.
+
+In contrast, the clusters of the *spatially_constraint_clustered_map,* are mostly contiguous, except for a few regions that may be outliers causing such patterns.

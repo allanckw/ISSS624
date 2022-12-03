@@ -225,30 +225,6 @@ wpt_unknown = wpdx_clean_sf %>%
   filter(Functional %in% "Unknown")
 ```
 
-Out of the 32, 204, records, we can gain some insights on why it might be non functional, is it due to management? Is it due to technology? Is it due to the source of the water?
-
-Similarly, like how we aggregate functional data points, we could use `freq()` of the **funModeling** package to find out
-
-```{r}
-freq(data=wpt_non_functional, input = 'Management')
-```
-
-```{r}
-freq(data=wpt_non_functional, input = 'Water_Tech_Category')
-```
-
-```{r}
-freq(data=wpt_non_functional, input = 'Water_Source_Category')
-```
-
-From the results, we can conclude that
-
--   More than half of the non functional water points have an unknown management, we could ask if these water points are even managed.
-
--   Most of the non functional water points uses pumps, we could ask the question if there is an issue with the pumps and if there is a lack of expertise to repair or replace them when they fail.
-
--   97.72% of such non functional water points are made up of wells. We could ask the question if we could improve things by providing other forms of sources such as piped water. How much cost will it take to bring pipe water to the various state of Nigeria?
-
 ## Combining Spatial & Aspatial Data
 
 We can use `st_intersects()` to find common data points between geographical datasets. In our case we need to find the common points in the Nigeria's LGA spatial dataset and the water point aspatial dataset
@@ -280,6 +256,53 @@ nga_wp = nga %>%
   mutate(pct_functional = `wpt functional`/`total wpt`) %>%
   mutate(`pct_non-functional` = `wpt non functional`/`total wpt`) %>%
   select(3:4, 8:9, 18:23)
+```
+
+#### Updating Spatial features that have identical name but are in different states
+
+The following code determines whether any LGA names have been repeated. If the shapeName is not unique for rows, duplicated() returns True. Only rows that satisfy the duplicated rows = True criterion are returned by subset() (Loh, 2022).
+
+```{r}
+subset(nga_wp, duplicated(nga_wp$ADM2_EN))$ADM2_EN
+```
+
+From the result, there are 6 LGAs that have the same names, even though they are from different states.
+We will want to rename them or it would be confusing when we conduct further analysis.
+
+```{r}
+nga_wp %>% filter(grepl("Bassa",ADM2_EN)) 
+```
+
+Based on the values, we know the ADM2_PCODE of the respective Bassa are NG023004 (Kogi) and NG032002 (Plateau), so we will replace them using the code below.
+
+```{r}
+nga_wp$ADM2_EN[nga_wp$ADM2_PCODE=="NG023004"] = 'Bassa (Kogi)'
+nga_wp$ADM2_EN[nga_wp$ADM2_PCODE=="NG032002"] = 'Bassa (Plateau)'
+```
+
+We repeat the same for the rest of the duplicates and we have the final results as follow
+
+```{r}
+nga_wp$ADM2_EN[nga_wp$ADM2_PCODE=="NG024005"] = "Ifelodun (Kwara)"
+nga_wp$ADM2_EN[nga_wp$ADM2_PCODE=="NG030016"] = "Ifelodun (Osun)"
+
+nga_wp$ADM2_EN[nga_wp$ADM2_PCODE=="NG024009"] = "Irepodun (Kwara)"
+nga_wp$ADM2_EN[nga_wp$ADM2_PCODE=="NG030020"] = "Irepodun (Osun)"
+
+nga_wp$ADM2_EN[nga_wp$ADM2_PCODE=="NG020031"] = "Nasarawa (Kano)"
+nga_wp$ADM2_EN[nga_wp$ADM2_PCODE=="NG026009"] = "Nasarawa (Nasarawa)"
+
+nga_wp$ADM2_EN[nga_wp$ADM2_PCODE=="NG007014"] = "Obi (Benue)"
+nga_wp$ADM2_EN[nga_wp$ADM2_PCODE=="NG026011"] = "Obi (Nasarawa)"
+
+nga_wp$ADM2_EN[nga_wp$ADM2_PCODE=="NG025020"] = "Surulere (Lagos)"
+nga_wp$ADM2_EN[nga_wp$ADM2_PCODE=="NG031033"] = "Surulere (Oyo)"
+```
+
+We then change the row names to the names of the LGAs
+
+```{r}
+row.names(nga_wp) <- nga_wp$ADM2_EN
 ```
 
 ## Visualizing the spatial distribution of water points
@@ -348,3 +371,9 @@ nga_wp %>%
   summarise(count = n())%>% 
     arrange(desc(count))
 ```
+
+Reference
+
+LOH, S.Y (2022), *Take-home Exercise 1: Geospatial Analytics for Social Good*
+
+https://lohsiying.netlify.app/take_home_ex/ex1/take-home-ex1.html
