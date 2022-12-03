@@ -44,8 +44,9 @@ Firstly, we load the required packages in R
 ```{r}
 pacman::p_load(knitr, rgdal, spdep, tmap, sf, 
                ggpubr, cluster, funModeling,
-               factoextra, NbClust, #factoextra factor analysis, access clustering results
+               factoextra, NbClust, 
                heatmaply, corrplot, psych, tidyverse)
+#factoextra factor analysis, NbClust access clustering results
 ```
 
 ## Importing & preparing the data
@@ -562,7 +563,7 @@ print(gap_stat, method = "firstmax")
 
 Also note that the [`hcut`](https://rpkgs.datanovia.com/factoextra/reference/hcut.html) function used is from [**factoextra**](https://rpkgs.datanovia.com/factoextra/) package.
 
-Next, we can visualise the plot by using [`fviz_gap_stat()`](https://rpkgs.datanovia.com/factoextra/reference/fviz_nbclust.html) of [**factoextra**](https://rpkgs.datanovia.com/factoextra/) package.
+Next, we can visualize the plot by using [`fviz_gap_stat()`](https://rpkgs.datanovia.com/factoextra/reference/fviz_nbclust.html) of [**factoextra**](https://rpkgs.datanovia.com/factoextra/) package.
 
 ```{r}
 fviz_gap_stat(gap_stat)
@@ -611,7 +612,7 @@ heatmaply(normalize(shan_ict_mat),
           seriate = "OLO",
           colors=PuRd,
           k_row = 6,
-          margins= c(NA, 200, 60, NA),
+          margins= c(NA, 100, 50, NA),
           fontsize_row = 4,
           fontsize_col = 5,
           main = "Segmentation of Shan State by ICT indicators",
@@ -690,7 +691,7 @@ These serve as the nodes in the representation of the graph. In order to plot th
 ```{r}
 plot(shan_sp, border=grey(0.6))
 
-plot(shan.nb, coordinates(shan_sp), col="blue", add=TRUE)
+plot(shan.nb, coordinates(shan_sp), col="red", add=TRUE)
 ```
 
 > Be aware that some of the areas will be trimmed if you we plot the network first and then the borders. This is so because the first plot's attributes determine the plotting area. In this instance, we plot the border map first because it is larger than the graph.
@@ -832,8 +833,6 @@ shclust.map = tm_shape(shclust.map.df) +
   
 tmap_arrange(hclust.map, shclust.map,
              asp=NA, ncol=2)
-
-hclust.map + shclust.map
 ```
 
-## Spatially Constrained Clustering: ClustGeo Method
+## Spatially Constrained Clustering - ClustGeo Method
