@@ -1,14 +1,13 @@
 ---
 title: "Hands On Exercise 3.1 - Geographical Segmentation with Spatially Constrained Clustering Techniques"
 author: "Allan Chong"
+editor: visual
 execute: 
   warning: false
   message: false
 ---
-editor: visual
----
 
-### Overview
+## Overview
 
 In this hands-on exercise, we are interested to delineate [Shan State](https://en.wikipedia.org/wiki/Shan_State), [Myanmar](https://en.wikipedia.org/wiki/Myanmar) into homogeneous regions by using multiple Information and Communication technology (ICT) measures, namely: Radio, Television, Land line phone, Mobile phone, Computer, and Internet at home.
 
@@ -22,13 +21,13 @@ Firstly, we load the required packages in R
 
 -   **Attribute data handling**
 
-    -   **knitr, tidyverse**, especially **readr**, **ggplot2** and **dplyr**
+    -   **knitr, tidyverse**, **funModeling** especially **readr**, **ggplot2** and **dplyr**
 
 -   **Choropleth mapping**
 
     -   **tmap**
 
--   **Multivariate data visualisation and analysis**
+-   **Multivariate data visualization and analysis**
 
     -   **coorplot**, **ggpubr**, and **heatmaply**
 
@@ -40,7 +39,8 @@ Firstly, we load the required packages in R
 
 ```{r}
 pacman::p_load(knitr, rgdal, spdep, tmap, sf, 
-               ggpubr, cluster, factoextra, NbClust,
+               ggpubr, cluster, funModeling,
+               factoextra, NbClust, #factoextra factor analysis, access clustering results
                heatmaply, corrplot, psych, tidyverse)
 ```
 
@@ -93,7 +93,7 @@ new_col_names = c('DT_PCODE', 'DT', 'TS_PCODE', 'TS', 'TT_HOUSEHOLDS', 'RADIO', 
 old_col_names = c('District Pcode', 'District Name', 'Township Pcode', 'Township Name', 'Total households', 'Radio', 'Television', 'Land line phone', 'Mobile phone', 'Computer', 'Internet at home')
 
 ict_derived = ict %>%
-  mutate(`RADIO_PR` = `Radio`/`Total households`*1000) %>%
+  mutate(`RADIO_PR` = `Radio`/`Total households`*1000) %>% #per thousand household
   mutate(`TV_PR` = `Television`/`Total households`*1000) %>%
   mutate(`LLPHONE_PR` = `Land line phone`/`Total households`*1000) %>%
   mutate(`MPHONE_PR` = `Mobile phone`/`Total households`*1000) %>%
@@ -117,6 +117,7 @@ We can plot the distribution of the variables (i.e. Number of households with r
 A Histogram is useful to identify the overall distribution of the data values (i.e. left skew, right skew or normal distribution)
 
 ```{r}
+#{r, fig.width=4, fig.height=4
 ggplot(data = ict_derived, aes(x=`RADIO`)) + 
       geom_histogram(bins=30, color="black", fill="light blue") +
       
@@ -131,9 +132,7 @@ ggplot(data = ict_derived, aes(x=`RADIO`)) +
 
 ```
 
-From the histogram, we can tell it is positively skewed, with an outlier at the 30k mark.
-
-We can also use boxplot to detect outliers
+We can also use box plot to detect outliers
 
 ```{r}
 ggplot(data=ict_derived, 
@@ -179,7 +178,7 @@ ggplot(data=ict_derived,
                fill="light blue")
 ```
 
-From the boxplot, we can infer that there are 1 outlier, we can find the outlier and display it using `kable()` below from the code below
+From the box plot, we can infer that there are 1 outlier, we can find the outlier and display it using `kable()` below from the code below
 
 ```{r}
 ict_derived_outliers_radio = ict_derived %>%
@@ -290,7 +289,7 @@ We must first integrate the geographical data object (*shan_sf*) and aspatial da
 To do this, the **dplyr** package's `left_join` function will be used. We will use *TS_PCode* as the common variable to join the 2 tables
 
 ```{r}
-shan_sf = left_join(shan_sf, ict_derived, 
+shan_sf = left_join(shan_sf, ict_derived, #geospatial file first
                      by=c("TS_PCODE"="TS_PCODE"))
 ```
 
@@ -360,10 +359,10 @@ The penetration rate is 235.7 radios per 1000 which is only between the 50th and
 
 It is crucial that we ensure the cluster variables are not highly correlated before we conduct cluster analysis.
 
-We will discover how to see and analyze the correlation of the input variables using the corrplot.mixed() function of the corrplot package.
+We will discover how to see and analyze the correlation of the input variables using the `corrplot.mixed()` ([ref](https://cran.r-project.org/web/packages/corrplot/corrplot.pdf)) function of the [**corrplot**](https://cran.r-project.org/web/packages/corrplot/vignettes/corrplot-intro.html) package. However we need to find the correlation matrix first with `cor()` and only use the variables we are interested in, which are in column 12 to 17.
 
 ```{r}
-cluster_vars.cor = cor(ict_derived[,12:17])
+cluster_vars.cor = cor(ict_derived[,12:17]) #convert to correlation matrix [,cols]
 
 corrplot.mixed(cluster_vars.cor, 
                lower = "ellipse", 
@@ -392,12 +391,14 @@ First we need to extract the clustering variables from the *shan_sf* simple feat
 
 ```{r}
 cluster_vars = shan_sf %>%
-          st_set_geometry(NULL) %>%
+          st_set_geometry(NULL) %>% #drop geometric column as we it is not one of our clustering variables
             select("TS.x", "RADIO_PR", "TV_PR", "LLPHONE_PR", "MPHONE_PR", "COMPUTER_PR")
 head(cluster_vars, 10)
 ```
 
-The following step is to replace row number with township name in the rows and delete the TS.x field by selecting only the required columns (2 to 6)
+The following step is to replace row number with township name in the rows and delete the TS.x field by selecting only the required columns (2 to 6) by using `rows.names`
+
+The columns names must only be our clustering variables
 
 ```{r}
 row.names(cluster_vars) = cluster_vars$"TS.x"
@@ -415,7 +416,7 @@ In most cases, cluster analysis will make use of many variables. Their differing
 
 ##### Min-Max standardization
 
-The code below uses the **heatmaply** package's `normalize()` function to standardize the clustering variables using the Min-Max approach. he `summary()` function is used to show the summary statistics for the standardized clustering variables.
+The code below uses the [**heatmaply**](https://cran.r-project.org/web/packages/heatmaply/) package's `normalize()` function to standardize the clustering variables using the Min-Max approach. he `summary()` function is used to show the summary statistics for the standardized clustering variables.
 
 ```{r}
 shan_ict.std_minmax = normalize(shan_ict)
@@ -426,7 +427,7 @@ The values range of the Min-max standardized clustering variables are between 0 
 
 ##### Z-score standardization
 
-The Base R function `scale()` makes standardizing Z-scores simple. The Z-score approach will be used to standardize the clustering variables below. We use the `describe()` function of the **psych** package here because we want to look at the standard deviation of the variable
+The Base R function `scale()` ([ref](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/scale)) makes standardizing Z-scores simple. The Z-score approach will be used to standardize the clustering variables below. We use the `describe()` function of the **psych** package here because we want to look at the standard deviation of the variable
 
 ```{r}
 shan_ict.std_z = scale(shan_ict)
@@ -506,14 +507,16 @@ The code below uses the ward.D method to do a hierarchical cluster analysis. An 
 
 ```{r}
 hclust_ward_d = hclust(proxmat, method="ward.D")
-plot(hclust_ward_d, cex=0.6)
+plot(hclust_ward_d, cex=0.6) #scale down plot to 0.6x in order to see township name
 ```
 
 #### Selecting the optimal clustering algorithm
 
 Finding stronger clustering structures is a challenge when performing hierarchical clustering. Using the `agnes()` function of the **cluster** package will address the issue.
 
-It performs similar operations to `hclus()`, but `agnes()` also provides the agglomerative coefficient, which gauges the degree of clustering structure present (values closer to 1 suggest strong clustering structure).
+It performs similar operations to `hclus()`, but `agnes()` also provides the agglomerative coefficient, which gauges the degree of clustering structure present
+
+> ***values closer to 1 suggest strong clustering structure***
 
 All hierarchical clustering algorithms' agglomerative coefficients will be calculated using the code below.
 

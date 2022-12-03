@@ -19,12 +19,35 @@ The spatial patterns of non-functional water points will be shown in this study 
 
 ## Getting Started
 
-First, the required packages are loaded into the R environment . The required packages are **sf,** **tidyverse**, **spdep**, **tmap**, & **funModeling**
+First, we load the required packages in R
 
-with the code below:
+-   **Spatial data handling**
+
+    -   **sf**, **rgdal** and **spdep**
+
+-   **Attribute data handling**
+
+    -   **knitr, tidyverse**, **funModeling** especially **readr**, **ggplot2** and **dplyr**
+
+-   **Choropleth mapping**
+
+    -   **tmap**
+
+-   **Multivariate data visualization and analysis**
+
+    -   **coorplot**, **ggpubr**, and **heatmaply**
+
+-   **Cluster analysis**
+
+    -   **cluster**
+
+    -   **ClustGeo**
 
 ```{r}
-pacman::p_load(sf, tidyverse, spdep, tmap, funModeling)
+pacman::p_load(knitr, rgdal, spdep, tmap, sf, 
+               ggpubr, cluster, funModeling,
+               factoextra, NbClust, #factoextra factor analysis, access clustering results
+               heatmaply, corrplot, psych, tidyverse)
 ```
 
 ### Spatial Data
