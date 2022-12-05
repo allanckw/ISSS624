@@ -26,7 +26,7 @@ website:
           - text: In Class Exercise Week 2 - Do functionally similar water points positively co-occur in Nigeria?
             href: In-Class_Ex2\In-class_Ex2.qmd
           - text: In Class Exercise Week 3 - Spatially Constrained Clustering - ClustGeo Method
-            href: https://mitb-isss624-ackw-gis-analytics.netlify.app/in-class_ex3/in-class_ex3#spatially-constrained-clustering-clustgeo-method
+            href: https://mitb-isss624-ackw-gis-analytics.netlify.app/in-class_ex3/in-class_ex3#spatially-constrained-clustering---clustgeo-method
             
       - text: Take Home Exercises    
         menu: 

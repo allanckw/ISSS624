@@ -124,7 +124,7 @@ tm_shape(nga) +
 
 The aspatial dataset used in this assignment is the water point data exchange dataset found in [WPdx Global Data Repositories](https://www.waterpointdata.org/access-data/). Data is filtered on the web portal to only keep Nigeria and the file is saved as *NigeriaWaterPoints_Raw.csv*
 
-As we are only interested in the functionality of the water point, it is important to capture fields that may affect the functionality
+As we are only interested in the functionality of the water point, it is important to capture fields that may may aid us in our analysis (Definition are found here: [Source](https://data.waterpointdata.org/dataset/Water-Point-Data-Exchange-Plus-WPdx-/eqje-vguj))
 
 -   LGA: The area we are interested in
 
@@ -132,13 +132,23 @@ As we are only interested in the functionality of the water point, it is importa
 
 -   Functional: Whether it is functional or not
 
--   management: who manages it?
+-   Management: who manages it?
 
 -   Quality: what is the quality?
 
 -   Water Source Category: where the water came from?
 
 -   Water Tech Category: What technology is used?
+
+-   is_urban: Is it in an urban area?
+
+-   #distance_to_primary_road: Based on calculations with data from OpenStreetMap, the distance in km to the nearest road.
+
+-   #distance_to_secondary_road: Based on calculations using OpenStreetMap data, the distance in km to the second-closest road.
+
+-   #distance_to_tertiary_road: Using calculations with data from OpenStreetMap, the distance to the third-closest road is given in km.
+
+-   Usage Capacity: Maximum recommended number of users per waterpoint
 
 -   latitude
 
@@ -161,9 +171,18 @@ Most of the columns are irrelevant, so we will perform the following:
 
 ```{r}
 #| eval: false
-retain_cols = c('#clean_adm2', '#clean_adm1', '#status_clean', '#management_clean', '#subjective_quality', '#fecal_coliform_presence', '#water_source_category', '#water_tech_category', '#lat_deg', '#lon_deg' )
+retain_cols = c('#clean_adm2', '#clean_adm1', '#status_clean', '#management_clean'
+                , '#subjective_quality', '#water_source_category', 
+                '#water_tech_category', 
+                '#lat_deg', '#lon_deg','is_urban','#distance_to_primary_road',
+                '#distance_to_secondary_road', '#distance_to_tertiary_road'
+                ,'usage_capacity')
 
-new_col_names = c('LGA', 'State', 'Functional', 'Management', 'Quality', 'presence_of_fecal_coliform', 'Water_Source_Category', 'Water_Tech_Category', 'latitude', 'longitude')
+new_col_names = c('LGA', 'State', 'Functional', 'Management', 
+                  'Quality',  'Water_Source_Category', 'Water_Tech_Category',
+                  'latitude', 'longitude', 'Is_Urban_Area', 'dist_to_primary_road'
+                  ,'dist_to_secondary_road', 'dist_to_tertiary_road'
+                  ,'usage_capacity')
 
 wpdx_clean = subset(wpdx_raw, select = (names(wpdx_raw) %in% retain_cols)) %>%  rename_with(~ new_col_names, all_of(retain_cols)) %>% 
 replace_na(list(Functional = "Unknown", Management = "Unknown", Quality = "Unknown", Water_Source_Category = "Unknown", Water_Tech_Category = "Unknown"))
@@ -176,13 +195,13 @@ We save the clean file with `saveRDS()`, the file will be reduced to 1.6MB from 
 
 ```{r}
 #| eval: false
-saveRDS(wpdx_clean, "data/aspatial/wpdx_clean.rds")
+saveRDS(wpdx_clean, "data/aspatial/wpdx_clean_ex2.rds")
 ```
 
 We can then delete the raw file from the project and retrieve the saved RDS file using `readRDS()`
 
 ```{r}
-wpdx_clean = readRDS("data/aspatial/wpdx_clean.rds")
+wpdx_clean = readRDS("data/aspatial/wpdx_clean_ex2.rds")
 
 ```
 
@@ -203,26 +222,149 @@ There are 95, 008 water points in the LGAs. The results also shows that the long
 glimpse(wpdx_clean_sf)
 ```
 
-#### Aggregate the Data
+#### Data points of interest
 
-We can use `freq()` of the **funModeling** package to display the distribution of *functional* field in *wpdx_clean_sf*. This is to help us aggregate the data as the dataset provide breakdowns of functional status. In order to only look at non functional water points, we will need to aggregate the different categories into simply functional, non functional and unknowns.
+In this assignment, we will attempt to regionalize Nigeria based on the following variables:
+
+-   Total number of functional water points
+
+-   Total number of nonfunctional water points
+
+-   Percentage of functional water points
+
+-   Percentage of non-functional water points
+
+-   Percentage of main water point technology (i.e. Hand Pump)
+
+-   Percentage of usage capacity (i.e. \< 1000, \>=1000)
+
+-   Percentage of rural water points
+
+-   Percentage of potable vs non potable water points
+
+-   Percentage of water points accessible within median of primary road network
+
+-   Percentage of water points accessible within median of secondary road network
+
+-   Percentage of water points accessible within median of tertiary road network
+
+```{=html}
+<!-- -->
+```
+-   Percentage of water points that are managed
+
+#### Exploratory Data Analysis (EDA)
+
+We can use `freq()` of the **funModeling** package to display the distribution of *our data points of interest using wpdx_clean_sf*. This is to help us aggregate the data as the dataset provide breakdowns of their respective catagories.
+
+##### Categorical Variables
 
 ```{r}
 freq(data=wpdx_clean_sf, input = 'Functional')
 ```
 
-To aggregate them into functional, non functional and unknown, we will create new data frames to store them by using the `filter` function
+Checking out functionality, we know that functional water points are broken down into *Functional, Functional but needs repair,* and *Functional but not in use.* 48.29% are functional, 4.82% are functional but needs repair and 1.77% of them are functional but not in use.
+
+```{r}
+freq(data=wpdx_clean_sf, input = 'Water_Tech_Category')
+```
+
+Checking out water technology, we know that water points are broken down into *Hand pumps, Mechanized Pump, Tapstand, Rope and bucket.* 61.84% of water points operates on hand pumps, 26.99% on mechanized pumps, 10.58% are unknowns and a minority of them (less than 0.58%) are either on tapstand or Rope and Bucket.
+
+```{r}
+freq(data=wpdx_clean_sf, input = 'Quality')
+```
+
+Checking out the quality of water points, we know that 75.57% of them are of acceptable quality, with an additional 0.04% of them within potable national limits / standards. The rest are either unknown or of unacceptable quality.
+
+```{r}
+freq(data=wpdx_clean_sf, input = 'Management')
+```
+
+Checking out water point management, we know that water points are mostly managed except 37.8% which are unknowns
+
+##### Continuous Variables
+
+We will need to find out the summary of the respective distance in order to categorize them appropriately for analysis. We can achieve that by using summary statistics in R
+
+```{r}
+summary(wpdx_clean_sf$dist_to_primary_road)
+```
+
+```{r}
+summary(wpdx_clean_sf$dist_to_secondary_road)
+```
+
+```{r}
+summary(wpdx_clean_sf$dist_to_tertiary_road)
+```
+
+Based on the results above, we know that the median distance (in km) to primary, secondary and tertiary roads is 6647.50 km, 4446.0 km and 1442.4 km respectively. We can use within median distance to analyze if accessibility to water points is a factor to regionalization
+
+#### Aggregate the Data
+
+To aggregate the variable of interest, we will create new data frames to store them by using the `filter` function. Variables names used are self explanatory.
 
 ```{r}
 func_list = c("Functional", "Functional but needs repair", "Functional but not in use")
-wpt_functional = wpdx_clean_sf %>%
+wpt_functional_true = wpdx_clean_sf %>%
   filter(Functional %in% func_list)
 
-wpt_non_functional = wpdx_clean_sf %>%
+wpt_functional_false = wpdx_clean_sf %>%
   filter(!Functional %in% c(func_list, "Unknown"))
 
-wpt_unknown = wpdx_clean_sf %>%
+wpt_functional_unknown = wpdx_clean_sf %>%
   filter(Functional %in% "Unknown")
+
+wpt_rural = wpdx_clean_sf %>%
+  filter(Is_Urban_Area == FALSE)
+
+wpt_handpumps_true = wpdx_clean_sf %>%
+  filter(Water_Tech_Category %in% "Hand Pump")
+
+wpt_handpumps_false = wpdx_clean_sf %>%
+  filter(!Water_Tech_Category %in% "Hand Pump")
+
+wpt_potable_true = wpdx_clean_sf %>%
+  filter(Quality %in% c("Acceptable quality", "Within National standards (potable)
+", "Within National limits (potable)"))
+
+wpt_potable_false = wpdx_clean_sf %>%
+  filter(!Quality %in% c("Acceptable quality", "Within National standards (potable)
+", "Within National limits (potable)", "Unknown"))
+
+wpt_potable_unknown = wpdx_clean_sf %>%
+  filter(!Quality %in% "Unknown")
+
+wpt_usageOver1000 = wpdx_clean_sf %>%
+  filter(usage_capacity >= 1000)
+
+wpt_usageLessThan1000 = wpdx_clean_sf %>%
+  filter(usage_capacity < 1000)
+
+wpt_accessibility_PriRd_lessThanMedian = wpdx_clean_sf %>%
+  filter(dist_to_primary_road < 6647.50)
+  
+wpt_accessibility_PriRd_moreThanMedian = wpdx_clean_sf %>%
+  filter(dist_to_primary_road >= 6647.50)
+
+wpt_accessibility_secRd_lessThanMedian = wpdx_clean_sf %>%
+  filter(dist_to_secondary_road < 4446.0  )
+  
+wpt_accessibility_secRd_moreThanMedian = wpdx_clean_sf %>%
+  filter(dist_to_secondary_road >= 4446.0  )
+  
+wpt_accessibility_TerRd_lessThanMedian = wpdx_clean_sf %>%
+  filter(dist_to_tertiary_road < 1442.4  )
+  
+wpt_accessibility_TerRd_moreThanMedian = wpdx_clean_sf %>%
+  filter(dist_to_tertiary_road >= 1442.4  )
+
+wpt_managed_true = wpdx_clean_sf %>%
+  filter(!Management %in% "Unknown")
+
+wpt_managed_unknown = wpdx_clean_sf %>%
+  filter(Management %in% "Unknown")
 ```
 
 ## Combining Spatial & Aspatial Data
@@ -251,11 +393,13 @@ nga_wp = nga %>%
     st_intersects(nga, wpt_non_functional))) %>%
   mutate(`wpt unknown` = lengths(
     st_intersects(nga, wpt_unknown))) %>%
+  mutate(`isRural` = lengths(
+    st_intersects(nga, wpt_rural))) %>%
   
   #add columns to compute %
   mutate(pct_functional = `wpt functional`/`total wpt`) %>%
-  mutate(`pct_non-functional` = `wpt non functional`/`total wpt`) %>%
-  select(3:4, 8:9, 18:23)
+  mutate(`pct_non-functional` = `wpt non functional`/`total wpt`) #%>%
+  #select(3:4, 8:9, 18:23)
 ```
 
 #### Updating Spatial features that have identical name but are in different states
@@ -266,8 +410,7 @@ The following code determines whether any LGA names have been repeated. If the s
 subset(nga_wp, duplicated(nga_wp$ADM2_EN))$ADM2_EN
 ```
 
-From the result, there are 6 LGAs that have the same names, even though they are from different states.
-We will want to rename them or it would be confusing when we conduct further analysis.
+From the result, there are 6 LGAs that have the same names, even though they are from different states. We will want to rename them or it would be confusing when we conduct further analysis.
 
 ```{r}
 nga_wp %>% filter(grepl("Bassa",ADM2_EN)) 
@@ -283,26 +426,15 @@ nga_wp$ADM2_EN[nga_wp$ADM2_PCODE=="NG032002"] = 'Bassa (Plateau)'
 We repeat the same for the rest of the duplicates and we have the final results as follow
 
 ```{r}
-nga_wp$ADM2_EN[nga_wp$ADM2_PCODE=="NG024005"] = "Ifelodun (Kwara)"
-nga_wp$ADM2_EN[nga_wp$ADM2_PCODE=="NG030016"] = "Ifelodun (Osun)"
+z = nga_wp %>% filter(grepl("Ifelodun",ADM2_EN)) 
+nga_wp$ADM2_EN[nga_wp$ADM2_PCODE=="NG024005"] = 'Ifelodun (Kwara)'
+nga_wp$ADM2_EN[nga_wp$ADM2_PCODE=="NG030016"] = 'Ifelodun (Osun)'
 
-nga_wp$ADM2_EN[nga_wp$ADM2_PCODE=="NG024009"] = "Irepodun (Kwara)"
-nga_wp$ADM2_EN[nga_wp$ADM2_PCODE=="NG030020"] = "Irepodun (Osun)"
 
-nga_wp$ADM2_EN[nga_wp$ADM2_PCODE=="NG020031"] = "Nasarawa (Kano)"
-nga_wp$ADM2_EN[nga_wp$ADM2_PCODE=="NG026009"] = "Nasarawa (Nasarawa)"
+z = nga_wp %>% filter(grepl("Irepodun",ADM2_EN)) 
+nga_wp$ADM2_EN[nga_wp$ADM2_PCODE=="NG024009"] = 'Irepodun (Kwara)'
+nga_wp$ADM2_EN[nga_wp$ADM2_PCODE=="NG030020"] = 'Irepodun (Osun)'
 
-nga_wp$ADM2_EN[nga_wp$ADM2_PCODE=="NG007014"] = "Obi (Benue)"
-nga_wp$ADM2_EN[nga_wp$ADM2_PCODE=="NG026011"] = "Obi (Nasarawa)"
-
-nga_wp$ADM2_EN[nga_wp$ADM2_PCODE=="NG025020"] = "Surulere (Lagos)"
-nga_wp$ADM2_EN[nga_wp$ADM2_PCODE=="NG031033"] = "Surulere (Oyo)"
-```
-
-We then change the row names to the names of the LGAs
-
-```{r}
-row.names(nga_wp) <- nga_wp$ADM2_EN
 ```
 
 ## Visualizing the spatial distribution of water points

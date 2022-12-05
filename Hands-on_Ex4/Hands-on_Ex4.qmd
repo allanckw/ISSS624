@@ -427,7 +427,7 @@ The values range of the Min-max standardized clustering variables are between 0 
 
 ##### Z-score standardization
 
-The Base R function `scale()` ([ref](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/scale)) makes standardizing Z-scores simple. The Z-score approach will be used to standardize the clustering variables below. We use the `describe()` function of the **psych** package here because we want to look at the standard deviation of the variable
+The Base R function `scale()` ([ref](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/scale)) makes standardizing Z-scores simple. The Z-score approach will be used to standardize the clustering variables below. We use the `describe()` ([ref](https://www.rdocumentation.org/packages/Hmisc/versions/4.4-0/topics/describe)) function of the [**psych**](https://cran.r-project.org/web/packages/psych/) package here because we want to look at the standard deviation of the variable
 
 ```{r}
 shan_ict.std_z = scale(shan_ict)
