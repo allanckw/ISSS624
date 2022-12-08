@@ -102,7 +102,7 @@ st_crs(nga)
 
 ### Updating Spatial features that have identical name but are in different states
 
-The following code determines whether any LGA names have been repeated. If the shapeName is not distinct for rows, duplicated() returns True. Only rows that satisfy the duplicated rows = True criterion are returned by subset() (Ong, 2022).
+The following code determines whether any LGA names have been repeated. If the shapeName is not distinct for rows, duplicated() returns True. Only rows that satisfy the duplicated rows = True criterion are returned by `subset()` (Ong, 2022).
 
 ```{r}
 duplicate = nga$shapeName[nga$shapeName %in% nga$shapeName[duplicated(nga$shapeName)]]
@@ -944,6 +944,372 @@ nga_wp_corr_vars = nga_wp_corr_vars %>%
 ```
 
 ### Data Standardization
+
+As most of the data points are already in percentages except the number of functional and non functional water points, we will need to perform standardization so that they will be comparable. From the histogram generated previously, we know that not all of the variables follow some normal distribution, so we will use Min-Max normalization instead.
+
+To achieve that we can use the [**heatmaply**](https://cran.r-project.org/web/packages/heatmaply/) package\'s `normalize()` function. The `summary()` function is used to show the summary statistics for the standardized clustering variables.
+
+```{r}
+nga_wp_corr_vars.std_minmax = normalize(nga_wp_corr_vars)
+summary(nga_wp_corr_vars.std_minmax)
+```
+
+The values range of the Min-max standardized clustering variables are between 0 and 1 now.
+
+#### Visualizing the standardize clustering variables
+
+It is a good idea to visualize the distribution graphical of the standardized clustering variables in addition to evaluating the summary statistics of those variables.
+
+```{r}
+r_func = ggplot(data=nga_wp_interested_data_pts, aes(x=`wpt functional`)) + 
+    geom_histogram(bins=20, color="black", fill="light blue") +
+    labs(x = "Functional", y = "Frequency") +
+    geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`wpt functional`)),   
+               color="red", linetype="dashed", linewidth=1) +
+    geom_vline(aes(xintercept=median(nga_wp_interested_data_pts$`wpt functional`)),   
+               color="brown", linetype="dashed", linewidth=1)
+
+s_func = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`wpt functional`)) + 
+    geom_histogram(bins=20, color="black", fill="light blue") +
+    labs(x = "Functional", y = "Frequency") +
+    geom_vline(aes(xintercept = mean(nga_wp_corr_vars.std_minmax$`wpt functional`)),   
+               color="red", linetype="dashed", linewidth=1) +
+    geom_vline(aes(xintercept=median(nga_wp_corr_vars.std_minmax$`wpt functional`)),   
+               color="brown", linetype="dashed", linewidth=1) + ggtitle("Min-Max Standardization")
+
+r_nfunc = ggplot(data=nga_wp_interested_data_pts, aes(x=`wpt non functional`)) + 
+    geom_histogram(bins=20, color="black", fill="light blue") +
+    labs(x = "Non Functional", y = "Frequency") +
+    geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`wpt non functional`)),   
+               color="red", linetype="dashed", linewidth=1) +
+    geom_vline(aes(xintercept=median(nga_wp_interested_data_pts$`wpt non functional`)),   
+               color="brown", linetype="dashed", linewidth=1)
+
+s_nfunc = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`wpt non functional`)) + 
+    geom_histogram(bins=20, color="black", fill="light blue") +
+    labs(x = "Non Functional", y = "Frequency") +
+    geom_vline(aes(xintercept = mean(nga_wp_corr_vars.std_minmax$`wpt non functional`)),   
+               color="red", linetype="dashed", linewidth=1) +
+    geom_vline(aes(xintercept=median(nga_wp_corr_vars.std_minmax$`wpt non functional`)),   
+               color="brown", linetype="dashed", linewidth=1) + ggtitle("Min-Max Standardization")
+
+ggarrange(r_func, s_func, r_nfunc, s_nfunc,
+          ncol = 2,
+          nrow = 2)
+```
+
+```{r}
+r_pctFunc = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_functional`)) + 
+    geom_histogram(bins=20, color="black", fill="light blue") +
+    labs(x = "% Functional", y = "Frequency") +
+    geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_functional`)),   
+               color="red", linetype="dashed", linewidth=1) +
+    geom_vline(aes(xintercept=median(nga_wp_interested_data_pts$`pct_functional`)),   
+               color="brown", linetype="dashed", linewidth=1)
+
+s_pctFunc = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`pct_functional`)) + 
+    geom_histogram(bins=20, color="black", fill="light blue") +
+    labs(x = "% Functional", y = "Frequency") +
+    geom_vline(aes(xintercept = mean(nga_wp_corr_vars.std_minmax$`pct_functional`)),   
+               color="red", linetype="dashed", linewidth=1) +
+    geom_vline(aes(xintercept=median(nga_wp_corr_vars.std_minmax$`pct_functional`)),   
+               color="brown", linetype="dashed", linewidth=1) + ggtitle("Min-Max Standardization")
+
+r_pctNfunc = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_non-functional`)) + 
+    geom_histogram(bins=20, color="black", fill="light blue") +
+    labs(x = "% Non Functional", y = "Frequency") +
+    geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_non-functional`)),   
+               color="red", linetype="dashed", linewidth=1) +
+    geom_vline(aes(xintercept=median(nga_wp_interested_data_pts$`pct_non-functional`)),   
+               color="brown", linetype="dashed", linewidth=1)
+
+s_pctNfunc = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`pct_non-functional`)) + 
+    geom_histogram(bins=20, color="black", fill="light blue") +
+    labs(x = "% Non Functional", y = "Frequency") +
+    geom_vline(aes(xintercept = mean(nga_wp_corr_vars.std_minmax$`pct_non-functional`)),   
+               color="red", linetype="dashed", linewidth=1) +
+    geom_vline(aes(xintercept=median(nga_wp_corr_vars.std_minmax$`wpt non functional`)),   
+               color="brown", linetype="dashed", linewidth=1) + ggtitle("Min-Max Standardization")
+
+ggarrange(r_pctFunc, s_pctFunc, r_pctNfunc,s_pctNfunc,
+          ncol = 2,
+          nrow = 2)
+```
+
+```{r}
+r_nonpotable = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_NonPotable`)) + 
+    geom_histogram(bins=20, color="black", fill="light blue") +
+    labs(x = "Non Potable", y = "Frequency") +
+    geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_NonPotable`)),   
+               color="red", linetype="dashed", linewidth=1) +
+    geom_vline(aes(xintercept=median(nga_wp_interested_data_pts$`pct_NonPotable`)),   
+               color="brown", linetype="dashed", linewidth=1)
+
+s_nonpotable = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`pct_NonPotable`)) + 
+    geom_histogram(bins=20, color="black", fill="light blue") +
+    labs(x = "Non Potable", y = "Frequency") +
+    geom_vline(aes(xintercept = mean(nga_wp_corr_vars.std_minmax$`pct_NonPotable`)),   
+               color="red", linetype="dashed", linewidth=1) +
+    geom_vline(aes(xintercept=median(nga_wp_corr_vars.std_minmax$`pct_NonPotable`)),   
+               color="brown", linetype="dashed", linewidth=1) + ggtitle("Min-Max Standardization")
+
+r_capUnder1000 = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_Cap_Under_1000`)) + 
+    geom_histogram(bins=20, color="black", fill="light blue") +
+    labs(x = "Usage Capacity < 1000", y = "Frequency") +
+    geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_Cap_Under_1000`)),   
+               color="red", linetype="dashed", linewidth=1) +
+    geom_vline(aes(xintercept=median(nga_wp_interested_data_pts$`pct_Cap_Under_1000`)),   
+               color="brown", linetype="dashed", linewidth=1)
+
+s_capUnder1000 = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`pct_Cap_Under_1000`)) + 
+    geom_histogram(bins=20, color="black", fill="light blue") +
+    labs(x = "Usage Capacity < 1000", y = "Frequency") +
+    geom_vline(aes(xintercept = mean(nga_wp_corr_vars.std_minmax$`pct_Cap_Under_1000`)),   
+               color="red", linetype="dashed", linewidth=1) +
+    geom_vline(aes(xintercept=median(nga_wp_corr_vars.std_minmax$`pct_Cap_Under_1000`)),   
+               color="brown", linetype="dashed", linewidth=1) + ggtitle("Min-Max Standardization")
+
+ggarrange(r_nonpotable, s_nonpotable, r_capUnder1000, s_capUnder1000 ,
+          ncol = 2,
+          nrow = 2)
+```
+
+```{r}
+r_Managed = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_managed`)) + 
+    geom_histogram(bins=20, color="black", fill="light blue") +
+    labs(x = "Managed", y = "Frequency") +
+    geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_managed`)),   
+               color="red", linetype="dashed", linewidth=1) +
+    geom_vline(aes(xintercept=median(nga_wp_interested_data_pts$`pct_managed`)),   
+               color="brown", linetype="dashed", linewidth=1)
+
+s_Managed = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`pct_managed`)) + 
+    geom_histogram(bins=20, color="black", fill="light blue") +
+    labs(x = "Managed", y = "Frequency") +
+    geom_vline(aes(xintercept = mean(nga_wp_corr_vars.std_minmax$`pct_managed`)),   
+               color="red", linetype="dashed", linewidth=1) +
+    geom_vline(aes(xintercept=median(nga_wp_corr_vars.std_minmax$`pct_managed`)),   
+               color="brown", linetype="dashed", linewidth=1) + ggtitle("Min-Max Standardization")
+
+r_rural = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_rural`)) + 
+    geom_histogram(bins=20, color="black", fill="light blue") +
+    labs(x = "Rural", y = "Frequency") +
+    geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_rural`)),   
+               color="red", linetype="dashed", linewidth=1) +
+    geom_vline(aes(xintercept=median(nga_wp_interested_data_pts$`pct_rural`)),   
+               color="brown", linetype="dashed", linewidth=1)
+
+s_rural = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`pct_rural`)) + 
+    geom_histogram(bins=20, color="black", fill="light blue") +
+    labs(x = "Rural", y = "Frequency") +
+    geom_vline(aes(xintercept = mean(nga_wp_corr_vars.std_minmax$`pct_rural`)),   
+               color="red", linetype="dashed", linewidth=1) +
+    geom_vline(aes(xintercept=median(nga_wp_corr_vars.std_minmax$`pct_rural`)),   
+               color="brown", linetype="dashed", linewidth=1) + ggtitle("Min-Max Standardization")
+
+ggarrange(r_Managed, s_Managed, r_rural, s_rural ,
+          ncol = 2,
+          nrow = 2)
+```
+
+```{r}
+r_w_dist_toSecRoad = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_w_meddist_to_SecRoad`)) + 
+    geom_histogram(bins=20, color="black", fill="light blue") +
+    labs(x = "Within Dist to Secondary Road", y = "Frequency") +
+    geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_w_meddist_to_SecRoad`)),   
+               color="red", linetype="dashed", linewidth=1) +
+    geom_vline(aes(xintercept=median(nga_wp_interested_data_pts$`pct_w_meddist_to_SecRoad`)),   
+               color="brown", linetype="dashed", linewidth=1)
+
+s_w_dist_toSecRoad = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`pct_w_meddist_to_SecRoad`)) + 
+    geom_histogram(bins=20, color="black", fill="light blue") +
+    labs(x = "Within Dist to Secondary Road", y = "Frequency") +
+    geom_vline(aes(xintercept = mean(nga_wp_corr_vars.std_minmax$`pct_w_meddist_to_SecRoad`)),   
+               color="red", linetype="dashed", linewidth=1) +
+    geom_vline(aes(xintercept=median(nga_wp_corr_vars.std_minmax$`pct_w_meddist_to_SecRoad`)),   
+               color="brown", linetype="dashed", linewidth=1) + ggtitle("Min-Max Standardization")
+
+r_w_dist_toTerRoad = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_w_meddist_to_TerRoad`)) + 
+    geom_histogram(bins=20, color="black", fill="light blue") +
+    labs(x = "Within Dist to Tertiary Road", y = "Frequency") +
+    geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_w_meddist_to_TerRoad`)),   
+               color="red", linetype="dashed", linewidth=1) +
+    geom_vline(aes(xintercept=median(nga_wp_interested_data_pts$`pct_w_meddist_to_TerRoad`)),   
+               color="brown", linetype="dashed", linewidth=1)
+
+s_w_dist_toSecRoad = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`pct_w_meddist_to_TerRoad`)) + 
+    geom_histogram(bins=20, color="black", fill="light blue") +
+    labs(x = "Within Dist to Tertiary Road", y = "Frequency") +
+    geom_vline(aes(xintercept = mean(nga_wp_corr_vars.std_minmax$`pct_w_meddist_to_TerRoad`)),   
+               color="red", linetype="dashed", linewidth=1) +
+    geom_vline(aes(xintercept=median(nga_wp_corr_vars.std_minmax$`pct_w_meddist_to_TerRoad`)),   
+               color="brown", linetype="dashed", linewidth=1) + ggtitle("Min-Max Standardization")
+
+ggarrange(r_w_dist_toSecRoad , s_w_dist_toSecRoad, r_w_dist_toTerRoad , s_w_dist_toSecRoad,
+          ncol = 2,
+          nrow = 2)
+```
+
+After observing the histograms, we can conclude that the distribution did not change for all of the variables. preserving the nature of the data post standardization.
+
+#### Determine the proximity matrix.
+
+With R\'s `dist()` function, we shall compute the proximity matrix. The six distance proximity calculations that are supported by `dist()` are the euclidean, maximum, manhattan, canberra, binary, and minkowski methods. As the variables are largely dissimilar, we use the *minkowski* method
+
+```{r}
+proxmat = dist(nga_wp_corr_vars.std_minmax, method="minkowski")
+proxmat 
+```
+
+### Computing hierarchical clustering
+
+Hierarchical clustering is an unsupervised machine learning technique that divides objects into clusters based on how related they are. The result is a collection of clusters, each of which differs from the others while having things that are generally similar to one another.
+
+A tree-like diagram known as a dendrogram is used to record the sequences of mergers and splits in the result of the clustering process.
+
+We can use `hclust()` method provided by the R Stat class to find our clusters with our proximity matrix we found earlier using the *ward.d* method. The dendrogram is drawn using `plot()` of R graphics
+
+```{r}
+#| fig.height = 10, fig.width = 10
+hclust_ward_d = hclust(proxmat, method="ward.D")
+q = plot(hclust_ward_d, cex=0.5) 
+```
+
+#### Selecting the optimal clustering algorithm
+
+Finding stronger clustering structures is a challenge when performing hierarchical clustering. Using the `agnes()` function of the **cluster** package will address the issue.
+
+It performs similar operations to `hclus()`, but `agnes()` also provides the agglomerative coefficient, which gauges the degree of clustering structure present
+
+> ***values closer to 1 suggest strong clustering structure***
+
+We define the different methods and name of them in the variable *m* and define a function to find the agglomerative coefficient (*ac*). By calling `map_dbl(m, ac)` we can iterate through the list to find the respective ac of the different functions
+
+```{r}
+m = c("average", "single", "complete", "ward")
+names(m) = c("average", "single", "complete", "ward")
+
+ac = function(y) {
+  agnes(nga_wp_corr_vars.std_minmax, method=y)$ac
+}
+
+map_dbl(m,ac)
+```
+
+According to the results shown above, Ward\'s approach offers the greatest clustering structure out of the four examined methods as it is closest to 1. Consequently, only Ward\'s technique will be applied in the analysis that follows.
+
+### Determining Optimal Clusters
+
+The choice of the best clusters to keep is a technical problem for data analysts when undertaking clustering analysis.
+
+The gap statistic contrasts the overall intra-cluster variation for various values of *k* with the values that would be predicted under a null reference distribution for the data.
+
+The value that maximizes the gap statistic will be used to estimate the best clusters (i.e., that yields the largest gap statistic). In other words, the clustering structure is very different from a randomly distributed, uniform distribution of points.
+
+To compute the gap statistic, [`clusGap()`](https://www.rdocumentation.org/packages/cluster/versions/2.1.0/topics/clusGap) of [**cluster**](https://cran.r-project.org/web/packages/cluster/) package will be used. with the [`hcut`](https://rpkgs.datanovia.com/factoextra/reference/hcut.html) function from [**factoextra**](https://rpkgs.datanovia.com/factoextra/) package.
+
+```{r}
+set.seed(12345)
+gap_stat = clusGap(nga_wp_corr_vars.std_minmax, FUN=hcut, nstart=25, K.max = 10, B = 50)
+# Print the result
+print(gap_stat, method = "firstmax")
+```
+
+Next, we can visualise the plot by using [`fviz_gap_stat()`](https://rpkgs.datanovia.com/factoextra/reference/fviz_nbclust.html) of [**factoextra**](https://rpkgs.datanovia.com/factoextra/) package.
+
+```{r}
+fviz_gap_stat(gap_stat)
+```
+
+We can infer from the figure above that **10** clusters is the optimum number for the Hierarchical Clustering Algorithm.
+
+Using **R stats\'** `rect.hclust()` function, the dendrogram can alternatively be plotted with a border around the chosen clusters. The rectangles\' borders can be colored using the option border.
+
+```{r}
+#| fig.height = 10, fig.width = 10
+plot(hclust_ward_d, cex=0.6)
+rect.hclust(hclust_ward_d, k = 10, border = 2:10)
+```
+
+### Visually-driven hierarchical clustering analysis
+
+By using [**heatmaply**](https://cran.r-project.org/web/packages/heatmaply/) package we are able to build both highly interactive cluster heatmap or static cluster heatmap.
+
+```{r}
+nga_wp_corr_vars.std_minmax_mat = data.matrix(nga_wp_corr_vars.std_minmax)
+```
+
+Plotting interactive cluster heatmap using `heatmaply()`
+
+```{r}
+heatmaply(normalize(nga_wp_corr_vars.std_minmax_mat), 
+          Colv=NA,
+          dist_method = "minkowski",
+          hclust_method = "ward.D",
+          seriate = "OLO",
+          colors=PuRd,
+          k_row = 10,
+          margins= c(NA, 200, 60, NA),
+          fontsize_row = 4,
+          fontsize_col = 5,
+          main = "Segmentation of Nigeria water points",
+          xlab = "Water point indicators",
+          ylab = "Nigeria LGA"
+          
+          )
+```
+
+### Mapping the clusters formed
+
+Following a thorough analysis of the dendragram shown above, we chose to keep 20groups. The code below will use R Base\'s `cutree()` function to create a 10-cluster model.
+
+```{r}
+groups = as.factor(cutree(hclust_ward_d, k=10))
+```
+
+Groups are the output. It is a *list* object.
+
+The groups object needs to be added to the *nga* simple feature object in order to visualize the clusters.
+
+The following code snippet forms the join in 3 steps:
+
+1.  The object representing the groups list will be transformed into a matrix;
+
+2.  *shan_sf* is appended with the groups matrix using `cbind()` to create the simple feature object *shan_sf* cluster;
+
+3.  The as.matrix.groups column is renamed to CLUSTER using the **dplyr** package\'s `rename()` function.
+
+```{r}
+nga_wp_cluster = cbind(nga, as.matrix(groups)) %>%
+  rename(`CLUSTER` = `as.matrix.groups.`)
+```
+
+Next we use the tmap functions to plot the cloropleth map showing the clusters
+
+```{r}
+hclust_map_without_spatial_constraints = tm_shape(nga_wp_cluster) + 
+  tm_polygons("CLUSTER") +
+  tm_borders(alpha = 0.5) 
+
+hclust_map_without_spatial_constraints
+```
+
+We can see that without spatial constraints, the map generated with 10 clusters are quite messy and the regions forming the clusters are all over the place. This is sub optimal as there may be real world consideration that that necessitates the regionalization of geographies into distinct regions, such as urban planning.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## Reference
 
