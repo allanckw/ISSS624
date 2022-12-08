@@ -51,11 +51,11 @@ First, we load the required packages in R
 
 -   **Spatial data handling**
 
-    -   **sf**, **rgdal** and **spdep**
+    -   **sf** and **spdep**
 
 -   **Attribute data handling**
 
-    -   **knitr, tidyverse**, **funModeling** especially **readr**, **ggplot2** and **dplyr**
+    -   **tidyverse** especially **readr**, **ggplot2** and **dplyr** and **funModeling**
 
 -   **Choropleth mapping**
 
@@ -72,10 +72,10 @@ First, we load the required packages in R
     -   **ClustGeo**
 
 ```{r}
-pacman::p_load(knitr, rgdal, spdep, tmap, sf, 
+pacman::p_load(knitr, spdep, tmap, sf, 
                ggpubr, cluster, funModeling,
                factoextra, NbClust, #factoextra factor analysis, access clustering results
-               heatmaply, corrplot, psych, tidyverse)
+               heatmaply, corrplot, tidyverse, ClustGeo)
 ```
 
 ## Spatial Data
@@ -89,15 +89,10 @@ As the data we want is in WSG-84 format, we set *crs* to 4326.
 We won't utilize `st_transform()` at this time because it can result in outputs with missing points after transformation, which would skew our study.
 
 ```{r}
+#| eval: false
 nga = st_read(dsn = "data/geospatial",
                layer = "geoBoundaries-NGA-ADM2",
                crs = 4326)
-```
-
-We could use `st_crs()`to verify the coordinate system from the object.
-
-```{r}
-st_crs(nga)
 ```
 
 ### Updating Spatial features that have identical name but are in different states
@@ -105,6 +100,7 @@ st_crs(nga)
 The following code determines whether any LGA names have been repeated. If the shapeName is not distinct for rows, duplicated() returns True. Only rows that satisfy the duplicated rows = True criterion are returned by `subset()` (Ong, 2022).
 
 ```{r}
+#| eval: false
 duplicate = nga$shapeName[nga$shapeName %in% nga$shapeName[duplicated(nga$shapeName)]]
 
 duplicate
@@ -115,6 +111,7 @@ From the result, there are 12 LGAs that have the same names, even though they ar
 Firstly, we create a data frame with the duplicate
 
 ```{r}
+#| eval: false
 nga_dupes = nga %>%
   filter(shapeName %in% duplicate)
 ```
@@ -122,7 +119,7 @@ nga_dupes = nga %>%
 Calling `ttm()` in the **tmap** package will switch the tmap's viewing mode to interactive viewing, which will help us find the states of the respective duplicates in the map. We then plot the map with **tmap** functions
 
 ```{r}
-ttm()
+#| eval: false
 tm_shape(nga_dupes) + 
   tm_polygons("shapeName") +
   tm_borders(alpha=0.5) 
@@ -149,6 +146,7 @@ From the result, we can observe the following:
 Based on the results above, we replace the shape names with shapeID as the identifier and run the duplicate check again to verify that it is now empty
 
 ```{r}
+#| eval: false
 nga$shapeName[nga$shapeID=='NGA-ADM2-72505758B95534398'] = 'Bassa (Kogi)'
 nga$shapeName[nga$shapeID=='NGA-ADM2-72505758B52690633'] = 'Bassa (Plateau)'
 
@@ -170,6 +168,23 @@ nga$shapeName[nga$shapeID=='NGA-ADM2-72505758B31597260'] = 'Surulere (Oyo)'
 duplicate = nga$shapeName[nga$shapeName %in% nga$shapeName[duplicated(nga$shapeName)]]
 
 duplicate
+```
+
+Once we are done, we simply remove the unnecessary columns and keep only *shapeName* and save the data frame with `saveRDS()`
+
+```{r}
+#| eval: false
+nga = nga %>%
+  select(shapeName)
+
+saveRDS(nga, "data/geospatial/nga_ex2.rds")
+```
+
+We can then retrieve the cleaned RDS file using `readRDS()` and the set view mode to interactive using `ttm()`
+
+```{r}
+nga = readRDS("data/geospatial/nga_ex2.rds")
+ttm()
 ```
 
 ## Aspatial Data
@@ -271,12 +286,6 @@ We could use `st_crs()`to verify the coordinate system from the object.
 ```{r}
 wpdx_clean_sf = st_sf(wpdx_clean, crs=4326) 
 st_crs(wpdx_clean_sf)
-```
-
-We can then use *`glimpse()`* to verify each field's data type & available values.
-
-```{r}
-glimpse(wpdx_clean_sf)
 ```
 
 Lastly, the attribute data from the *nga* sf data frame will be transferred into the *wpdx_clean_sf* data frame using a geoprocessing function known as point-in-polygon overlay. `st_join()` from the sf package can help us with that
@@ -584,7 +593,7 @@ We will only keep the following variables as the rest are intermediate data poin
 ```{r}
 #| eval: false
 nga_wp_interested_data_pts = nga_wp  %>% 
-      select(8:9, 23:34) 
+      select(4:5, 19:30) 
 ```
 
 We save the processed data frame *nga_wp_interested_data_pts* into a file with `saveRDS()`, so that we do not need to process it again
@@ -657,7 +666,7 @@ ggarrange(functional_boxplot, nonfunctional_boxplot, ncol = 2, nrow = 1)
 
 We can see that there isn't any outliers in the functional water points, but for the non functional water points, there is an outlier where 100% of the water points are not functional.
 
-In the figure below, multiple histograms are plotted to reveal the distribution of the selected variables in the *ict_derived* data.frame. First, We do this by creating all the histograms assigned to individual variables.
+In the figure below, multiple histograms are plotted to reveal the distribution of the selected variables in the *nga_wp_interested_data_pts* data.frame. First, We do this by creating all the histograms assigned to individual variables.
 
 ```{r}
 
@@ -867,7 +876,7 @@ nga_wp_interested_data_pts.map.pct_func =
           palette ="PuRd", style="jenks", n = 5) +  
   tm_borders(alpha=0.5) + 
   tm_grid (alpha=0.2) +
-  tm_layout(main.title="% functional WP - 2 Layer map", 
+  tm_layout(main.title="% functional WP", 
             main.title.position="center", 
             main.title.size=0.8, 
             frame = TRUE) 
@@ -878,7 +887,7 @@ nga_wp_interested_data_pts.map.pct_nonfunc =
           palette ="PuRd", style="jenks", n = 5) +  
   tm_borders(alpha=0.5) + 
   tm_grid (alpha=0.2) +
-  tm_layout(main.title="% non functional WP - 2 Layer map", 
+  tm_layout(main.title="% non functional WP", 
             main.title.position="center", 
             main.title.size=0.8, 
             frame = TRUE) 
@@ -947,7 +956,7 @@ nga_wp_corr_vars = nga_wp_corr_vars %>%
 
 As most of the data points are already in percentages except the number of functional and non functional water points, we will need to perform standardization so that they will be comparable. From the histogram generated previously, we know that not all of the variables follow some normal distribution, so we will use Min-Max normalization instead.
 
-To achieve that we can use the [**heatmaply**](https://cran.r-project.org/web/packages/heatmaply/) package\'s `normalize()` function. The `summary()` function is used to show the summary statistics for the standardized clustering variables.
+To achieve that we can use the [**heatmaply**](https://cran.r-project.org/web/packages/heatmaply/) package's `normalize()` function. The `summary()` function is used to show the summary statistics for the standardized clustering variables.
 
 ```{r}
 nga_wp_corr_vars.std_minmax = normalize(nga_wp_corr_vars)
@@ -1154,7 +1163,7 @@ After observing the histograms, we can conclude that the distribution did not ch
 
 #### Determine the proximity matrix.
 
-With R\'s `dist()` function, we shall compute the proximity matrix. The six distance proximity calculations that are supported by `dist()` are the euclidean, maximum, manhattan, canberra, binary, and minkowski methods. As the variables are largely dissimilar, we use the *minkowski* method
+With R's `dist()` function, we shall compute the proximity matrix. The six distance proximity calculations that are supported by `dist()` are the euclidean, maximum, manhattan, canberra, binary, and minkowski methods. As the variables are largely dissimilar, we use the *minkowski* method
 
 ```{r}
 proxmat = dist(nga_wp_corr_vars.std_minmax, method="minkowski")
@@ -1196,7 +1205,7 @@ ac = function(y) {
 map_dbl(m,ac)
 ```
 
-According to the results shown above, Ward\'s approach offers the greatest clustering structure out of the four examined methods as it is closest to 1. Consequently, only Ward\'s technique will be applied in the analysis that follows.
+According to the results shown above, Ward's approach offers the greatest clustering structure out of the four examined methods as it is closest to 1. Consequently, only Ward's technique will be applied in the analysis that follows.
 
 ### Determining Optimal Clusters
 
@@ -1223,7 +1232,7 @@ fviz_gap_stat(gap_stat)
 
 We can infer from the figure above that **10** clusters is the optimum number for the Hierarchical Clustering Algorithm.
 
-Using **R stats\'** `rect.hclust()` function, the dendrogram can alternatively be plotted with a border around the chosen clusters. The rectangles\' borders can be colored using the option border.
+Using **R stats'** `rect.hclust()` function, the dendrogram can alternatively be plotted with a border around the chosen clusters. The rectangles' borders can be colored using the option border.
 
 ```{r}
 #| fig.height = 10, fig.width = 10
@@ -1259,9 +1268,9 @@ heatmaply(normalize(nga_wp_corr_vars.std_minmax_mat),
           )
 ```
 
-### Mapping the clusters formed
+### Mapping the clusters formed in hierarchical clustering
 
-Following a thorough analysis of the dendragram shown above, we chose to keep 20groups. The code below will use R Base\'s `cutree()` function to create a 10-cluster model.
+Following a thorough analysis of the dendragram shown above, we chose to keep 20groups. The code below will use R Base's `cutree()` function to create a 10-cluster model.
 
 ```{r}
 groups = as.factor(cutree(hclust_ward_d, k=10))
@@ -1275,9 +1284,9 @@ The following code snippet forms the join in 3 steps:
 
 1.  The object representing the groups list will be transformed into a matrix;
 
-2.  *shan_sf* is appended with the groups matrix using `cbind()` to create the simple feature object *shan_sf* cluster;
+2.  *nga* is appended with the groups matrix using `cbind()` to create the simple feature object *nga_wp_cluster*;
 
-3.  The as.matrix.groups column is renamed to CLUSTER using the **dplyr** package\'s `rename()` function.
+3.  The as.matrix.groups column is renamed to CLUSTER using the **dplyr** package's `rename()` function.
 
 ```{r}
 nga_wp_cluster = cbind(nga, as.matrix(groups)) %>%
@@ -1288,30 +1297,330 @@ Next we use the tmap functions to plot the cloropleth map showing the clusters
 
 ```{r}
 hclust_map_without_spatial_constraints = tm_shape(nga_wp_cluster) + 
+  tm_layout(main.title="Distribution of H Clusters", 
+            main.title.position="center", 
+            main.title.size=0.9, 
+            legend.height = 0.35, 
+            legend.width = 0.35, 
+            frame = TRUE) + 
   tm_polygons("CLUSTER") +
   tm_borders(alpha = 0.5) 
 
 hclust_map_without_spatial_constraints
 ```
 
-We can see that without spatial constraints, the map generated with 10 clusters are quite messy and the regions forming the clusters are all over the place. This is sub optimal as there may be real world consideration that that necessitates the regionalization of geographies into distinct regions, such as urban planning.
+We can see that without spatial constraints, the map generated 10 clusters that are quite messy and the regions forming the clusters are all over the place. This is sub optimal as there may be real world consideration that necessitates the regionalization of geographies into distinct regions, such as urban planning.
 
+## Spatially Constrained Clustering
 
+Now that we know utilizing overarching clustering without spatial considerations can form fragmented clusters that are not optimal, lets looks at adding spatial constraints
 
+### SKATER approach
 
+We will use the `skater()` method of the **spdep** package to derive a geographically limited cluster in this section.
 
+The SKATER approach is a method that begins with a set of edges, a data set and a number of cuts to determine clusters.
 
+1.  First We must first transform *nga* into a spatial polygons data frame. This is because only SP objects (*SpatialPolygonDataFrame*) are supported by the SKATER function.
 
+```{r}
+nga_sp = as_Spatial(nga)
+```
 
+#### Computing Neighbour List
 
+The neighbours list from the polygon list will then be computed using the `poly2nb()` function of the **spdep** package.
 
+```{r}
+nga_sp.nb = poly2nb(nga_sp)
+summary(nga_sp.nb)
+```
 
+From the output, there are 774 LGAs in Nigeria, Using the Queen's method, 1 of them has 14 neighbours, 1 of them is an island (no neighbour), and 2 of them only has 1 neighbour
 
+We must first create the weights matrix after determining the spatial weights. A isolated island can be found in the neighbor list's results. Since this island won't have any neighbors at all, it is not recommended to utilize a contiguity weight matrix. In light of this, we'll employ a weight matrix based on distance instead.
 
+#### Building the weights matrix
 
+The distance-based weight matrix can be found by using the **spdep** package's `dnearneigh()` function. The function searches for neighbors of region points using the Euclidean distance between the bottom (\>=) and upper (\<=) bounds or by using the longlat = True parameter and the great circle distance in kilometers.
 
+As there is an island involved, we will build an adaptive weight matrix instead.
 
-## Reference
+Using the k nearest neighbor (knn) technique, we can adjust how many neighbors each LGA has. As discussed in class, we set k in this instance to 8. The R functions used in this case are `knn2nb()` and `knearneigh()`
+
+For distance based matrix, we will need to perform st_transform first, and recreate the nga_sp for the *SpatialPolygonDataFrame*
+
+```{r}
+nga_local = st_transform(nga, crs=26392)
+st_crs(nga_local)
+
+nga_sp = as_Spatial(nga_local)
+```
+
+Before we can start building the matrix, we first need to find the coordinates
+
+-   The longitude is the first variable in each centroid, this enables us to obtain only the longitude.
+
+-   The latitude is the second variable in each centroid, this enables us to obtain only the latitude
+
+-   Using the double bracket notation \[\[\]\] and the index, we can access the latitude & longitude values.
+
+-   After getting the longitude and latitudes values, we can form the coordinates object named `coord` using `cbind`.
+
+```{r}
+longitude = map_dbl(nga_local$geometry, ~st_centroid(.x)[[1]]) #longitude index 1
+latitude = map_dbl(nga_local$geometry, ~st_centroid(.x)[[2]]) #latitude index 2
+coord = cbind(longitude, latitude)
+```
+
+We then run the algorithm to create the adaptive distance matrix using `knn2nb()` and `knearneigh()`
+
+```{r}
+knn8 = knn2nb(knearneigh(coord, k=8, longlat = FALSE))
+str(knn8)
+```
+
+#### Computing minimum spanning tree
+
+**Calculating edge costs**
+
+The cost of each edge is determined using `nbcosts()` from the **spdep** package. Its nodes are separated by this distance. This function uses a data.frame with observations vectors in each node to calculate the distance.
+
+```{r}
+lcosts = nbcosts(knn8, nga_wp_corr_vars.std_minmax_mat)
+```
+
+Next, in a manner similar to how we calculated the inverse of distance weights, we will include these costs into a weights object. In other words, we specify the recently computed *lcosts* as the weights in order to transform the neighbour list into a list weights object. To accomplish this, we can use using the `nb2listw()` function of **spdep** package. We will use the 'B' Style as it will be more robust
+
+```{r}
+nga_wp_corr_vars.std_minmax_mat.w = nb2listw(knn8, lcosts, style="B")
+summary(nga_wp_corr_vars.std_minmax_mat.w)
+```
+
+**Finding the minimum spanning tree**
+
+A minimum spanning trees is a graph where all the vertices are connected by weighted edges with no cycle with the minimum cost.
+
+The minimum spanning tree is computed by using [`mstree()`](https://r-spatial.github.io/spdep/reference/mstree.html) of **spdep** package as shown in the code below. We can check its class and dimensions by using `class()` and `dim()`
+
+```{r}
+nga_wp_mst = mstree(nga_wp_corr_vars.std_minmax_mat.w)
+class(nga_wp_mst)
+dim(nga_wp_mst)
+```
+
+The MST plot method includes a mechanism to display the nodes' observation numbers in addition to the edge. We once again plot these along with the LGA lines. We can see how the initial neighbor list is condensed to a single edge that passes through every node
+
+```{r}
+#| fig.height = 10, fig.width = 10
+plot(nga_sp, border=gray(0.6))
+plot.mst(nga_wp_mst, coordinates(nga_sp), col="blue", 
+         cex.lab=0.7, cex.circles=0.05, add=TRUE)
+```
+
+#### Computing spatially constrained clusters using SKATER method
+
+We can compute the spatially constrained cluster using [`skater()`](https://r-spatial.github.io/spdep/reference/skater.html) of the **spdep** package.
+
+Required inputs for the `skater()` function. 
+
+-   Data matrix (to update the costs while units are being grouped),
+
+-   the number of cuts (no. of variables - 1)
+
+-   the first two columns of the MST matrix
+
+```{r}
+clust10 = skater(edge=nga_wp_mst[,1:2], #1st 2 col of MST
+                data = nga_wp_corr_vars, #data matrix
+                method = "minkowski",
+                ncuts = 9 #number of cuts
+                )
+```
+
+We can display the content of the result using `str()`
+
+```{r}
+str(clust10)
+```
+
+Finally, we can also plot the pruned tree that shows the 10 clusters on top of the LGA area.
+
+```{r}
+#| fig.height = 20, fig.width = 20
+plot(nga_sp, border=gray(.5))
+plot(clust10,
+     coordinates(nga_sp),
+     cex.lab=0.5,
+     groups.colors=c("red","green","blue", "brown", "orange", "darkgreen", "darksalmon", "gold2", "orchid", "tan3"),
+     cex.circles=0.005, 
+     add=TRUE
+     )
+```
+
+#### Visualizing the clusters in choropleth map
+
+The code below is used to plot the newly derived clusters by using the SKATER method
+
+```{r}
+groups_mat = as.matrix(clust10$groups)
+nga_wp_spatialcluster = cbind(nga_wp_cluster, as.factor(groups_mat)) %>% 
+  rename(`SP_CLUSTER` = `as.factor.groups_mat.`)
+
+skatermap = tm_shape(nga_wp_spatialcluster) + 
+  tm_layout(main.title="Distribution of clusters with SKATER", 
+            main.title.position="center", 
+            main.title.size=0.9, 
+            legend.height = 0.35, 
+            legend.width = 0.35, 
+            frame = TRUE) + 
+  tm_fill("SP_CLUSTER") +
+  tm_borders(alpha = 0.5) 
+
+skatermap
+```
+
+We can observe that once we added spatial constraints into the formula, it is now 10 clusters that are mostly contiguous. This can help us make better decisions on what to do with each cluster and make planning easier when we need to consolidate resources.
+
+The remarkable clusters are:
+
+-   in the north eastern and eastern borders of Nigeria, where there are little to no water points,
+
+-   the west of Nigeria and the south western coast facing gulf of guinea and Bight of Benin where non functional water points congregate
+
+-   North of Nigeria where functional points congregate
+
+### Spatially Constrained Clustering - ClustGeo Method
+
+Another method of introducing spatial constraints to the SKATER algorithm (Spatial 'K'luster Analysis by Tree Edge Removal) (Assuncao & Krainski (n.d)).
+
+This function starts with a set of edges, an input dataset and a number of cuts to form clusters that are homogeneous
+
+In this part of the exercise, we use of the `hclustgeo()` function from the **ClustGeo** package to perform Ward-style hierarchical clustering.
+
+First we will need to create the nongeo_cluster using hclustgeo with the proximity matrix we created in the previous section and we plot its corresponding Dendrogram
+
+```{r}
+#| fig.height = 10, fig.width = 10
+nongeo_cluster = hclustgeo(proxmat)
+plot(nongeo_cluster, cex=0.5)
+rect.hclust(nongeo_cluster, k=10, border = 2:9)
+```
+
+#### Mapping the clusters formed
+
+Similarly, by applying the techniques we discovered in the section *Mapping the clusters formed in hierarchical clustering,* we may plot the clusters on a categorical area shaded map.
+
+```{r}
+groups = as.factor(cutree(nongeo_cluster, k=10))
+
+nga_ngeo_cluster = cbind(nga, as.matrix(groups)) %>%
+  rename(`CLUSTER` = `as.matrix.groups.`)
+
+default_ngeo_clustered_map = tm_shape(nga_ngeo_cluster) + 
+   tm_layout(main.title="Distribution of clusters with HClustGeo", 
+            main.title.position="center", 
+            main.title.size=0.9, 
+            legend.height = 0.35, 
+            legend.width = 0.35, 
+            frame = TRUE) + 
+  tm_polygons("CLUSTER") +
+  tm_borders(alpha = 0.5) 
+
+default_ngeo_clustered_map
+```
+
+Without spatial limitations, the map generated 10 clusters that are rather messy and the regions composing the clusters are dispersed throughout the map, which is sub-optimal. This is similar to the results we applied in the section *Mapping the clusters formed in hierarchical clustering*.
+
+#### Spatially Constrained Hierarchical Clustering
+
+Prior to starting the spatially constrained hierarchical clustering process, a spatial distance matrix will need to be derived by using [`st_distance()`](https://r-spatial.github.io/sf/reference/geos_measures.html) of **sf** package.
+
+```{r}
+dist = st_distance(nga, nga)
+```
+
+`as.dist()` is used to convert the data frame into a matrix.
+
+```{r}
+distmat <- as.dist(dist)
+```
+
+Our goal is to as much as possible **retain the attribute homogeneity** as much as possible but also **introduce spatial homogeneity**. In order to balance this, we can compute ***∝*** using the `choicealpha()` function.
+
+```{r}
+cr = choicealpha(proxmat, distmat, range.alpha = seq(0,1, 0.05), K=10, graph=T)
+```
+
+As the data is skewed as we have explored in our EDA, we will use the QNorm graph based on normalized values.
+
+We can observe that when ***∝*** is raised from 0.2 to 0.4, the homogeneity of d1 (which is our spatial relationship (contiguity matrix), gain significantly from about 60% to slightly less than 80%. And for d0 (which is our attribute), the homogeneity loss is at 20%. Since ***∝ = 0.4*** is the most optimal, we will use it to form our cluster.
+
+```{r}
+clustG = hclustgeo(proxmat, distmat, alpha = 0.4)
+```
+
+We then use `cutree()` to derive the cluster object, and join it back to the *nga* polygon feature data frame by using `cbind()`
+
+```{r}
+groups = as.factor(cutree(clustG, k=10))
+nga_Gcluster  = cbind(nga, as.matrix(groups)) %>%
+  rename(`CLUSTER` = `as.matrix.groups.`)
+```
+
+We can now plot the map of the newly delineated spatially constraints clusters using functions of **tmap**
+
+```{r}
+g_clustered_map = 
+  tm_shape(nga_Gcluster) + 
+     tm_layout(main.title="Distribution of clusters with HClustGeo using choice alpha", 
+            main.title.position="center", 
+            main.title.size=0.9, 
+            legend.height = 0.35, 
+            legend.width = 0.35, 
+            frame = TRUE) + 
+  tm_polygons("CLUSTER") +
+  tm_borders(alpha = 0.5) 
+
+g_clustered_map
+```
+
+Similarly to the SKATER method, we can observe that once we added alpha into the formula, it is now 10 clusters that are mostly contiguous. This can help us make better decisions on what to do with each cluster and make planning easier when we need to consolidate resources.
+
+## Conclusion
+
+We attempt to conclude by plotting the 4 maps together
+
+```{r}
+tmap_arrange(hclust_map_without_spatial_constraints,skatermap, 
+             ncol = 2, nrow = 1, asp = 1)
+
+tmap_arrange(default_ngeo_clustered_map, g_clustered_map, 
+             ncol = 2, nrow = 1, asp = 1)
+```
+
+Based on the results, we can see that hierarchical clustering without spatial constraints produces clusters that are messy with no contiguity which is sub optimal in both methods if resources must be focused amongst similar areas.. It will be difficult to conduct planning without spatial considerations.
+
+We can see that the SKATER map generated a map that assumed that the bulk of the water points were homogeneous, creating a relatively large cluster in cluster 1. Due to the size of the cluster, this may not be the right approach for this data set. This is evident from the map generated below. The area in cluster 1 is unlikely to be homogeneous
+
+```{r}
+
+tmap_arrange(nga_wp_interested_data_pts.map.pct_func, nga_wp_interested_data_pts.map.pct_nonfunc, asp=1, ncol=2)
+```
+
+The ClustGeo approach produced a much more optimal result as it was able to clearly separate out distinct areas as compared to the SKATER method.
+
+For example
+
+-   the north eastern and eastern borders which contains little to no water points is a large cluster on its own with some small clusters within.
+
+-   The northern part of Nigeria which has most of the functional water points, form a clusters on its own
+
+-   The southern and south western coast of Nigeria, formed 2 main clusters facing the Bight of Benin and Gulf of Guinea
+
+## References
+
+Assuncao R.M & Krainski E.T skater (n.d): *Spatial 'K'luster Analysis by Tree Edge Removal* https://www.rdocumentation.org/packages/spdep/versions/1.2-7/topics/skater
 
 Calkins K. G (2005) *Applied Statistics - Lesson 5, Correlation Coefficients*
 
