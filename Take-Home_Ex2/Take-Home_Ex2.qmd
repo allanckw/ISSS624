@@ -796,7 +796,8 @@ pct_within_median_dist_to_pri_road = ggplot(data=nga_wp_interested_data_pts,
               geom_histogram(bins=20, 
                  color="black", 
                  fill="light green") +
-                labs(x = "% Rural", y = "Frequency") +
+                 labs(x = "% Within Median distance to Primary Road", 
+                      y = "Frequency") +
                 geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_w_meddist_to_PriRoad` )),   
                color="red", linetype="dashed", linewidth=1) +
   geom_vline(aes(xintercept=median(nga_wp_interested_data_pts$`pct_w_meddist_to_PriRoad`)),   
@@ -807,7 +808,8 @@ pct_within_median_dist_to_sec_road = ggplot(data=nga_wp_interested_data_pts,
               geom_histogram(bins=20, 
                  color="black", 
                  fill="light green") +
-                labs(x = "% Rural", y = "Frequency") +
+                 labs(x = "% Within Median distance to Secondary Road", 
+                     y = "Frequency") +
                 geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_w_meddist_to_SecRoad` )),   
                color="red", linetype="dashed", linewidth=1) +
   geom_vline(aes(xintercept=median(nga_wp_interested_data_pts$`pct_w_meddist_to_SecRoad`)),   
@@ -818,7 +820,8 @@ pct_within_median_dist_to_ter_road = ggplot(data=nga_wp_interested_data_pts,
               geom_histogram(bins=20, 
                  color="black", 
                  fill="light green") +
-                labs(x = "% Rural", y = "Frequency") +
+                labs(x = "% Within Median distance to Tertiary Road", 
+                     y = "Frequency") +
                 geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_w_meddist_to_TerRoad` )),   
                color="red", linetype="dashed", linewidth=1) +
   geom_vline(aes(xintercept=median(nga_wp_interested_data_pts$`pct_w_meddist_to_TerRoad`)),   
@@ -866,7 +869,7 @@ From the charts, we can observe that
 
 -   percentage of water points with hand pumps is negatively skewed.
 
-> *As functional and non functional water points are **NOT** of the same units as the other variables in percentage, we will need to standardized them later.*
+> *As functional and non functional water points are **NOT** of the same units as the other variables in percentage, we will need to standardize them later.*
 
 ### Visualizing the spatial distribution of water points
 
@@ -940,21 +943,25 @@ According to Calkins (2005), variables that can be regarded as having a high deg
 
 As a result, the following **5 observations** are strongly correlated with the findings.
 
-1.  pct_functional - Percentage of functional water points
+1.  *pct_functional* vs. pct_managed - we will drop *pct_managed*
 
-2.  pct_handpump - percentage of water points with hand pumps
+2.  pct_handpump vs. *pct_Cap_Over1000* and *pct_Cap_Under1000* - we will drop *pct_Cap_Under1000* and *pct_handpump*
 
-3.  pct_potable - Percentage of water points with potable water
+3.  *pct_potable* vs. *pct managed* - *pct_managed* already drop in 1
 
-4.  pct_Cap_Over_1000 - percentage of water points with capacity over 1000
+4.  pct_Cap_Over_1000 vs. *pct_Cap_Under1000* - *pct_Cap_Under1000* already drop in 2
 
-5.  pct_w\_meddist_to_PriRoad - percentage of water points within median distance of a primary road
+5.  *pct_w\_meddist_to_PriRoad* vs. *pct_w\_meddist_to_TerRoad* - we will drop *pct_w\_meddist_to_TerRoad*
 
-In view of that we will just keep pct_functional and drop the other 4 by using the `select` statement
+In conclusion, we will drop *pct_handpump (Column 5), pct_managed (Column 10), pct_Cap_Under1000 (Column 8), and pct_w\_meddist_to_TerRoad (Column 14).* Using `select()`, we drop the respective columns.
+
+At the end of it, we verify that the column names that are retained are correct by using `colnames()`
 
 ```{r}
 nga_wp_corr_vars = nga_wp_corr_vars %>%
-                   select(1:4, 7, 9:11, 13:14)
+                   select(-5, -10, -8, -14)
+
+colnames(nga_wp_corr_vars)
 ```
 
 ### Data Standardization
@@ -972,7 +979,7 @@ The values range of the Min-max standardized clustering variables are between 0 
 
 #### Visualizing the standardize clustering variables
 
-It is a good idea to visualize the distribution graphical of the standardized clustering variables in addition to evaluating the summary statistics of those variables.
+It is a good idea to visualize the distribution graphical of the standardized clustering variables in addition to evaluating the summary statistics of those variables. We will use the ggplot2 library to help us with that by plotting the raw variable distribution vs the standardized distribution
 
 ```{r}
 r_func = ggplot(data=nga_wp_interested_data_pts, aes(x=`wpt functional`)) + 
@@ -1051,9 +1058,26 @@ ggarrange(r_pctFunc, s_pctFunc, r_pctNfunc,s_pctNfunc,
 ```
 
 ```{r}
+
+r_potable = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_Potable`)) + 
+    geom_histogram(bins=20, color="black", fill="light green") +
+    labs(x = "% Potable", y = "Frequency") +
+    geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_Potable`)),   
+               color="red", linetype="dashed", linewidth=1) +
+    geom_vline(aes(xintercept=median(nga_wp_interested_data_pts$`pct_Potable`)),   
+               color="brown", linetype="dashed", linewidth=1)
+
+s_potable = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`pct_Potable`)) + 
+    geom_histogram(bins=20, color="black", fill="light green") +
+    labs(x = "% Potable", y = "Frequency") +
+    geom_vline(aes(xintercept = mean(nga_wp_corr_vars.std_minmax$`pct_Potable`)),   
+               color="red", linetype="dashed", linewidth=1) +
+    geom_vline(aes(xintercept=median(nga_wp_corr_vars.std_minmax$`pct_Potable`)),   
+               color="brown", linetype="dashed", linewidth=1) + ggtitle("Min-Max Standardization")
+
 r_nonpotable = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_NonPotable`)) + 
     geom_histogram(bins=20, color="black", fill="light green") +
-    labs(x = "Non Potable", y = "Frequency") +
+    labs(x = "% Non Potable", y = "Frequency") +
     geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_NonPotable`)),   
                color="red", linetype="dashed", linewidth=1) +
     geom_vline(aes(xintercept=median(nga_wp_interested_data_pts$`pct_NonPotable`)),   
@@ -1061,15 +1085,23 @@ r_nonpotable = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_NonPotable`)) 
 
 s_nonpotable = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`pct_NonPotable`)) + 
     geom_histogram(bins=20, color="black", fill="light green") +
-    labs(x = "Non Potable", y = "Frequency") +
+    labs(x = "% Non Potable", y = "Frequency") +
     geom_vline(aes(xintercept = mean(nga_wp_corr_vars.std_minmax$`pct_NonPotable`)),   
                color="red", linetype="dashed", linewidth=1) +
     geom_vline(aes(xintercept=median(nga_wp_corr_vars.std_minmax$`pct_NonPotable`)),   
                color="brown", linetype="dashed", linewidth=1) + ggtitle("Min-Max Standardization")
 
+
+
+ggarrange(r_potable, s_potable, r_nonpotable, s_nonpotable,
+          ncol = 2,
+          nrow = 2)
+```
+
+```{r}
 r_capUnder1000 = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_Cap_Under_1000`)) + 
     geom_histogram(bins=20, color="black", fill="light green") +
-    labs(x = "Usage Capacity < 1000", y = "Frequency") +
+    labs(x = "% Usage Capacity < 1000", y = "Frequency") +
     geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_Cap_Under_1000`)),   
                color="red", linetype="dashed", linewidth=1) +
     geom_vline(aes(xintercept=median(nga_wp_interested_data_pts$`pct_Cap_Under_1000`)),   
@@ -1077,37 +1109,15 @@ r_capUnder1000 = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_Cap_Under_10
 
 s_capUnder1000 = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`pct_Cap_Under_1000`)) + 
     geom_histogram(bins=20, color="black", fill="light green") +
-    labs(x = "Usage Capacity < 1000", y = "Frequency") +
+    labs(x = "% Usage Capacity < 1000", y = "Frequency") +
     geom_vline(aes(xintercept = mean(nga_wp_corr_vars.std_minmax$`pct_Cap_Under_1000`)),   
                color="red", linetype="dashed", linewidth=1) +
     geom_vline(aes(xintercept=median(nga_wp_corr_vars.std_minmax$`pct_Cap_Under_1000`)),   
                color="brown", linetype="dashed", linewidth=1) + ggtitle("Min-Max Standardization")
 
-ggarrange(r_nonpotable, s_nonpotable, r_capUnder1000, s_capUnder1000 ,
-          ncol = 2,
-          nrow = 2)
-```
-
-```{r}
-r_Managed = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_managed`)) + 
-    geom_histogram(bins=20, color="black", fill="light green") +
-    labs(x = "Managed", y = "Frequency") +
-    geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_managed`)),   
-               color="red", linetype="dashed", linewidth=1) +
-    geom_vline(aes(xintercept=median(nga_wp_interested_data_pts$`pct_managed`)),   
-               color="brown", linetype="dashed", linewidth=1)
-
-s_Managed = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`pct_managed`)) + 
-    geom_histogram(bins=20, color="black", fill="light green") +
-    labs(x = "Managed", y = "Frequency") +
-    geom_vline(aes(xintercept = mean(nga_wp_corr_vars.std_minmax$`pct_managed`)),   
-               color="red", linetype="dashed", linewidth=1) +
-    geom_vline(aes(xintercept=median(nga_wp_corr_vars.std_minmax$`pct_managed`)),   
-               color="brown", linetype="dashed", linewidth=1) + ggtitle("Min-Max Standardization")
-
 r_rural = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_rural`)) + 
     geom_histogram(bins=20, color="black", fill="light green") +
-    labs(x = "Rural", y = "Frequency") +
+    labs(x = "% Rural", y = "Frequency") +
     geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_rural`)),   
                color="red", linetype="dashed", linewidth=1) +
     geom_vline(aes(xintercept=median(nga_wp_interested_data_pts$`pct_rural`)),   
@@ -1115,21 +1125,38 @@ r_rural = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_rural`)) +
 
 s_rural = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`pct_rural`)) + 
     geom_histogram(bins=20, color="black", fill="light green") +
-    labs(x = "Rural", y = "Frequency") +
+    labs(x = "% Rural", y = "Frequency") +
     geom_vline(aes(xintercept = mean(nga_wp_corr_vars.std_minmax$`pct_rural`)),   
                color="red", linetype="dashed", linewidth=1) +
     geom_vline(aes(xintercept=median(nga_wp_corr_vars.std_minmax$`pct_rural`)),   
                color="brown", linetype="dashed", linewidth=1) + ggtitle("Min-Max Standardization")
 
-ggarrange(r_Managed, s_Managed, r_rural, s_rural ,
+ggarrange(r_capUnder1000, s_capUnder1000, r_rural, s_rural ,
           ncol = 2,
           nrow = 2)
 ```
 
 ```{r}
+
+r_w_dist_toPriRoad = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_w_meddist_to_PriRoad`)) + 
+    geom_histogram(bins=20, color="black", fill="light green") +
+    labs(x = "% Within Med Dist to Pri Road", y = "Frequency") +
+    geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_w_meddist_to_PriRoad`)),   
+               color="red", linetype="dashed", linewidth=1) +
+    geom_vline(aes(xintercept=median(nga_wp_interested_data_pts$`pct_w_meddist_to_PriRoad`)),   
+               color="brown", linetype="dashed", linewidth=1)
+
+s_w_dist_toPriRoad = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`pct_w_meddist_to_PriRoad`)) + 
+    geom_histogram(bins=20, color="black", fill="light green") +
+    labs(x = "% Within Med Dist to Pri Road", y = "Frequency") +
+    geom_vline(aes(xintercept = mean(nga_wp_corr_vars.std_minmax$`pct_w_meddist_to_PriRoad`)),   
+               color="red", linetype="dashed", linewidth=1) +
+    geom_vline(aes(xintercept=median(nga_wp_corr_vars.std_minmax$`pct_w_meddist_to_PriRoad`)),   
+               color="brown", linetype="dashed", linewidth=1) + ggtitle("Min-Max Standardization")
+
 r_w_dist_toSecRoad = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_w_meddist_to_SecRoad`)) + 
     geom_histogram(bins=20, color="black", fill="light green") +
-    labs(x = "Within Dist to Secondary Road", y = "Frequency") +
+    labs(x = "% Within Med Dist to Sec Road", y = "Frequency") +
     geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_w_meddist_to_SecRoad`)),   
                color="red", linetype="dashed", linewidth=1) +
     geom_vline(aes(xintercept=median(nga_wp_interested_data_pts$`pct_w_meddist_to_SecRoad`)),   
@@ -1137,29 +1164,15 @@ r_w_dist_toSecRoad = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_w_meddis
 
 s_w_dist_toSecRoad = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`pct_w_meddist_to_SecRoad`)) + 
     geom_histogram(bins=20, color="black", fill="light green") +
-    labs(x = "Within Dist to Secondary Road", y = "Frequency") +
+    labs(x = "% Within Med Dist to Sec Road", y = "Frequency") +
     geom_vline(aes(xintercept = mean(nga_wp_corr_vars.std_minmax$`pct_w_meddist_to_SecRoad`)),   
                color="red", linetype="dashed", linewidth=1) +
     geom_vline(aes(xintercept=median(nga_wp_corr_vars.std_minmax$`pct_w_meddist_to_SecRoad`)),   
                color="brown", linetype="dashed", linewidth=1) + ggtitle("Min-Max Standardization")
 
-r_w_dist_toTerRoad = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_w_meddist_to_TerRoad`)) + 
-    geom_histogram(bins=20, color="black", fill="light green") +
-    labs(x = "Within Dist to Tertiary Road", y = "Frequency") +
-    geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_w_meddist_to_TerRoad`)),   
-               color="red", linetype="dashed", linewidth=1) +
-    geom_vline(aes(xintercept=median(nga_wp_interested_data_pts$`pct_w_meddist_to_TerRoad`)),   
-               color="brown", linetype="dashed", linewidth=1)
 
-s_w_dist_toSecRoad = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`pct_w_meddist_to_TerRoad`)) + 
-    geom_histogram(bins=20, color="black", fill="light green") +
-    labs(x = "Within Dist to Tertiary Road", y = "Frequency") +
-    geom_vline(aes(xintercept = mean(nga_wp_corr_vars.std_minmax$`pct_w_meddist_to_TerRoad`)),   
-               color="red", linetype="dashed", linewidth=1) +
-    geom_vline(aes(xintercept=median(nga_wp_corr_vars.std_minmax$`pct_w_meddist_to_TerRoad`)),   
-               color="brown", linetype="dashed", linewidth=1) + ggtitle("Min-Max Standardization")
 
-ggarrange(r_w_dist_toSecRoad , s_w_dist_toSecRoad, r_w_dist_toTerRoad , s_w_dist_toSecRoad,
+ggarrange(r_w_dist_toPriRoad , s_w_dist_toPriRoad, r_w_dist_toSecRoad , s_w_dist_toSecRoad, 
           ncol = 2,
           nrow = 2)
 ```
@@ -1219,29 +1232,32 @@ The gap statistic contrasts the overall intra-cluster variation for various valu
 
 The value that maximizes the gap statistic will be used to estimate the best clusters (i.e., that yields the largest gap statistic). In other words, the clustering structure is very different from a randomly distributed, uniform distribution of points.
 
-To compute the gap statistic, [`clusGap()`](https://www.rdocumentation.org/packages/cluster/versions/2.1.0/topics/clusGap) of [**cluster**](https://cran.r-project.org/web/packages/cluster/) package will be used. with the [`hcut`](https://rpkgs.datanovia.com/factoextra/reference/hcut.html) function from [**factoextra**](https://rpkgs.datanovia.com/factoextra/) package.
+To compute the gap statistic, [`clusGap()`](https://www.rdocumentation.org/packages/cluster/versions/2.1.0/topics/clusGap) of [**cluster**](https://cran.r-project.org/web/packages/cluster/) package will be used. with the [`hcut`](https://rpkgs.datanovia.com/factoextra/reference/hcut.html) function from [**factoextra**](https://rpkgs.datanovia.com/factoextra/) package. `hcut` calculates the hierarchical clustering and cuts the tree.
+
+We set k.max to 10 as there are 10 variable involved and we want to find the global maximum to determine what is the best value of *k.*
 
 ```{r}
 set.seed(12345)
-gap_stat = clusGap(nga_wp_corr_vars.std_minmax, FUN=hcut, nstart=25, K.max = 10, B = 50)
+gap_stat = clusGap(nga_wp_corr_vars.std_minmax, 
+                   FUN=hcut, nstart=25, K.max = 10, B = 50)
 # Print the result
-print(gap_stat, method = "firstmax")
+print(gap_stat, method = "globalmax")
 ```
 
-Next, we can visualise the plot by using [`fviz_gap_stat()`](https://rpkgs.datanovia.com/factoextra/reference/fviz_nbclust.html) of [**factoextra**](https://rpkgs.datanovia.com/factoextra/) package.
+Next, we can visualize the plot by using [`fviz_gap_stat()`](https://rpkgs.datanovia.com/factoextra/reference/fviz_nbclust.html) of [**factoextra**](https://rpkgs.datanovia.com/factoextra/) package.
 
 ```{r}
 fviz_gap_stat(gap_stat)
 ```
 
-We can infer from the figure above that **10** clusters is the optimum number for the Hierarchical Clustering Algorithm.
+We can infer from the figure above that **9** clusters is the optimum number for the Hierarchical Clustering Algorithm.
 
 Using **R stats'** `rect.hclust()` function, the dendrogram can alternatively be plotted with a border around the chosen clusters. The rectangles' borders can be colored using the option border.
 
 ```{r}
 #| fig.height = 10, fig.width = 10
 plot(hclust_ward_d, cex=0.6)
-rect.hclust(hclust_ward_d, k = 10, border = 2:10)
+rect.hclust(hclust_ward_d, k = 9, border = 2:9)
 ```
 
 ### Visually-driven hierarchical clustering analysis
@@ -1261,7 +1277,7 @@ heatmaply(normalize(nga_wp_corr_vars.std_minmax_mat),
           hclust_method = "ward.D",
           seriate = "OLO",
           colors=PuRd,
-          k_row = 10,
+          k_row = 9,
           margins= c(NA, 200, 60, NA),
           fontsize_row = 4,
           fontsize_col = 5,
@@ -1274,10 +1290,10 @@ heatmaply(normalize(nga_wp_corr_vars.std_minmax_mat),
 
 ### Mapping the clusters formed in hierarchical clustering
 
-Following a thorough analysis of the dendragram shown above, we chose to keep 20groups. The code below will use R Base's `cutree()` function to create a 10-cluster model.
+Following a thorough analysis of the dendragram shown above, we chose to keep 9 groups. The code below will use R Base's `cutree()` function to create a 9-cluster model.
 
 ```{r}
-groups = as.factor(cutree(hclust_ward_d, k=10))
+groups = as.factor(cutree(hclust_ward_d, k=9))
 ```
 
 Groups are the output. It is a *list* object.
@@ -1313,7 +1329,7 @@ hclust_map_without_spatial_constraints = tm_shape(nga_wp_cluster) +
 hclust_map_without_spatial_constraints
 ```
 
-We can see that without spatial constraints, the map generated 10 clusters that are quite messy and the regions forming the clusters are all over the place. This is sub optimal as there may be real world consideration that necessitates the regionalization of geographies into distinct regions, such as urban planning.
+We can see that without spatial constraints, the map generated 9 clusters that are quite messy and the regions forming the clusters are all over the place. This is sub optimal as there may be real world consideration that necessitates the regionalization of geographies into distinct regions, such as urban planning.
 
 ## Spatially Constrained Clustering
 
@@ -1321,9 +1337,9 @@ Now that we know utilizing overarching clustering without spatial considerations
 
 ### SKATER approach
 
-We will use the `skater()` method of the **spdep** package to derive a geographically limited cluster in this section.
+SKATER stands for Spatial 'K'luster Analysis by Tree Edge Removal (Assuncao & Krainski (n.d)). This function starts with a set of edges, an input dataset and a number of cuts to form clusters that are homogeneous
 
-The SKATER approach is a method that begins with a set of edges, a data set and a number of cuts to determine clusters.
+We will use the `skater()` method of the **spdep** package to derive a geographically limited cluster in this section.
 
 First We must first transform *nga* into a spatial polygons data frame. This is because only SP objects (*SpatialPolygonDataFrame*) are supported by the SKATER function.
 
@@ -1432,19 +1448,19 @@ Required inputs for the `skater()` function. 
 -   the first two columns of the MST matrix
 
 ```{r}
-clust10 = skater(edge=nga_wp_mst[,1:2], #1st 2 col of MST
+clust9 = skater(edge=nga_wp_mst[,1:2], #1st 2 col of MST
                 data = nga_wp_corr_vars, #data matrix
                 method = "minkowski",
-                ncuts = 9 #number of cuts
+                ncuts = 8 #number of cuts
                 )
 ```
 
-Finally, we can also plot the pruned tree that shows the 10 clusters on top of the LGA area.
+Finally, we can also plot the pruned tree that shows the 9 clusters on top of the LGA area.
 
 ```{r}
 #| fig.height = 20, fig.width = 20
 plot(nga_sp, border=gray(.5))
-plot(clust10,
+plot(clust9,
      coordinates(nga_sp),
      cex.lab=0.5,
      groups.colors=c("red","green","blue", "brown", "orange", "darkgreen", "darksalmon", "gold2", "orchid", "tan3"),
@@ -1458,7 +1474,7 @@ plot(clust10,
 The code below is used to plot the newly derived clusters by using the SKATER method
 
 ```{r}
-groups_mat = as.matrix(clust10$groups)
+groups_mat = as.matrix(clust9$groups)
 nga_wp_spatialcluster = cbind(nga_wp_cluster, as.factor(groups_mat)) %>% 
   rename(`SP_CLUSTER` = `as.factor.groups_mat.`)
 
@@ -1475,31 +1491,29 @@ skatermap = tm_shape(nga_wp_spatialcluster) +
 skatermap
 ```
 
-We can observe that once we added spatial constraints into the formula, it is now 10 clusters that are mostly contiguous. This can help us make better decisions on what to do with each cluster and make planning easier when we need to consolidate resources.
+We can observe that once we added spatial constraints into the formula, there are 9 clusters that are mostly contiguous. This can help us make better decisions on what to do with each cluster and make planning easier when we need to consolidate resources.
 
 The remarkable clusters are:
 
 -   in the north eastern and eastern borders of Nigeria, where there are little to no water points,
 
--   the west of Nigeria and the south western coast facing gulf of guinea and Bight of Benin where non functional water points congregate
+-   the south western coast facing gulf of guinea and Bight of Benin where non functional water points congregate
 
 -   North of Nigeria where functional points congregate
 
+-   A really large cluster (Cluster 4) that covers almost the whole of Nigeria
+
 ### Spatially Constrained Clustering - ClustGeo Method
 
-Another method of introducing spatial constraints to the SKATER algorithm (Spatial 'K'luster Analysis by Tree Edge Removal) (Assuncao & Krainski (n.d)).
+Another method of introducing spatial constraints to use the **ClustGeo** package. We can make use of the `hclustgeo()` function in the **ClustGeo** package to perform Ward-style hierarchical clustering.
 
-This function starts with a set of edges, an input dataset and a number of cuts to form clusters that are homogeneous
-
-In this part of the exercise, we use of the `hclustgeo()` function from the **ClustGeo** package to perform Ward-style hierarchical clustering.
-
-First we will need to create the nongeo_cluster using hclustgeo with the proximity matrix we created in the previous section and we plot its corresponding Dendrogram
+First we will need to create the nongeo_cluster using `hclustgeo()` with the proximity matrix we created in the previous section and plot its corresponding Dendrogram
 
 ```{r}
 #| fig.height = 10, fig.width = 10
 nongeo_cluster = hclustgeo(proxmat)
 plot(nongeo_cluster, cex=0.5)
-rect.hclust(nongeo_cluster, k=10, border = 2:9)
+rect.hclust(nongeo_cluster, k=9, border = 2:9)
 ```
 
 #### Mapping the clusters formed
@@ -1507,7 +1521,7 @@ rect.hclust(nongeo_cluster, k=10, border = 2:9)
 Similarly, by applying the techniques we discovered in the section *Mapping the clusters formed in hierarchical clustering,* we may plot the clusters on a categorical area shaded map.
 
 ```{r}
-groups = as.factor(cutree(nongeo_cluster, k=10))
+groups = as.factor(cutree(nongeo_cluster, k=9))
 
 nga_ngeo_cluster = cbind(nga, as.matrix(groups)) %>%
   rename(`CLUSTER` = `as.matrix.groups.`)
@@ -1525,7 +1539,7 @@ default_ngeo_clustered_map = tm_shape(nga_ngeo_cluster) +
 default_ngeo_clustered_map
 ```
 
-Without spatial limitations, the map generated 10 clusters that are rather messy and the regions composing the clusters are dispersed throughout the map, which is sub-optimal. This is similar to the results we applied in the section *Mapping the clusters formed in hierarchical clustering*.
+Without spatial constraints, the map generated 9 clusters that are rather messy and the regions composing the clusters are dispersed throughout the map, which is sub-optimal. This is similar to the results we applied in the section *Mapping the clusters formed in hierarchical clustering*.
 
 #### Spatially Constrained Hierarchical Clustering
 
@@ -1544,12 +1558,12 @@ distmat <- as.dist(dist)
 Our goal is to as much as possible **retain the attribute homogeneity** as much as possible but also **introduce spatial homogeneity**. In order to balance this, we can compute ***∝*** using the `choicealpha()` function.
 
 ```{r}
-cr = choicealpha(proxmat, distmat, range.alpha = seq(0,1, 0.05), K=10, graph=T)
+cr = choicealpha(proxmat, distmat, range.alpha = seq(0,1, 0.1), K=9, graph=T)
 ```
 
 As the data is skewed as we have explored in our EDA, we will use the QNorm graph based on normalized values.
 
-We can observe that when ***∝*** is raised from 0.2 to 0.4, the homogeneity of d1, which is our spatial relationship (contiguity matrix), gain significantly from about 60% to slightly less than 80%. And for d0 (which is our attribute), the homogeneity loss is at 20%. Since ***∝ = 0.4*** is the most optimal, we will use it to form our cluster.
+We can observe that when ***∝*** is raised from 0.2 to 0.4, the homogeneity of d1, which is our spatial relationship (contiguity matrix), gain significantly from about 50% to 80%. And for d0 (which is our attribute), the homogeneity loss is slightly more than 20%. Since ***∝ = 0.4*** is the most optimal, we will use it to form our cluster.
 
 ```{r}
 clustG = hclustgeo(proxmat, distmat, alpha = 0.4)
@@ -1558,7 +1572,7 @@ clustG = hclustgeo(proxmat, distmat, alpha = 0.4)
 We then use `cutree()` to derive the cluster object, and join it back to the *nga* polygon feature data frame by using `cbind()`
 
 ```{r}
-groups = as.factor(cutree(clustG, k=10))
+groups = as.factor(cutree(clustG, k=9))
 nga_Gcluster  = cbind(nga, as.matrix(groups)) %>%
   rename(`CLUSTER` = `as.matrix.groups.`)
 ```
@@ -1580,7 +1594,7 @@ g_clustered_map =
 g_clustered_map
 ```
 
-Similarly to the SKATER method, we can observe that once we added alpha into the formula, it is now 10 clusters that are mostly contiguous. This can help us make better decisions on what to do with each cluster and make planning easier when we need to consolidate resources.
+Similarly to the skater method of the **spdep** package, we can observe that once we added alpha into the formula, there are now 9 clusters that are mostly contiguous. This can help us make better decisions on what to do with each cluster and make planning easier when we need to consolidate resources.
 
 ## Conclusion
 
@@ -1594,24 +1608,28 @@ tmap_arrange(default_ngeo_clustered_map, g_clustered_map,
              ncol = 2, nrow = 1, asp = 1)
 ```
 
-Based on the results, we can see that hierarchical clustering without spatial constraints produces clusters that are messy with no contiguity which is sub optimal in both methods if resources must be focused amongst similar areas.. It will be difficult to conduct planning without spatial considerations.
+Based on the results, we can see that hierarchical clustering without spatial constraints produces clusters that are messy with no contiguity which is sub optimal in both methods if resources must be focused among similar areas. Such clustering can posed to be difficult when one conduct planning without spatial considerations.
 
-We can see that the SKATER map generated a map that assumed that the bulk of the water points were homogeneous, creating a relatively large cluster in cluster 1. Due to the size of the cluster, this may not be the right approach for this data set. This is evident from the map generated below. The area in cluster 1 is unlikely to be homogeneous
+We can see that the SKATER map generated a map that assumed that the bulk of the water points were homogeneous, creating a relatively large cluster (Cluster 4). Due to the size of the cluster, this may not be the right approach for this data set. This is evident from the map generated below. The area in cluster 4 is unlikely to be homogeneous
 
 ```{r}
 
 tmap_arrange(nga_wp_interested_data_pts.map.pct_func, nga_wp_interested_data_pts.map.pct_nonfunc, asp=1, ncol=2)
 ```
 
-The ClustGeo approach produced a much more optimal result as it was able to clearly separate out distinct areas as compared to the SKATER method.
+The ClustGeo approach produced a much more optimal result as it was able to clearly separate out distinct areas as compared to the skater method.
 
-For example
+From the ClustGeo map, we could infer
 
 -   the north eastern and eastern borders which contains little to no water points is a large cluster on its own with some small clusters within.
 
 -   The northern part of Nigeria which has most of the functional water points, form a clusters on its own
 
 -   The southern and south western coast of Nigeria, formed 2 main clusters facing the Bight of Benin and Gulf of Guinea
+
+-   The western borders of Nigeria forms a cluster on its own
+
+These observation were similar to the observation we made in the section *Visualizing the spatial distribution of water points.*
 
 ## References
 
