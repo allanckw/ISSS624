@@ -15,7 +15,7 @@ The severe water shortages and water quality issues are seen in underdeveloped c
 
 Despite technological advancement, providing rural people with clean water continues to be a key development concern in many countries around the world, especially in those on the continent of Africa.
 
-The spatial patterns of non-functional water points will be shown in this study by using the proper global and local spatial association methodologies. We look at Nigeria's in this assignment.
+We will attempt to regionalize Nigeria with the water points attributes in this exercise.
 
 #### Data points of interest
 
@@ -120,6 +120,7 @@ Calling `ttm()` in the **tmap** package will switch the tmap's viewing mode to i
 
 ```{r}
 #| eval: false
+ttm()
 tm_shape(nga_dupes) + 
   tm_polygons("shapeName") +
   tm_borders(alpha=0.5) 
@@ -358,7 +359,7 @@ summary(nga_wp$dist_to_secondary_road)
 summary(nga_wp$dist_to_tertiary_road)
 ```
 
-Based on the results above, we know that the median distance (in km) to primary, secondary and tertiary roads is 6647.50 km, 4446.0 km and 1442.4 km respectively. We can use within median distance to analyze if accessibility to water points is a factor to regionalization
+Based on the results above, we know that the median distance (in km) to primary, secondary and tertiary roads is 6647.5 km, 4446.0 km and 1442.4 km respectively. We can use within median distance to analyze if accessibility to water points is a factor to regionalization
 
 ### Aggregate the Data
 
@@ -430,7 +431,7 @@ We can use `st_intersects()` to find common data points between geographical dat
 
 The below code adds new columns to compute the total number of water points of our data point of interests
 
-As an example, the below code intersects the Nigeria LGA dataset (*nga_wp* dataframe) with the water point dataset (*wpdx_clean_sf* dataframe) and produce a new column to denote the total number of water points in the area (*Total wpt*) by using `mutate()` and `lengths()`
+As an example, the below code intersects the Nigeria LGA dataset (*nga* dataframe) with the water point dataset (*wpdx_clean_sf* dataframe) and produce a new column to denote the total number of water points in the area (*Total wpt*) by using `mutate()` and `lengths()`
 
 ```{r}
 #| eval: false
@@ -442,7 +443,7 @@ nga_wp = nga %>%
 
 Similarly, for the rest of the variables, we piped the output and add the new columns to denote the number of
 
--   water points are functional, non functional and unknown
+-   water points are functional & non functional
 
 -   Water points that are in rural areas
 
@@ -452,7 +453,7 @@ Similarly, for the rest of the variables, we piped the output and add the new co
 
 -   Water points with usage capacity of over 1000 persons or under
 
--   Water points within or over Median distance of Primary, Secondary and Tertiary roads
+-   Water points within Median distance of Primary, Secondary and Tertiary roads
 
 -   Water points management that are managed
 
@@ -622,7 +623,7 @@ functional_pct_histo = ggplot(data=nga_wp_interested_data_pts,
              aes(x= `pct_functional`)) +
   geom_histogram(bins=20, 
                  color="black", 
-                 fill="light blue") +
+                 fill="light green") +
   labs(x = "% Functional", y = "Frequency") +
   geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$pct_functional)),   
                color="red", linetype="dashed", linewidth=1) +
@@ -633,7 +634,7 @@ nonfunctional_pct_histo = ggplot(data=nga_wp_interested_data_pts,
              aes(x= `pct_non-functional`)) +
   geom_histogram(bins=20, 
                  color="black", 
-                 fill="light blue") +
+                 fill="light green") +
   labs(x = "% Non Functional", y = "Frequency") +
   geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_non-functional` )),   
                color="red", linetype="dashed", linewidth=1) +
@@ -653,12 +654,12 @@ We can also use box plot to detect outliers with `geom_boxplot`. We plot them si
 functional_boxplot = ggplot(data=nga_wp_interested_data_pts, 
        aes(x=`pct_functional`)) +
        labs(x = "% Functional") +
-       geom_boxplot(color="black", fill="light blue")
+       geom_boxplot(color="black", fill="light green")
 
 nonfunctional_boxplot = ggplot(data=nga_wp_interested_data_pts, 
        aes(x=`pct_non-functional`)) + 
        labs(x = "% Non Functional") +
-       geom_boxplot(color="black", fill="light blue") 
+       geom_boxplot(color="black", fill="light green") 
   
 
 ggarrange(functional_boxplot, nonfunctional_boxplot, ncol = 2, nrow = 1)
@@ -674,7 +675,7 @@ functional = ggplot(data=nga_wp_interested_data_pts,
              aes(x= `wpt functional`)) +
   geom_histogram(bins=20, 
                  color="black", 
-                 fill="light blue") +
+                 fill="light green") +
   labs(x = "No. of Functional", y = "Frequency") +
   geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`wpt functional`)), 
                color="red", linetype="dashed", linewidth=1) +
@@ -684,7 +685,7 @@ nonfunctional = ggplot(data=nga_wp_interested_data_pts,
              aes(x= `wpt non functional`)) +
   geom_histogram(bins=20, 
                  color="black", 
-                 fill="light blue") +
+                 fill="light green") +
   labs(x = "No. of Non Functional", y = "Frequency") +
   geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`wpt non functional` )),color="red", linetype="dashed", linewidth=1) +
   geom_vline(aes(xintercept=median(nga_wp_interested_data_pts$`wpt non functional`)),color="brown", linetype="dashed", linewidth=1)
@@ -693,7 +694,7 @@ functional_pct = ggplot(data=nga_wp_interested_data_pts,
              aes(x= `pct_functional`)) +
   geom_histogram(bins=20, 
                  color="black", 
-                 fill="light blue") +
+                 fill="light green") +
   labs(x = "% Functional", y = "Frequency") +
   geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_functional` )),color="red", linetype="dashed", linewidth=1) +
   geom_vline(aes(xintercept=median(nga_wp_interested_data_pts$`pct_functional`)), color="brown", linetype="dashed", linewidth=1)
@@ -702,7 +703,7 @@ nonfunctional_pct = ggplot(data=nga_wp_interested_data_pts,
              aes(x= `pct_non-functional`)) +
   geom_histogram(bins=20, 
                  color="black", 
-                 fill="light blue") +
+                 fill="light green") +
   labs(x = "% Non Functional", y = "Frequency") +
   geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_non-functional` )),   
                color="red", linetype="dashed", linewidth=1) +
@@ -713,7 +714,7 @@ pct_Handpump = ggplot(data=nga_wp_interested_data_pts,
              aes(x= `pct_Handpump`)) +
   geom_histogram(bins=20, 
                  color="black", 
-                 fill="light blue") +
+                 fill="light green") +
   labs(x = "% Handpump", y = "Frequency") +
   geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_Handpump` )),   
                color="red", linetype="dashed", linewidth=1) +
@@ -724,7 +725,7 @@ pct_Potable = ggplot(data=nga_wp_interested_data_pts,
              aes(x= `pct_Potable`)) +
   geom_histogram(bins=20, 
                  color="black", 
-                 fill="light blue") +
+                 fill="light green") +
   labs(x = "% Potable", y = "Frequency") +
   geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_Potable` )),   
                color="red", linetype="dashed", linewidth=1) +
@@ -735,7 +736,7 @@ pct_NonPotable = ggplot(data=nga_wp_interested_data_pts,
              aes(x= `pct_NonPotable`)) +
   geom_histogram(bins=20, 
                  color="black", 
-                 fill="light blue") +
+                 fill="light green") +
   labs(x = "% Non Potable", y = "Frequency") +
   geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_NonPotable` )),   color="red", linetype="dashed", linewidth=1) +
   geom_vline(aes(xintercept=median(nga_wp_interested_data_pts$`pct_NonPotable`)),    color="brown", linetype="dashed", linewidth=1)
@@ -745,7 +746,7 @@ pct_Usage_Capacity_Over_1000 = ggplot(data=nga_wp_interested_data_pts,
              aes(x= `pct_Cap_Over_1000`)) +
   geom_histogram(bins=20, 
                  color="black", 
-                 fill="light blue") +
+                 fill="light green") +
   labs(x = "% Usage capacity >= 1000", y = "Frequency") +
   geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_Cap_Over_1000` )),   
                color="red", linetype="dashed", linewidth=1) +
@@ -757,7 +758,7 @@ pct_Usage_Capacity_Under_1000 = ggplot(data=nga_wp_interested_data_pts,
              aes(x= `pct_Cap_Under_1000`)) +
   geom_histogram(bins=20, 
                  color="black", 
-                 fill="light blue") +
+                 fill="light green") +
   labs(x = "% Usage capacity < 1000", y = "Frequency") +
   geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_Cap_Under_1000` )),   
                color="red", linetype="dashed", linewidth=1) +
@@ -768,7 +769,7 @@ pct_managed = ggplot(data=nga_wp_interested_data_pts,
              aes(x= `pct_managed`)) +
   geom_histogram(bins=20, 
                  color="black", 
-                 fill="light blue") +
+                 fill="light green") +
   labs(x = "% Managed", y = "Frequency") +
   geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_managed` )),   
                color="red", linetype="dashed", linewidth=1) +
@@ -780,7 +781,7 @@ pct_rural = ggplot(data=nga_wp_interested_data_pts,
              aes(x= `pct_rural`)) +
   geom_histogram(bins=20, 
                  color="black", 
-                 fill="light blue") +
+                 fill="light green") +
   labs(x = "% Rural", y = "Frequency") +
   geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_rural` )),   
                color="red", linetype="dashed", linewidth=1) +
@@ -792,7 +793,7 @@ pct_within_median_dist_to_pri_road = ggplot(data=nga_wp_interested_data_pts,
              aes(x= `pct_w_meddist_to_PriRoad`)) +
               geom_histogram(bins=20, 
                  color="black", 
-                 fill="light blue") +
+                 fill="light green") +
                 labs(x = "% Rural", y = "Frequency") +
                 geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_w_meddist_to_PriRoad` )),   
                color="red", linetype="dashed", linewidth=1) +
@@ -803,7 +804,7 @@ pct_within_median_dist_to_sec_road = ggplot(data=nga_wp_interested_data_pts,
              aes(x= `pct_w_meddist_to_SecRoad`)) +
               geom_histogram(bins=20, 
                  color="black", 
-                 fill="light blue") +
+                 fill="light green") +
                 labs(x = "% Rural", y = "Frequency") +
                 geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_w_meddist_to_SecRoad` )),   
                color="red", linetype="dashed", linewidth=1) +
@@ -814,7 +815,7 @@ pct_within_median_dist_to_ter_road = ggplot(data=nga_wp_interested_data_pts,
              aes(x= `pct_w_meddist_to_TerRoad`)) +
               geom_histogram(bins=20, 
                  color="black", 
-                 fill="light blue") +
+                 fill="light green") +
                 labs(x = "% Rural", y = "Frequency") +
                 geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_w_meddist_to_TerRoad` )),   
                color="red", linetype="dashed", linewidth=1) +
@@ -863,7 +864,7 @@ From the charts, we can observe that
 
 -   percentage of water points with hand pumps is negatively skewed.
 
-> *As functional and non functional water points are **NOT** of the same units as the other variables in percentage, we will need to normalize it later.*
+> *As functional and non functional water points are **NOT** of the same units as the other variables in percentage, we will need to standardized them later.*
 
 ### Visualizing the spatial distribution of water points
 
@@ -933,7 +934,9 @@ q = corrplot.mixed(cluster_vars.cor,
 
 ![](corr_matrix.png){fig-align="center"}
 
-According to Calkins (2005), variables that can be regarded as having a high degree of correlation are indicated by correlation coefficients with magnitudes between 0.7 and 1.0. As such, the following **5 observations** are highly correlated from the results
+According to Calkins (2005), variables that can be regarded as having a high degree of correlation are indicated by correlation coefficients with magnitudes between ± 0.7 and 1.0.
+
+As a result, the following **5 observations** are strongly correlated with the findings.
 
 1.  pct_functional - Percentage of functional water points
 
@@ -971,7 +974,7 @@ It is a good idea to visualize the distribution graphical of the standardized cl
 
 ```{r}
 r_func = ggplot(data=nga_wp_interested_data_pts, aes(x=`wpt functional`)) + 
-    geom_histogram(bins=20, color="black", fill="light blue") +
+    geom_histogram(bins=20, color="black", fill="light green") +
     labs(x = "Functional", y = "Frequency") +
     geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`wpt functional`)),   
                color="red", linetype="dashed", linewidth=1) +
@@ -979,7 +982,7 @@ r_func = ggplot(data=nga_wp_interested_data_pts, aes(x=`wpt functional`)) +
                color="brown", linetype="dashed", linewidth=1)
 
 s_func = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`wpt functional`)) + 
-    geom_histogram(bins=20, color="black", fill="light blue") +
+    geom_histogram(bins=20, color="black", fill="light green") +
     labs(x = "Functional", y = "Frequency") +
     geom_vline(aes(xintercept = mean(nga_wp_corr_vars.std_minmax$`wpt functional`)),   
                color="red", linetype="dashed", linewidth=1) +
@@ -987,7 +990,7 @@ s_func = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`wpt functional`)) +
                color="brown", linetype="dashed", linewidth=1) + ggtitle("Min-Max Standardization")
 
 r_nfunc = ggplot(data=nga_wp_interested_data_pts, aes(x=`wpt non functional`)) + 
-    geom_histogram(bins=20, color="black", fill="light blue") +
+    geom_histogram(bins=20, color="black", fill="light green") +
     labs(x = "Non Functional", y = "Frequency") +
     geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`wpt non functional`)),   
                color="red", linetype="dashed", linewidth=1) +
@@ -995,7 +998,7 @@ r_nfunc = ggplot(data=nga_wp_interested_data_pts, aes(x=`wpt non functional`)) +
                color="brown", linetype="dashed", linewidth=1)
 
 s_nfunc = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`wpt non functional`)) + 
-    geom_histogram(bins=20, color="black", fill="light blue") +
+    geom_histogram(bins=20, color="black", fill="light green") +
     labs(x = "Non Functional", y = "Frequency") +
     geom_vline(aes(xintercept = mean(nga_wp_corr_vars.std_minmax$`wpt non functional`)),   
                color="red", linetype="dashed", linewidth=1) +
@@ -1009,7 +1012,7 @@ ggarrange(r_func, s_func, r_nfunc, s_nfunc,
 
 ```{r}
 r_pctFunc = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_functional`)) + 
-    geom_histogram(bins=20, color="black", fill="light blue") +
+    geom_histogram(bins=20, color="black", fill="light green") +
     labs(x = "% Functional", y = "Frequency") +
     geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_functional`)),   
                color="red", linetype="dashed", linewidth=1) +
@@ -1017,7 +1020,7 @@ r_pctFunc = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_functional`)) +
                color="brown", linetype="dashed", linewidth=1)
 
 s_pctFunc = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`pct_functional`)) + 
-    geom_histogram(bins=20, color="black", fill="light blue") +
+    geom_histogram(bins=20, color="black", fill="light green") +
     labs(x = "% Functional", y = "Frequency") +
     geom_vline(aes(xintercept = mean(nga_wp_corr_vars.std_minmax$`pct_functional`)),   
                color="red", linetype="dashed", linewidth=1) +
@@ -1025,7 +1028,7 @@ s_pctFunc = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`pct_functional`)) +
                color="brown", linetype="dashed", linewidth=1) + ggtitle("Min-Max Standardization")
 
 r_pctNfunc = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_non-functional`)) + 
-    geom_histogram(bins=20, color="black", fill="light blue") +
+    geom_histogram(bins=20, color="black", fill="light green") +
     labs(x = "% Non Functional", y = "Frequency") +
     geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_non-functional`)),   
                color="red", linetype="dashed", linewidth=1) +
@@ -1033,7 +1036,7 @@ r_pctNfunc = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_non-functional`)
                color="brown", linetype="dashed", linewidth=1)
 
 s_pctNfunc = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`pct_non-functional`)) + 
-    geom_histogram(bins=20, color="black", fill="light blue") +
+    geom_histogram(bins=20, color="black", fill="light green") +
     labs(x = "% Non Functional", y = "Frequency") +
     geom_vline(aes(xintercept = mean(nga_wp_corr_vars.std_minmax$`pct_non-functional`)),   
                color="red", linetype="dashed", linewidth=1) +
@@ -1047,7 +1050,7 @@ ggarrange(r_pctFunc, s_pctFunc, r_pctNfunc,s_pctNfunc,
 
 ```{r}
 r_nonpotable = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_NonPotable`)) + 
-    geom_histogram(bins=20, color="black", fill="light blue") +
+    geom_histogram(bins=20, color="black", fill="light green") +
     labs(x = "Non Potable", y = "Frequency") +
     geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_NonPotable`)),   
                color="red", linetype="dashed", linewidth=1) +
@@ -1055,7 +1058,7 @@ r_nonpotable = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_NonPotable`)) 
                color="brown", linetype="dashed", linewidth=1)
 
 s_nonpotable = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`pct_NonPotable`)) + 
-    geom_histogram(bins=20, color="black", fill="light blue") +
+    geom_histogram(bins=20, color="black", fill="light green") +
     labs(x = "Non Potable", y = "Frequency") +
     geom_vline(aes(xintercept = mean(nga_wp_corr_vars.std_minmax$`pct_NonPotable`)),   
                color="red", linetype="dashed", linewidth=1) +
@@ -1063,7 +1066,7 @@ s_nonpotable = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`pct_NonPotable`))
                color="brown", linetype="dashed", linewidth=1) + ggtitle("Min-Max Standardization")
 
 r_capUnder1000 = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_Cap_Under_1000`)) + 
-    geom_histogram(bins=20, color="black", fill="light blue") +
+    geom_histogram(bins=20, color="black", fill="light green") +
     labs(x = "Usage Capacity < 1000", y = "Frequency") +
     geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_Cap_Under_1000`)),   
                color="red", linetype="dashed", linewidth=1) +
@@ -1071,7 +1074,7 @@ r_capUnder1000 = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_Cap_Under_10
                color="brown", linetype="dashed", linewidth=1)
 
 s_capUnder1000 = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`pct_Cap_Under_1000`)) + 
-    geom_histogram(bins=20, color="black", fill="light blue") +
+    geom_histogram(bins=20, color="black", fill="light green") +
     labs(x = "Usage Capacity < 1000", y = "Frequency") +
     geom_vline(aes(xintercept = mean(nga_wp_corr_vars.std_minmax$`pct_Cap_Under_1000`)),   
                color="red", linetype="dashed", linewidth=1) +
@@ -1085,7 +1088,7 @@ ggarrange(r_nonpotable, s_nonpotable, r_capUnder1000, s_capUnder1000 ,
 
 ```{r}
 r_Managed = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_managed`)) + 
-    geom_histogram(bins=20, color="black", fill="light blue") +
+    geom_histogram(bins=20, color="black", fill="light green") +
     labs(x = "Managed", y = "Frequency") +
     geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_managed`)),   
                color="red", linetype="dashed", linewidth=1) +
@@ -1093,7 +1096,7 @@ r_Managed = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_managed`)) +
                color="brown", linetype="dashed", linewidth=1)
 
 s_Managed = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`pct_managed`)) + 
-    geom_histogram(bins=20, color="black", fill="light blue") +
+    geom_histogram(bins=20, color="black", fill="light green") +
     labs(x = "Managed", y = "Frequency") +
     geom_vline(aes(xintercept = mean(nga_wp_corr_vars.std_minmax$`pct_managed`)),   
                color="red", linetype="dashed", linewidth=1) +
@@ -1101,7 +1104,7 @@ s_Managed = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`pct_managed`)) +
                color="brown", linetype="dashed", linewidth=1) + ggtitle("Min-Max Standardization")
 
 r_rural = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_rural`)) + 
-    geom_histogram(bins=20, color="black", fill="light blue") +
+    geom_histogram(bins=20, color="black", fill="light green") +
     labs(x = "Rural", y = "Frequency") +
     geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_rural`)),   
                color="red", linetype="dashed", linewidth=1) +
@@ -1109,7 +1112,7 @@ r_rural = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_rural`)) +
                color="brown", linetype="dashed", linewidth=1)
 
 s_rural = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`pct_rural`)) + 
-    geom_histogram(bins=20, color="black", fill="light blue") +
+    geom_histogram(bins=20, color="black", fill="light green") +
     labs(x = "Rural", y = "Frequency") +
     geom_vline(aes(xintercept = mean(nga_wp_corr_vars.std_minmax$`pct_rural`)),   
                color="red", linetype="dashed", linewidth=1) +
@@ -1123,7 +1126,7 @@ ggarrange(r_Managed, s_Managed, r_rural, s_rural ,
 
 ```{r}
 r_w_dist_toSecRoad = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_w_meddist_to_SecRoad`)) + 
-    geom_histogram(bins=20, color="black", fill="light blue") +
+    geom_histogram(bins=20, color="black", fill="light green") +
     labs(x = "Within Dist to Secondary Road", y = "Frequency") +
     geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_w_meddist_to_SecRoad`)),   
                color="red", linetype="dashed", linewidth=1) +
@@ -1131,7 +1134,7 @@ r_w_dist_toSecRoad = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_w_meddis
                color="brown", linetype="dashed", linewidth=1)
 
 s_w_dist_toSecRoad = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`pct_w_meddist_to_SecRoad`)) + 
-    geom_histogram(bins=20, color="black", fill="light blue") +
+    geom_histogram(bins=20, color="black", fill="light green") +
     labs(x = "Within Dist to Secondary Road", y = "Frequency") +
     geom_vline(aes(xintercept = mean(nga_wp_corr_vars.std_minmax$`pct_w_meddist_to_SecRoad`)),   
                color="red", linetype="dashed", linewidth=1) +
@@ -1139,7 +1142,7 @@ s_w_dist_toSecRoad = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`pct_w_meddi
                color="brown", linetype="dashed", linewidth=1) + ggtitle("Min-Max Standardization")
 
 r_w_dist_toTerRoad = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_w_meddist_to_TerRoad`)) + 
-    geom_histogram(bins=20, color="black", fill="light blue") +
+    geom_histogram(bins=20, color="black", fill="light green") +
     labs(x = "Within Dist to Tertiary Road", y = "Frequency") +
     geom_vline(aes(xintercept = mean(nga_wp_interested_data_pts$`pct_w_meddist_to_TerRoad`)),   
                color="red", linetype="dashed", linewidth=1) +
@@ -1147,7 +1150,7 @@ r_w_dist_toTerRoad = ggplot(data=nga_wp_interested_data_pts, aes(x=`pct_w_meddis
                color="brown", linetype="dashed", linewidth=1)
 
 s_w_dist_toSecRoad = ggplot(data=nga_wp_corr_vars.std_minmax, aes(x=`pct_w_meddist_to_TerRoad`)) + 
-    geom_histogram(bins=20, color="black", fill="light blue") +
+    geom_histogram(bins=20, color="black", fill="light green") +
     labs(x = "Within Dist to Tertiary Road", y = "Frequency") +
     geom_vline(aes(xintercept = mean(nga_wp_corr_vars.std_minmax$`pct_w_meddist_to_TerRoad`)),   
                color="red", linetype="dashed", linewidth=1) +
@@ -1167,7 +1170,6 @@ With R's `dist()` function, we shall compute the proximity matrix. The six dista
 
 ```{r}
 proxmat = dist(nga_wp_corr_vars.std_minmax, method="minkowski")
-proxmat 
 ```
 
 ### Computing hierarchical clustering
@@ -1321,7 +1323,7 @@ We will use the `skater()` method of the **spdep** package to derive a geographi
 
 The SKATER approach is a method that begins with a set of edges, a data set and a number of cuts to determine clusters.
 
-1.  First We must first transform *nga* into a spatial polygons data frame. This is because only SP objects (*SpatialPolygonDataFrame*) are supported by the SKATER function.
+First We must first transform *nga* into a spatial polygons data frame. This is because only SP objects (*SpatialPolygonDataFrame*) are supported by the SKATER function.
 
 ```{r}
 nga_sp = as_Spatial(nga)
@@ -1338,13 +1340,11 @@ summary(nga_sp.nb)
 
 From the output, there are 774 LGAs in Nigeria, Using the Queen's method, 1 of them has 14 neighbours, 1 of them is an island (no neighbour), and 2 of them only has 1 neighbour
 
-We must first create the weights matrix after determining the spatial weights. A isolated island can be found in the neighbor list's results. Since this island won't have any neighbors at all, it is not recommended to utilize a contiguity weight matrix. In light of this, we'll employ a weight matrix based on distance instead.
+We must create the weights matrix after determining the spatial weights. A isolated island can be found in the neighbor list's results. Since this island won't have any neighbors at all, it is not recommended to utilize a contiguity weight matrix. In light of this, we'll employ a weight matrix based on distance instead.
 
 #### Building the weights matrix
 
-The distance-based weight matrix can be found by using the **spdep** package's `dnearneigh()` function. The function searches for neighbors of region points using the Euclidean distance between the bottom (\>=) and upper (\<=) bounds or by using the longlat = True parameter and the great circle distance in kilometers.
-
-As there is an island involved, we will build an adaptive weight matrix instead.
+As there is an island involved, we will build an adaptive weight matrix.
 
 Using the k nearest neighbor (knn) technique, we can adjust how many neighbors each LGA has. As discussed in class, we set k in this instance to 8. The R functions used in this case are `knn2nb()` and `knearneigh()`
 
@@ -1377,7 +1377,6 @@ We then run the algorithm to create the adaptive distance matrix using `knn2nb()
 
 ```{r}
 knn8 = knn2nb(knearneigh(coord, k=8, longlat = FALSE))
-str(knn8)
 ```
 
 #### Computing minimum spanning tree
@@ -1436,12 +1435,6 @@ clust10 = skater(edge=nga_wp_mst[,1:2], #1st 2 col of MST
                 method = "minkowski",
                 ncuts = 9 #number of cuts
                 )
-```
-
-We can display the content of the result using `str()`
-
-```{r}
-str(clust10)
 ```
 
 Finally, we can also plot the pruned tree that shows the 10 clusters on top of the LGA area.
@@ -1554,7 +1547,7 @@ cr = choicealpha(proxmat, distmat, range.alpha = seq(0,1, 0.05), K=10, graph=T)
 
 As the data is skewed as we have explored in our EDA, we will use the QNorm graph based on normalized values.
 
-We can observe that when ***∝*** is raised from 0.2 to 0.4, the homogeneity of d1 (which is our spatial relationship (contiguity matrix), gain significantly from about 60% to slightly less than 80%. And for d0 (which is our attribute), the homogeneity loss is at 20%. Since ***∝ = 0.4*** is the most optimal, we will use it to form our cluster.
+We can observe that when ***∝*** is raised from 0.2 to 0.4, the homogeneity of d1, which is our spatial relationship (contiguity matrix), gain significantly from about 60% to slightly less than 80%. And for d0 (which is our attribute), the homogeneity loss is at 20%. Since ***∝ = 0.4*** is the most optimal, we will use it to form our cluster.
 
 ```{r}
 clustG = hclustgeo(proxmat, distmat, alpha = 0.4)
