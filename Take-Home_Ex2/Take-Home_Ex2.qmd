@@ -305,7 +305,11 @@ We can use `freq()` of the **funModeling** package to display the distribution o
 freq(data=nga_wp, input = 'Functional')
 ```
 
-Checking out functionality, we know that functional water points are broken down into *Functional, Functional but needs repair,* and *Functional but not in use.* 48.29% are functional, 4.82% are functional but needs repair and 1.77% of them are functional but not in use.
+Checking out functionality, we know that functional water points are broken down into *Functional, Functional but needs repair,* and *Functional but not in use.*
+
+48.29% are functional, 4.82% are functional but needs repair and 1.77% of them are functional but not in use.
+
+To aggregate data, Abandoned and Decommissioned water points were be grouped as non functional as well.
 
 ```{r}
 freq(data=nga_wp, input = 'Management')
@@ -323,13 +327,13 @@ Checking out the quality of water points, we know that 75.57% of them are of acc
 freq(data=nga_wp, input = 'Water_Source_Category')
 ```
 
-Checking out the source of water points, we know that majority of them (96.35%) comes from well. With such a high number, this variable may not be useful for our analysis as it most of the data points will come have this value.
+Checking out the source of water points, we know that majority of them (96.35%) comes from well. With such a high number, this variable may not be useful for our analysis as most of the data points will have this value.
 
 ```{r}
 freq(data=nga_wp, input = 'Water_Tech_Category')
 ```
 
-Checking out the technology the water point uses, we know that water points are broken down into *Hand pumps, Mechanized Pump, Tapstand, Rope and bucket.* 61.84% of water points operates on hand pumps, 26.99% on mechanized pumps, 10.58% are unknowns and a minority of them (less than 0.58%) are either on tapstand or Rope and Bucket.
+Checking out the technology the water point uses, we know that water points are broken down into *Hand pumps, Mechanized Pump, Tapstand, Rope and bucket.* 61.84% of water points operates on hand pumps, 26.99% on mechanized pumps, 10.58% are unknowns and a minority of them (0.58%) are either on tapstand or Rope and Bucket.
 
 ```{r}
 freq(data=nga_wp, input = 'Is_Urban_Area')
@@ -427,9 +431,7 @@ wpt_managed_unknown = wpdx_clean_sf %>%
 
 ### Computing our data points of interest
 
-We can use `st_intersects()` to find common data points between geographical datasets. In our case we need to find the common points in the Nigeria's LGA spatial dataset and the water point aspatial dataset
-
-The below code adds new columns to compute the total number of water points of our data point of interests
+We can use `st_intersects()` to find common data points between geographical datasets. In our case, we need to find the common points in the Nigeria's LGA spatial dataset and the water point aspatial dataset
 
 As an example, the below code intersects the Nigeria LGA dataset (*nga* dataframe) with the water point dataset (*wpdx_clean_sf* dataframe) and produce a new column to denote the total number of water points in the area (*Total wpt*) by using `mutate()` and `lengths()`
 
@@ -665,7 +667,7 @@ nonfunctional_boxplot = ggplot(data=nga_wp_interested_data_pts,
 ggarrange(functional_boxplot, nonfunctional_boxplot, ncol = 2, nrow = 1)
 ```
 
-We can see that there isn't any outliers in the functional water points, but for the non functional water points, there is an outlier where 100% of the water points are not functional.
+We can see that there isn't any outliers in the functional water points, but for the non functional water points, there are outliers where 100% of the water points are not functional.
 
 In the figure below, multiple histograms are plotted to reveal the distribution of the selected variables in the *nga_wp_interested_data_pts* data.frame. First, We do this by creating all the histograms assigned to individual variables.
 

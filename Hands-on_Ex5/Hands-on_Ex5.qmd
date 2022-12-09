@@ -127,7 +127,7 @@ ggplot(data=condo_resale_sf, aes(x=`SELLING_PRICE`)) +
   geom_histogram(bins=20, color="black", fill="light green")
 ```
 
-We can observed that the selling price of condo resale apartments shows a right skewed distribution, which can help us conclude that the units were transacted at relatively lower price.
+We can observe that the selling price of condo resale apartments shows a right skewed distribution, which can help us conclude that the units were transacted at relatively lower price.
 
 Statistically, we could use Log transformation to normalize the log distribution. It can be achieved by using mutate() of dplyr package.
 
@@ -289,9 +289,9 @@ corrplot(cor(condo_resale[, 5:23]), diag = FALSE, order = "AOE",
 ```
 
 ![](corrplot.png){width="800"}
-Rearranging the matrix is crucial for uncovering its hidden patterns and structures. Corrplot (parameter order) has four techniques with the names "AOE," "FPC," "hclust," and "alphabet." AOE order is applied in the following code section.
+Rearranging the matrix is crucial for uncovering its hidden patterns and structures. Corrplot (parameter order) has four techniques with the names "AOE," "FPC," "hclust," and "alphabet."
 
-It uses [Michael Friendly's](https://www.datavis.ca/papers/corrgram.pdf) recommended method of employing the angular order of the eigenvectors to organize the variables.
+AOE order is applied in the following code section. It uses [Michael Friendly's](https://www.datavis.ca/papers/corrgram.pdf) recommended method of employing the angular order of the eigenvectors to organize the variables.
 
 According to Calkins (2005), variables that can be regarded as having a high degree of correlation are indicated by correlation coefficients with magnitudes between ± 0.7 and 1.0.
 
@@ -321,7 +321,8 @@ summary(condo_mlr)
 
 #### Preparing Publication Quality Table: olsrr method
 
-With reference to the summary statistics of *condo_mlr*, it is clear that not all the independent variables are statistically significant. We will revised the model by removing the variables which are not
+With reference to the summary statistics of *condo_mlr*, it is clear that not all the independent variables are statistically significant. We will revised the model by removing the variables which are not.
+
 We will then use the [*`ols_regress`*](https://www.rdocumentation.org/packages/olsrr/versions/0.5.3/topics/ols_regress)*`()`* function to create the model
 
 ```{r}
@@ -338,7 +339,7 @@ ols_regress(condo_mlr1)
 #### Preparing Publication Quality Table: gtsummary method
 
 An elegant and flexible method for producing publication-quality summary tables in R is the
-[gtsummary](https://www.danieldsjoberg.com/gtsummary/)package. The [`tbl_regression()`](https://www.danieldsjoberg.com/gtsummary/reference/tbl_regression.html) function is used to generate a nicely prepared regression report using the code below.
+[gtsummary](https://www.danieldsjoberg.com/gtsummary/) package. The [`tbl_regression()`](https://www.danieldsjoberg.com/gtsummary/reference/tbl_regression.html) function is used to generate a nicely prepared regression report using the code below.
 
 ```{r}
 tbl_regression(condo_mlr1, intercept = TRUE)
@@ -406,7 +407,7 @@ Lastly, the code below uses [`ols_plot_resid_hist()`](https://olsrr.rsquaredacad
 ols_plot_resid_hist(condo_mlr1)
 ```
 
-The result shows that the residual of the multiple linear regression model (i.e. `condo_mlr1`) is matches a normal distribution. As demonstrated in the code below, the `ols_test_normality()` function of the **olsrr** package can be used if you prefer formal statistical test methods.
+The result shows that the residual of the multiple linear regression model (i.e. `condo_mlr1`) matches a normal distribution. As demonstrated in the code below, the `ols_test_normality()` function of the **olsrr** package can be used if you prefer formal statistical test methods.
 
 ```{r}
 ols_test_normality(condo_mlr1)
@@ -420,7 +421,7 @@ Therefore, we will conclude that the residuals are not normally distributed and 
 
 Since the hedonic model we attempt to construct uses attributes that are geographically referenced, it is important for us to see the residual of the hedonic pricing model.
 
-condo_resale_sf from the SF data frame needs to be transformed into a SpatialPointsDataFrame in order to run the spatial autocorrelation test.
+*condo_resale_sf* from the SF data frame needs to be transformed into a SpatialPointsDataFrame in order to run the spatial autocorrelation test.
 
 1.  First, we will export the residual of the hedonic pricing model and save it as a data frame using `as.data.frame()`
 
@@ -436,7 +437,7 @@ condo_resale_sf from the SF data frame needs to be transformed into a SpatialPo
                 rename(`MLR_RES` = `condo_mlr1.residuals`)
     ```
 
-3.  Because the spdep package can only process sp compliant spatial data objects, we need to transform *condo_resale_res_sf* from a simple feature object into a SpatialPointsDataFrame with c`atial()`
+3.  Because the spdep package can only process sp compliant spatial data objects, we need to transform *condo_resale_res_sf* from a simple feature object into a SpatialPointsDataFrame with `as_spatial()`
 
     ```{r}
     condo_resale_sp = as_Spatial(condo_resale_res_sf)
@@ -609,7 +610,7 @@ They are all stored in a SpatialPointsDataFrame or SpatialPolygonsDataFrame obje
 
 ### Converting SDF into *sf* data.frame
 
-To visualize the fields in **SDF**, we need to first convert it into **sf** data.frame by using st_as_sf() function and then transforming it to SVY21 projection with st_transform() using the crs 3414
+To visualize the fields in **SDF**, we need to first convert it into **sf** data.frame by using `st_as_sf()` function and then transforming it to SVY21 projection with `st_transform()` using the crs=3414
 
 ```{r}
 condo_resale_sf_adaptive = st_as_sf(gwr.adaptive$SDF) %>%
