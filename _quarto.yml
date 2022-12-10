@@ -2,6 +2,11 @@ project:
   type: website
 
 website:
+  page-navigation: true
+  reader-mode: true
+  page-footer: 
+    left: "Copyright 2022, Allan Chongs"
+    
   title: "ISSS624 - Geospatial Analytics App"
   navbar:
     left: 
@@ -33,7 +38,7 @@ website:
           - text: In Class Exercise Week 3 - Spatially Constrained Clustering - ClustGeo Method
             href: https://mitb-isss624-ackw-gis-analytics.netlify.app/in-class_ex3/in-class_ex3#spatially-constrained-clustering---clustgeo-method
           
-          - text: In Class Exercise Week 4 - ???
+          - text: In Class Exercise Week 4 - Hedonic Pricing Models using GW model and Visualizing coefficient estimates of 2015 Condo Resale price in Singapore
             href: In-Class_Ex4\In-class_Ex4.qmd  
       
       
@@ -44,17 +49,17 @@ website:
             
           - text: Take Home Exercise 2 - Regionalization of Nigeria with Water points
             href: Take-Home_Ex2\Take-Home_Ex2.qmd
-          
-          - text: Take Home Exercise 3 - ???
-            href: Take-Home_Ex3\Take-Home_Ex3.qmd
             
     right:
+      - href: https://github.com/allanckw
+        icon: github
+        aria-label: GitHub
       - href: index.qmd
         text: Home
 
 format:
   html:
-    theme: cosmo
+    theme: Cerulean
     css: styles.css
     toc: true
 

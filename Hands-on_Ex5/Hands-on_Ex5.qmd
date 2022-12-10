@@ -129,7 +129,7 @@ ggplot(data=condo_resale_sf, aes(x=`SELLING_PRICE`)) +
 
 We can observe that the selling price of condo resale apartments shows a right skewed distribution, which can help us conclude that the units were transacted at relatively lower price.
 
-Statistically, we could use Log transformation to normalize the log distribution. It can be achieved by using mutate() of dplyr package.
+Statistically, we could use Log transformation to normalize the log distribution. It can be achieved by using `mutate()` of **dplyr** package.
 
 ```{r}
 condo_resale_sf <- condo_resale_sf %>%
@@ -259,7 +259,7 @@ summary(condo_slr)
 
     As a consequence, we can conclude that ***B0*** and ***B1*** are accurate parameter estimates.
 
-To visualise the best fit curve on a scatterplot, we can incorporate `lm()` as a method function in ggplot\'s geometry with the code below.
+To visualise the best fit curve on a scatterplot, we can incorporate `lm()` as a method function in ggplot's geometry with the code below.
 
 ```{r}
 ggplot(data=condo_resale_sf,  
@@ -272,7 +272,7 @@ We can observe from the scatter plot that there are a few statistical outliers w
 
 ### Multiple Linear Regression Method
 
-#### Visualising the relationships of the independent variables
+#### Visualizing the relationships of the independent variables
 
 It's crucial to make sure that the independent variables employed are not highly correlated with one another before creating a multiple regression model.
 
@@ -288,8 +288,7 @@ corrplot(cor(condo_resale[, 5:23]), diag = FALSE, order = "AOE",
          tl.pos = "td", tl.cex = 0.5, method = "number", type = "upper")
 ```
 
-![](corrplot.png){width="800"}
-Rearranging the matrix is crucial for uncovering its hidden patterns and structures. Corrplot (parameter order) has four techniques with the names "AOE," "FPC," "hclust," and "alphabet."
+![](corrplot.png){width="800"} Rearranging the matrix is crucial for uncovering its hidden patterns and structures. Corrplot (parameter order) has four techniques with the names "AOE," "FPC," "hclust," and "alphabet."
 
 AOE order is applied in the following code section. It uses [Michael Friendly's](https://www.datavis.ca/papers/corrgram.pdf) recommended method of employing the angular order of the eigenvectors to organize the variables.
 
@@ -338,8 +337,7 @@ ols_regress(condo_mlr1)
 
 #### Preparing Publication Quality Table: gtsummary method
 
-An elegant and flexible method for producing publication-quality summary tables in R is the
-[gtsummary](https://www.danieldsjoberg.com/gtsummary/) package. The [`tbl_regression()`](https://www.danieldsjoberg.com/gtsummary/reference/tbl_regression.html) function is used to generate a nicely prepared regression report using the code below.
+An elegant and flexible method for producing publication-quality summary tables in R is the [gtsummary](https://www.danieldsjoberg.com/gtsummary/) package. The [`tbl_regression()`](https://www.danieldsjoberg.com/gtsummary/reference/tbl_regression.html) function is used to generate a nicely prepared regression report using the code below.
 
 ```{r}
 tbl_regression(condo_mlr1, intercept = TRUE)
@@ -355,7 +353,7 @@ tbl_regression(condo_mlr, intercept = TRUE) %>%
   )
 ```
 
-For more customisation options, refer to [Tutorial: tbl_regression](https://www.danieldsjoberg.com/gtsummary/articles/tbl_regression.html)
+For more customization options, refer to [Tutorial: tbl_regression](https://www.danieldsjoberg.com/gtsummary/articles/tbl_regression.html)
 
 #### Checking for multicolinearity
 
@@ -465,7 +463,7 @@ There are indications of spatial autocorrelation, as shown by the map above. The
 
 #### Moran's I test for spatial autocorrelation
 
-We will create the distance base matrix by using dnearneigh() function of **spdep**.
+We will create the distance base matrix by using `dnearneigh()` function of **spdep**.
 
 ```{r}
 nb = dnearneigh(coordinates(condo_resale_sp), 0, 1500, longlat = FALSE)
@@ -498,7 +496,7 @@ summary(nb_lw)
 
 The null hypothesis in this case is that residuals are randomly distributed.
 
-[`lm.morantest()`](https://r-spatial.github.io/spdep/reference/lm.morantest.html) of **spdep** package will be used to perform Moran\'s I test for residual spatial autocorrelation
+[`lm.morantest()`](https://r-spatial.github.io/spdep/reference/lm.morantest.html) of **spdep** package will be used to perform Moran's I test for residual spatial autocorrelation
 
 ```{r}
 lm.morantest(condo_mlr1, nb_lw)
@@ -506,7 +504,7 @@ lm.morantest(condo_mlr1, nb_lw)
 
 Based on the result, we will ***reject*** the null hypothesis as the p-value is less than 0.05. In fact as the p-value is less than 0.01, we can consider that as **highly significant.**
 
-Therefore, we can conclude that the residuals is not randomly distributed based on Moran\'s I statistics and conclude that the residuals are consistent with the cluster distribution.
+Therefore, we can conclude that the residuals is not randomly distributed based on Moran's I statistics and conclude that the residuals are consistent with the cluster distribution.
 
 ## Building Hedonic Pricing Models using GW model
 
@@ -537,7 +535,7 @@ The result shows that the recommended bandwidth is 1007.229 metres. The reason w
 
 #### GWModel method - fixed bandwith
 
-Now, utilizing fixed bandwidth and a gaussian kernel, we may calibrate the ***gwr*** ***model*** using the code below.
+Now, utilizing fixed bandwidth and a Gaussian kernel, we may calibrate the ***gwr*** ***model*** using the code below.
 
 ```{r}
 gwr.fixed = gwr.basic(formula = SELLING_PRICE ~ AREA_SQM + AGE + PROX_CBD + PROX_CHILDCARE + PROX_ELDERLYCARE  + PROX_URA_GROWTH_AREA + PROX_MRT   + PROX_PARK + PROX_PRIMARY_SCH + PROX_SHOPPING_MALL + NO_Of_UNITS + FAMILY_FRIENDLY + FREEHOLD, 
@@ -590,7 +588,7 @@ PROX_PRIMARY_SCH + PROX_SHOPPING_MALL +                 NO_Of_UNITS + FAMILY_FRI
 gwr.adaptive 
 ```
 
-The report shows that the adjusted r-square of the ***gwr*** is 0.8803 which is significantly better than the global multiple linear regression model of 0.6411.
+The report shows that the adjusted r-square of the ***gwr*** is 0.845 which is significantly better than the global multiple linear regression model of 0.6411.
 
 ### Visualizing GWR Output
 
@@ -606,7 +604,7 @@ The output feature class table has fields for observed and predicted y values, c
 
 -   Coefficient Standard Error: These numbers reflect the reliability of each coefficient estimate. When standard errors are low relative to the actual coefficient values, the confidence in those estimations is increased. Problems with local collinearity may be indicated by large standard errors.
 
-They are all stored in a SpatialPointsDataFrame or SpatialPolygonsDataFrame object integrated with fit.points, GWR coefficient estimates, y value, predicted values, coefficient standard errors and t-values in its \"data\" slot in an object called **SDF** of the output list.
+They are all stored in a SpatialPointsDataFrame or SpatialPolygonsDataFrame object integrated with fit.points, GWR coefficient estimates, y value, predicted values, coefficient standard errors and t-values in its "data" slot in an object called **SDF** of the output list.
 
 ### Converting SDF into *sf* data.frame
 

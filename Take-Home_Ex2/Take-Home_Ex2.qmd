@@ -123,6 +123,7 @@ Calling `ttm()` in the **tmap** package will switch the tmap's viewing mode to i
 ttm()
 tm_shape(nga_dupes) + 
   tm_polygons("shapeName") +
+  tm_view(set.zoom.limits = c(5,10)) +
   tm_borders(alpha=0.5) 
 
 ```
@@ -563,7 +564,7 @@ nga_wp[is.na(nga_wp)] = 0
 row.names(nga_wp) = nga_wp$shapeName
 ```
 
-We will only keep the following variables as the rest are intermediate data points that are no longer relevant
+We will only keep the following variables as the rest are intermediate data points that are no longer relevant by using `select()` and verify that the data is columns are correct using `colnames()`
 
 1.  wpt functional
 
@@ -597,6 +598,7 @@ We will only keep the following variables as the rest are intermediate data poin
 #| eval: false
 nga_wp_interested_data_pts = nga_wp  %>% 
       select(4:5, 19:30) 
+colnames(nga_wp_interested_data_pts)
 ```
 
 We save the processed data frame *nga_wp_interested_data_pts* into a file with `saveRDS()`, so that we do not need to process it again
@@ -606,10 +608,12 @@ We save the processed data frame *nga_wp_interested_data_pts* into a file with `
 saveRDS(nga_wp_interested_data_pts, "data/geospatial/nga_wp_interested_data_pts.rds")
 ```
 
-We can then retrieve the saved RDS file using `readRDS()`
+We can then retrieve the saved RDS file using `readRDS()` and check that the column names are correct before we proceed further with `colnames()`
 
 ```{r}
 nga_wp_interested_data_pts = readRDS("data/geospatial/nga_wp_interested_data_pts.rds")
+
+colnames(nga_wp_interested_data_pts)
 ```
 
 ### EDA using statistical graphics
@@ -669,7 +673,7 @@ ggarrange(functional_boxplot, nonfunctional_boxplot, ncol = 2, nrow = 1)
 
 We can see that there isn't any outliers in the functional water points, but for the non functional water points, there are outliers where 100% of the water points are not functional.
 
-In the figure below, multiple histograms are plotted to reveal the distribution of the selected variables in the *nga_wp_interested_data_pts* data.frame. First, We do this by creating all the histograms assigned to individual variables.
+In the figure below, multiple histograms are plotted to reveal the distribution of the selected variables in the *nga_wp_interested_data_pts* data.frame. First, We do this by creating all the histograms assigned to individual variables by using `ggplot()`.
 
 ```{r}
 
@@ -828,46 +832,28 @@ pct_within_median_dist_to_ter_road = ggplot(data=nga_wp_interested_data_pts,
                color="brown", linetype="dashed", linewidth=1)
 
 
-ggarrange(functional, nonfunctional, 
-          functional_pct, nonfunctional_pct,
-          ncol = 2, nrow = 2)
-
-ggarrange(pct_Potable, pct_NonPotable, 
-          pct_Usage_Capacity_Over_1000, pct_Usage_Capacity_Under_1000,
-          pct_managed, pct_rural,
-          ncol = 2, nrow = 3)
-          
-
-ggarrange(pct_within_median_dist_to_pri_road, 
-          pct_within_median_dist_to_sec_road, 
-          pct_within_median_dist_to_ter_road, 
-          pct_Handpump,
-          ncol = 2, nrow = 2)
-
 
 ```
 
-From the charts, we can observe that
+We can build a trellis plot with the code below after creating our graphs with `ggarrange()` to create 14 histograms. and organised into a 3 columns by 5 rows small multiple plot.
 
--   No. of functional water points & non functional water points are positively skewed
+```{r}
+#| eval: false
+ggarrange(functional, nonfunctional, 
+          functional_pct, nonfunctional_pct,
+          pct_Potable, pct_NonPotable, 
+          pct_Usage_Capacity_Over_1000, pct_Usage_Capacity_Under_1000,
+          pct_managed, pct_rural,
+          pct_within_median_dist_to_pri_road, 
+          pct_within_median_dist_to_sec_road, 
+          pct_within_median_dist_to_ter_road, 
+          pct_Handpump,
+          ncol = 3, nrow = 5)
+```
 
--   percentage of functional follows closely to a normal distribution while percentage of non functional is positively skewed
+![Trellis Plot](trellisplot.png){fig-align="center" width="891"}
 
--   percentage of water points with potable water is negatively skewed while percentage of water points with non potable water is positively skewed
-
--   percentage of water points with usage capacity over 1000 is positively skewed while percentage of water points with usage capacity less than 1000 is negatively skewed
-
--   percentage of managed water points is negatively skewed
-
--   percentage of rural water points is negatively skewed
-
--   percentage of water points with primary road within median distance is negatively skewed
-
--   percentage of water points with secondary road within median distance is negatively skewed
-
--   percentage of water points with tertiary road within median distance is negatively skewed
-
--   percentage of water points with hand pumps is negatively skewed.
+From the Trellis plot, we can observe that most of the variables does not follow a Normal Distribution, except for % functional and % non functional.
 
 > *As functional and non functional water points are **NOT** of the same units as the other variables in percentage, we will need to standardize them later.*
 
@@ -949,7 +935,7 @@ As a result, the following **5 observations** are strongly correlated with the f
 
 3.  *pct_potable* vs. *pct managed* - *pct_managed* already drop in 1
 
-4.  pct_Cap_Over_1000 vs. *pct_Cap_Under1000* - *pct_Cap_Under1000* already drop in 2
+4.  *pct_Cap_Over_1000* vs. *pct_Cap_Under1000* - *pct_Cap_Under1000* already drop in 2
 
 5.  *pct_w\_meddist_to_PriRoad* vs. *pct_w\_meddist_to_TerRoad* - we will drop *pct_w\_meddist_to_TerRoad*
 
@@ -966,7 +952,7 @@ colnames(nga_wp_corr_vars)
 
 ### Data Standardization
 
-As most of the data points are already in percentages except the number of functional and non functional water points, we will need to perform standardization so that they will be comparable. From the histogram generated previously, we know that not all of the variables follow some normal distribution, so we will use Min-Max normalization instead.
+As most of the data points are already in percentages except *wpt functional* and *wpt non functional*, we will need to perform standardization so that they will be comparable. From the Trellis plot generated earlier, we know that not all of the variables follow some normal distribution, so we will use ***Min-Max*** standardization instead of the Z-scorestandardization
 
 To achieve that we can use the [**heatmaply**](https://cran.r-project.org/web/packages/heatmaply/) package's `normalize()` function. The `summary()` function is used to show the summary statistics for the standardized clustering variables.
 
@@ -979,7 +965,7 @@ The values range of the Min-max standardized clustering variables are between 0 
 
 #### Visualizing the standardize clustering variables
 
-It is a good idea to visualize the distribution graphical of the standardized clustering variables in addition to evaluating the summary statistics of those variables. We will use the ggplot2 library to help us with that by plotting the raw variable distribution vs the standardized distribution
+It is a good idea to visualize the distribution graphical of the standardized clustering variables in addition to evaluating the summary statistics of those variables. We will use the **ggplot2** library to help us with that by plotting the raw variable distribution vs the standardized distribution
 
 ```{r}
 r_func = ggplot(data=nga_wp_interested_data_pts, aes(x=`wpt functional`)) + 
@@ -1181,7 +1167,9 @@ After observing the histograms, we can conclude that the distribution did not ch
 
 #### Determine the proximity matrix.
 
-With R's `dist()` function, we shall compute the proximity matrix. The six distance proximity calculations that are supported by `dist()` are the euclidean, maximum, manhattan, canberra, binary, and minkowski methods. As the variables are largely dissimilar, we use the *minkowski* method
+With R's `dist()` function, we shall compute the proximity matrix. The six distance proximity calculations that are supported by `dist()` are the *euclidean, maximum, manhattan, canberra, binary,* and *minkowski* methods.
+
+As the variables are largely dissimilar, we use the ***minkowski*** method to create our proximity matrix
 
 ```{r}
 proxmat = dist(nga_wp_corr_vars.std_minmax, method="minkowski")
@@ -1191,9 +1179,9 @@ proxmat = dist(nga_wp_corr_vars.std_minmax, method="minkowski")
 
 Hierarchical clustering is an unsupervised machine learning technique that divides objects into clusters based on how related they are. The result is a collection of clusters, each of which differs from the others while having things that are generally similar to one another.
 
-A tree-like diagram known as a dendrogram is used to record the sequences of mergers and splits in the result of the clustering process.
+A tree-like diagram known as a Dendrogram is used to record the sequences of mergers and splits in the result of the clustering process.
 
-We can use `hclust()` method provided by the R Stat class to find our clusters with our proximity matrix we found earlier using the *ward.d* method. The dendrogram is drawn using `plot()` of R graphics
+We can use `hclust()` method provided by the R Stat class to find our clusters with our proximity matrix we found earlier using the *ward.d* method. The Dendrogram is drawn using `plot()` of R graphics
 
 ```{r}
 #| fig.height = 10, fig.width = 10
@@ -1262,13 +1250,13 @@ rect.hclust(hclust_ward_d, k = 9, border = 2:9)
 
 ### Visually-driven hierarchical clustering analysis
 
-By using [**heatmaply**](https://cran.r-project.org/web/packages/heatmaply/) package we are able to build both highly interactive cluster heatmap or static cluster heatmap.
+By using [**heatmaply**](https://cran.r-project.org/web/packages/heatmaply/) package we are able to build both highly interactive cluster heat map or static cluster heatmap.
 
 ```{r}
 nga_wp_corr_vars.std_minmax_mat = data.matrix(nga_wp_corr_vars.std_minmax)
 ```
 
-Plotting interactive cluster heatmap using `heatmaply()`
+Plotting interactive cluster heat map using `heatmaply()`, to make it consistent, we will use the *minkowski* distance method.
 
 ```{r}
 heatmaply(normalize(nga_wp_corr_vars.std_minmax_mat), 
@@ -1287,6 +1275,8 @@ heatmaply(normalize(nga_wp_corr_vars.std_minmax_mat),
           
           )
 ```
+
+From the heat map, it can be observed that the following variables *pct_functional, pct_Potable, pct_Cap_Under_1000* & *pct_rural* are likely to form clusters of high concentrations between the LGAs.
 
 ### Mapping the clusters formed in hierarchical clustering
 
@@ -1313,7 +1303,7 @@ nga_wp_cluster = cbind(nga, as.matrix(groups)) %>%
   rename(`CLUSTER` = `as.matrix.groups.`)
 ```
 
-Next we use the tmap functions to plot the cloropleth map showing the clusters
+Next we use the **tmap** functions to plot the choropleth map showing the clusters
 
 ```{r}
 hclust_map_without_spatial_constraints = tm_shape(nga_wp_cluster) + 
@@ -1324,6 +1314,7 @@ hclust_map_without_spatial_constraints = tm_shape(nga_wp_cluster) +
             legend.width = 0.35, 
             frame = TRUE) + 
   tm_polygons("CLUSTER") +
+  tm_view(set.zoom.limits = c(5,10)) +
   tm_borders(alpha = 0.5) 
 
 hclust_map_without_spatial_constraints
@@ -1364,9 +1355,9 @@ We must create the weights matrix after determining the spatial weights. A isola
 
 As there is an island involved, we will build an adaptive weight matrix.
 
-Using the k nearest neighbor (knn) technique, we can adjust how many neighbors each LGA has. As discussed in class, we set k in this instance to 8. The R functions used in this case are `knn2nb()` and `knearneigh()`
+Using the k nearest neighbor (knn) technique, we can adjust how many neighbors each LGA has. As discussed in class, we set k in this instance to 8. The R functions used in this case are `knn2nb()` and `knearneigh()`
 
-For distance based matrix, we will need to perform st_transform first, and recreate the nga_sp for the *SpatialPolygonDataFrame*
+For distance based matrix, we will need to perform `st_transform()` first, and recreate the nga_sp for the *SpatialPolygonDataFrame*
 
 ```{r}
 nga_local = st_transform(nga, crs=26392)
@@ -1392,6 +1383,8 @@ coord = cbind(longitude, latitude)
 ```
 
 We then run the algorithm to create the adaptive distance matrix using `knn2nb()` and `knearneigh()`
+
+We set longlat to False as the projection have already been changed to EPSG 26392, Nigeria Mid Belt
 
 ```{r}
 knn8 = knn2nb(knearneigh(coord, k=8, longlat = FALSE))
@@ -1486,6 +1479,7 @@ skatermap = tm_shape(nga_wp_spatialcluster) +
             legend.width = 0.35, 
             frame = TRUE) + 
   tm_fill("SP_CLUSTER") +
+  tm_view(set.zoom.limits = c(5,10)) +
   tm_borders(alpha = 0.5) 
 
 skatermap
@@ -1534,6 +1528,7 @@ default_ngeo_clustered_map = tm_shape(nga_ngeo_cluster) +
             legend.width = 0.35, 
             frame = TRUE) + 
   tm_polygons("CLUSTER") +
+  tm_view(set.zoom.limits = c(5,10)) +
   tm_borders(alpha = 0.5) 
 
 default_ngeo_clustered_map
@@ -1589,6 +1584,7 @@ g_clustered_map =
             legend.width = 0.35, 
             frame = TRUE) + 
   tm_polygons("CLUSTER") +
+  tm_view(set.zoom.limits = c(5,10)) +
   tm_borders(alpha = 0.5) 
 
 g_clustered_map
@@ -1596,16 +1592,16 @@ g_clustered_map
 
 Similarly to the skater method of the **spdep** package, we can observe that once we added alpha into the formula, there are now 9 clusters that are mostly contiguous. This can help us make better decisions on what to do with each cluster and make planning easier when we need to consolidate resources.
 
-## Conclusion
+## Comparing the Resultant map plots
 
 We attempt to conclude by plotting the 4 maps together
 
 ```{r}
 tmap_arrange(hclust_map_without_spatial_constraints,skatermap, 
-             ncol = 2, nrow = 1, asp = 1)
+             default_ngeo_clustered_map, g_clustered_map, 
+             ncol = 2, nrow = 2, asp = 1,
+             sync = TRUE)
 
-tmap_arrange(default_ngeo_clustered_map, g_clustered_map, 
-             ncol = 2, nrow = 1, asp = 1)
 ```
 
 Based on the results, we can see that hierarchical clustering without spatial constraints produces clusters that are messy with no contiguity which is sub optimal in both methods if resources must be focused among similar areas. Such clustering can posed to be difficult when one conduct planning without spatial considerations.
@@ -1630,6 +1626,8 @@ From the ClustGeo map, we could infer
 -   The western borders of Nigeria forms a cluster on its own
 
 These observation were similar to the observation we made in the section *Visualizing the spatial distribution of water points.*
+
+## Visual Interpretation of Clusters
 
 ## References
 
