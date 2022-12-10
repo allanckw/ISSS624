@@ -5,9 +5,9 @@ website:
   page-navigation: true
   reader-mode: true
   page-footer: 
-    left: "Copyright 2022, Allan Chongs"
+    left: "Copyright 2022, Allan Chong"
     
-  title: "ISSS624 - Geospatial Analytics App"
+  title: "Applied Geospatial Analytics"
   navbar:
     left: 
       - text: Hands-On Exercises
@@ -49,6 +49,12 @@ website:
             
           - text: Take Home Exercise 2 - Regionalization of Nigeria with Water points
             href: Take-Home_Ex2\Take-Home_Ex2.qmd
+            
+      - text: Course Website
+        href: https://isss624-ay2022-23nov.netlify.app/ 
+        
+      - text: R for GDSA EBook
+        href: https://r4gdsa.netlify.app/
             
     right:
       - href: https://github.com/allanckw

@@ -63,7 +63,7 @@ First, we load the required packages in R
 
 -   **Multivariate data visualization and analysis**
 
-    -   **coorplot**, **ggpubr**, and **heatmaply**
+    -   **coorplot**, **ggpubr**, **GGally** and **heatmaply**
 
 -   **Cluster analysis**
 
@@ -72,10 +72,10 @@ First, we load the required packages in R
     -   **ClustGeo**
 
 ```{r}
-pacman::p_load(knitr, spdep, tmap, sf, 
-               ggpubr, cluster, funModeling,
-               factoextra, NbClust, #factoextra factor analysis, access clustering results
-               heatmaply, corrplot, tidyverse, ClustGeo)
+pacman::p_load(knitr, rgdal, spdep, tmap, sf, 
+               ggpubr, GGally, cluster, funModeling,
+               factoextra, NbClust, ClustGeo,
+               heatmaply, corrplot, psych, tidyverse)
 ```
 
 ## Spatial Data
@@ -1628,6 +1628,10 @@ From the ClustGeo map, we could infer
 These observation were similar to the observation we made in the section *Visualizing the spatial distribution of water points.*
 
 ## Visual Interpretation of Clusters
+
+skatermap - SP_CLUSTER
+
+nga_Gcluster - CLUSTER
 
 ## References
 

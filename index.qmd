@@ -4,6 +4,8 @@ author: "Chong Kok Wei @ Allan Chong"
 editor: visual
 ---
 
-Welcome to ISSS624 Geospatial Analytics Applications.
+## Welcome to the ISSS624 Applied Geospatial Analytics
 
-This site will document my learning Journey
+In this web site, you will find my learning Journey to this Module
+
+Instructor: [Dr. Kam Tin Seong](https://www.smu.edu.sg/faculty/profile/9618/KAM-Tin-Seong), Associate Professor of Information Systems (Practice)

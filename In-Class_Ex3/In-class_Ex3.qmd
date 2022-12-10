@@ -35,7 +35,7 @@ Firstly, we load the required packages in R
 
 -   **Multivariate data visualization and analysis**
 
-    -   **coorplot**, **ggpubr**, and **heatmaply**
+    -   **coorplot**, **ggpubr**, **GGally** and **heatmaply**
 
 -   **Cluster analysis**
 
@@ -45,10 +45,9 @@ Firstly, we load the required packages in R
 
 ```{r}
 pacman::p_load(knitr, rgdal, spdep, tmap, sf, 
-               ggpubr, cluster, funModeling,
+               ggpubr, GGally, cluster, funModeling,
                factoextra, NbClust, ClustGeo,
                heatmaply, corrplot, psych, tidyverse)
-#factoextra factor analysis, NbClust access clustering results
 ```
 
 ## Importing & preparing the data
@@ -932,3 +931,90 @@ tmap_arrange(default_ngeo_clustered_map,spatially_constraint_clustered_map)
 We can see that without considering spatial relationships, the clusters are not linked spatially. Take for example cluster 2 of *default_ngeo_clustered_map*, without spatial constraints, the regions forming the clusters are all over the place; One of the region is in the far west, another at the south and so on. This is sub optimal as there may be real world consideration that that necessitates the regionalization of geographies into distinct regions, such as urban planning.
 
 In contrast, the clusters of the *spatially_constraint_clustered_map,* are mostly contiguous, except for a few regions that may be outliers causing such patterns.
+
+## Visual Interpretation of Clusters
+
+We can reveal the distribution of a clustering variable (i.e RADIO_PR) by cluster with a box plot using the **ggplot2** package
+
+```{r}
+ggplot(data = shan_sf_ngeo_cluster, 
+        aes(x=CLUSTER, y=RADIO_PR)) + 
+        geom_boxplot()
+```
+
+The boxplot discloses The highest mean Radio Ownership Per Thousand Households is shown by Cluster 3. Then come Clusters 2, 1, 4, 6, and 5.
+
+> See dark line in the middle of box plot
+
+### 5.10.2 Multivariate Visualization
+
+Studies in the past have demonstrated how parallel coordinate plots can be used to reveal clustering variables effectively.
+
+We can employ the [`ggparcoord()`](https://ggobi.github.io/ggally/reference/ggparcoord.html) function of the [**GGally**](https://ggobi.github.io/ggally/) package to achieve this.
+
+```{r}
+#| fig.height = 10, fig.width = 15
+ggparcoord(data = shan_sf_ngeo_cluster,
+           columns=c(25:30),
+           scale = "globalminmax",
+           alphaLines = 0.2,
+           boxplot = T,
+           title = "Multiple Parallel Coordinates Plots of ICT Variables by Cluster") +
+          facet_grid(~ CLUSTER) + 
+          theme(axis.text.x = element_text(angle = 30, size = 8 ))
+           
+```
+
+The parallel coordinate plot above demonstrates that the largest percentage of TV and mobile phone ownership is seen among homes in townships in Cluster 4. In contrast, households in Cluster 5 typically own the lowest of all the five ICT.
+
+It should be noted that the `ggparcoor()` function offers a number of ways to scale the clustering variables. As follows:
+
+-   ***std***: univariately, subtract mean and divide by standard deviation.
+
+-   ***robust***: univariately, subtract median and divide by median absolute deviation.
+
+-   ***uniminmax***: univariately, scale so the minimum of the variable is zero, and the maximum is one.
+
+-   ***globalminmax***: no scaling is done; the range of the graphs is defined by the global minimum and the global maximum.
+
+-   ***center***: use uniminmax to standardize vertical height, then center each variable at a value specified by the scaleSummary param.
+
+-   ***centerObs***: use uniminmax to standardize vertical height, then center each variable at the value of the observation specified by the centerObsID param
+
+There isn't a single best scaling technique. We should investigate them and decide which one best suits the analysis requirements.
+
+Last but not least, in order to supplement the visual interpretation, we can likewise generate summary statistics like mean, median, sd, etc. The `group_by()` and `summarise()` **dplyr** functions are used in the code snippet below to calculate the mean values of the clustering variables.
+
+We will use `kable()` of **knitr** package to list the values
+
+```{r}
+shan_sf_ngeo_cluster %>%
+  st_set_geometry(NULL)  %>% #remove spatial features
+  group_by(CLUSTER) %>%
+  summarise(mean_RADIO_PR = mean(RADIO_PR),
+            median_RADIO_PR = median(RADIO_PR),
+            sd_RADIO_PR = sd(RADIO_PR),
+            
+            mean_TV_PR = mean(TV_PR),
+            median_TV_PR = median(TV_PR),
+            sd_TV_PR = sd(TV_PR),
+            
+            
+            mean_LLPHONE_PR = mean(LLPHONE_PR),
+            median_LLPHONE_PR = median(LLPHONE_PR),
+            sd_LLPHONE_PR = sd(LLPHONE_PR),
+            
+            
+            mean_MPHONE_PR = mean(MPHONE_PR),
+            median_MPHONE_PR = median(MPHONE_PR),
+            sd_MPHONE_PR = sd(MPHONE_PR),
+            
+            mean_COMPUTER_PR = mean(COMPUTER_PR),
+            median_COMPUTER_PR = median(COMPUTER_PR),
+            sd_COMPUTER_PR = sd(COMPUTER_PR),
+            
+            )  %>%
+            kable()
+
+
+```
