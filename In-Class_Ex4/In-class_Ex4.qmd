@@ -353,7 +353,7 @@ ols_regress(condo_mlr1)
 
     $x_1$ = *AREA_SQM*, $x_2$ = *AGE*, $x_3$ = *PROX_CBD*, $x_4$ = *PROX_ELDERLYCARE*, $x_5$ = *PROX_URA_GROWTH_AREA*, $x_6$ = *PROX_MRT*, $x_7$ = *PROX_PARK*, $x_8$ = *PROX_PRIMARY_SCH*, $x_9$ = *PROX_SHOPPING_MALL*, $x_{10}$ = *NO_Of_UNITS*, $x_{11}$ = *FAMILY_FRIENDLY*, $x_{12}$ = *FREEHOLD*
 
--   From the above, we can conclude that the following 7 variables are positive correlated with the condo resale price (i.e. they tend to move in the same direction)  - *AREA_SQM, PROX_ELDERLYCARE, PROX_URA_GROWTH_AREA, PROX_PARK, PROX_PRIMARY_SCH, FAMILY_FRIENDLY, FREEHOLD*
+-   From the above, we can conclude that the following 7 variables are positive correlated with the condo resale price (i.e. they tend to move in the same direction) - *AREA_SQM, PROX_ELDERLYCARE, PROX_URA_GROWTH_AREA, PROX_PARK, PROX_PRIMARY_SCH, FAMILY_FRIENDLY, FREEHOLD*
 
 -   From the above, we can conclude that the following 5 variables are negatively correlated with the condo resale price (i.e. they tend to move in the opposite direction) - *AGE, PROX_CBD, PROX_MRT, PROX_SHOPPING_MALL, NO_Of_UNITS*
 
@@ -685,11 +685,11 @@ The AICC Value in this case is 42054.2
 
 Comparing the AICC value of using the CV Approach (42058.25) vs the AICC Approach (42054.2), the difference between the 2 method differs by 4.05, which is greater than 3. Hence we can conclude that the AICC Approach for adaptive bandwidth is a better model.
 
-#### Comparing FIXED & ADAPTIVE bandwidth 
+#### Comparing FIXED & ADAPTIVE bandwidth
 
 The results of our tests shows that the AICC Approach produces a better model for both *fixed* and *adaptive* bandwidth as they both produce lower AICC value greater than 3.
 
-With the AICC Approach, Adaptive bandwidth produces a higher $R^2$ of 0.8522 vs the fixed bandwidth $R^2$ of 0.8192. Additionally, adaptive bandwidth method produces higher a AICC value as compared to the fixed bandwidth method, with a difference of 237.75 (AICC Value: 42054.2 vs. 42291.95).
+With the AICC Approach, Adaptive bandwidth produces a higher adjusted $R^2$ of 0.8522 vs the fixed bandwidth adjusted $R^2$ of 0.8192. Additionally, adaptive bandwidth method produces a lower AICC value as compared to the fixed bandwidth method, with a difference of 237.75 (AICC Value: 42054.2 vs. 42291.95).
 
 Consequently, moving forward, we will apply the AICC Approach with Adaptive bandwidth.
 
@@ -729,7 +729,7 @@ glimpse(condo_resale_sf_adaptive)
 summary(gwr.adaptive.aicc$SDF$yhat)
 ```
 
-### Visualizing local R2
+### Visualizing local $R^2$
 
 We can create an interactive point symbol map using **tmap** functions. We toggle the mode to interactive mode with `ttm()`
 
@@ -747,7 +747,7 @@ tm_shape(condo_resale_sf_adaptive) +
   tm_view(set.zoom.limits = c(11,15))
 ```
 
-From the map above, we can tell that the GWR model will accurately predict the condo resale prices most of the time as they have adjusted $R^2$ value of at least 0.8. The areas of Bishan, Novena and Kallang may fall short in comparison as $R^2$ falls below 80%.
+From the map above, we can tell that the GWR model will accurately predict the condo resale prices most of the time as they have adjusted $R^2$ value of at least 0.8. The areas of Bishan, Novena and Kallang may fall short in comparison as the adjusted $R^2$ falls below 80%.
 
 #### By URA Planning Region
 
@@ -771,7 +771,7 @@ tm_shape(condo_resale_sf_adaptive) +
 
 #### Computing p-values from t-values
 
-We can compute the p value from the t-value by using the `pt()` function in R (Zach (2020)). In this case, we will conduct a 2 tail test of significance and set the degree of freedom to the number of rows in the *condo_resale_sf_adaptive* data frame.
+We can compute the p value from the t-value by using the `pt()` function in R (Zach, 2020)). In this case, we will conduct a 2 tail test of significance and set the degree of freedom to the number of rows in the *condo_resale_sf_adaptive* data frame.
 
 > *The null hypothesis is that the parameter variables does not affect the condo resale price.*
 

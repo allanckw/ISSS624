@@ -868,6 +868,7 @@ nga_wp_interested_data_pts.map.pct_func =
           palette ="PuRd", style="jenks", n = 5) +  
   tm_borders(alpha=0.5) + 
   tm_grid (alpha=0.2) +
+  tm_view(set.zoom.limits = c(5,10)) +
   tm_layout(main.title="% functional WP", 
             main.title.position="center", 
             main.title.size=0.8, 
@@ -879,6 +880,7 @@ nga_wp_interested_data_pts.map.pct_nonfunc =
           palette ="PuRd", style="jenks", n = 5) +  
   tm_borders(alpha=0.5) + 
   tm_grid (alpha=0.2) +
+  tm_view(set.zoom.limits = c(5,10)) +
   tm_layout(main.title="% non functional WP", 
             main.title.position="center", 
             main.title.size=0.8, 
@@ -952,7 +954,7 @@ colnames(nga_wp_corr_vars)
 
 ### Data Standardization
 
-As most of the data points are already in percentages except *wpt functional* and *wpt non functional*, we will need to perform standardization so that they will be comparable. From the Trellis plot generated earlier, we know that not all of the variables follow some normal distribution, so we will use ***Min-Max*** standardization instead of the Z-scorestandardization
+As most of the data points are already in percentages except *wpt functional* and *wpt non functional*, we will need to perform standardization so that they will be comparable. From the Trellis plot generated earlier, we know that not all of the variables follow some normal distribution, so we will use ***Min-Max*** standardization instead of the Z-score standardization
 
 To achieve that we can use the [**heatmaply**](https://cran.r-project.org/web/packages/heatmaply/) package's `normalize()` function. The `summary()` function is used to show the summary statistics for the standardized clustering variables.
 
@@ -1306,7 +1308,7 @@ nga_wp_cluster = cbind(nga, as.matrix(groups)) %>%
 Next we use the **tmap** functions to plot the choropleth map showing the clusters
 
 ```{r}
-hclust_map_without_spatial_constraints = tm_shape(nga_wp_cluster) + 
+nga_wp_hclust_map = tm_shape(nga_wp_cluster) + 
   tm_layout(main.title="Distribution of H Clusters", 
             main.title.position="center", 
             main.title.size=0.9, 
@@ -1317,7 +1319,7 @@ hclust_map_without_spatial_constraints = tm_shape(nga_wp_cluster) +
   tm_view(set.zoom.limits = c(5,10)) +
   tm_borders(alpha = 0.5) 
 
-hclust_map_without_spatial_constraints
+nga_wp_hclust_map
 ```
 
 We can see that without spatial constraints, the map generated 9 clusters that are quite messy and the regions forming the clusters are all over the place. This is sub optimal as there may be real world consideration that necessitates the regionalization of geographies into distinct regions, such as urban planning.
@@ -1471,7 +1473,7 @@ groups_mat = as.matrix(clust9$groups)
 nga_wp_spatialcluster = cbind(nga_wp_cluster, as.factor(groups_mat)) %>% 
   rename(`SP_CLUSTER` = `as.factor.groups_mat.`)
 
-skatermap = tm_shape(nga_wp_spatialcluster) + 
+nga_wp_spatialcluster_map = tm_shape(nga_wp_spatialcluster) + 
   tm_layout(main.title="Distribution of clusters with SKATER", 
             main.title.position="center", 
             main.title.size=0.9, 
@@ -1482,7 +1484,7 @@ skatermap = tm_shape(nga_wp_spatialcluster) +
   tm_view(set.zoom.limits = c(5,10)) +
   tm_borders(alpha = 0.5) 
 
-skatermap
+nga_wp_spatialcluster_map
 ```
 
 We can observe that once we added spatial constraints into the formula, there are 9 clusters that are mostly contiguous. This can help us make better decisions on what to do with each cluster and make planning easier when we need to consolidate resources.
@@ -1505,9 +1507,9 @@ First we will need to create the nongeo_cluster using `hclustgeo()` with the pro
 
 ```{r}
 #| fig.height = 10, fig.width = 10
-nongeo_cluster = hclustgeo(proxmat)
-plot(nongeo_cluster, cex=0.5)
-rect.hclust(nongeo_cluster, k=9, border = 2:9)
+nga_clustgeo_HClust = hclustgeo(proxmat)
+plot(nga_clustgeo_HClust, cex=0.5)
+rect.hclust(nga_clustgeo_HClust, k=9, border = 2:9)
 ```
 
 #### Mapping the clusters formed
@@ -1515,12 +1517,12 @@ rect.hclust(nongeo_cluster, k=9, border = 2:9)
 Similarly, by applying the techniques we discovered in the section *Mapping the clusters formed in hierarchical clustering,* we may plot the clusters on a categorical area shaded map.
 
 ```{r}
-groups = as.factor(cutree(nongeo_cluster, k=9))
+groups = as.factor(cutree(nga_clustgeo_HClust, k=9))
 
-nga_ngeo_cluster = cbind(nga, as.matrix(groups)) %>%
+nga_clustgeo_HClust_cluster = cbind(nga, as.matrix(groups)) %>%
   rename(`CLUSTER` = `as.matrix.groups.`)
 
-default_ngeo_clustered_map = tm_shape(nga_ngeo_cluster) + 
+nga_clustgeo_HClust_cluster_map = tm_shape(nga_clustgeo_HClust_cluster) + 
    tm_layout(main.title="Distribution of clusters with HClustGeo", 
             main.title.position="center", 
             main.title.size=0.9, 
@@ -1531,7 +1533,7 @@ default_ngeo_clustered_map = tm_shape(nga_ngeo_cluster) +
   tm_view(set.zoom.limits = c(5,10)) +
   tm_borders(alpha = 0.5) 
 
-default_ngeo_clustered_map
+nga_clustgeo_HClust_cluster_map
 ```
 
 Without spatial constraints, the map generated 9 clusters that are rather messy and the regions composing the clusters are dispersed throughout the map, which is sub-optimal. This is similar to the results we applied in the section *Mapping the clusters formed in hierarchical clustering*.
@@ -1568,26 +1570,26 @@ We then use `cutree()` to derive the cluster object, and join it back to the *ng
 
 ```{r}
 groups = as.factor(cutree(clustG, k=9))
-nga_Gcluster  = cbind(nga, as.matrix(groups)) %>%
-  rename(`CLUSTER` = `as.matrix.groups.`)
+nga_clustgeo_HClust_cluster_CA  = cbind(nga, as.matrix(groups)) %>%
+  rename(`SP_CLUSTER` = `as.matrix.groups.`)
 ```
 
 We can now plot the map of the newly delineated spatially constraints clusters using functions of **tmap**
 
 ```{r}
-g_clustered_map = 
-  tm_shape(nga_Gcluster) + 
+nga_clustgeo_HClust_cluster_CA_map = 
+  tm_shape(nga_clustgeo_HClust_cluster_CA) + 
      tm_layout(main.title="Distribution of clusters with HClustGeo using choice alpha", 
             main.title.position="center", 
             main.title.size=0.9, 
             legend.height = 0.35, 
             legend.width = 0.35, 
             frame = TRUE) + 
-  tm_polygons("CLUSTER") +
+  tm_polygons("SP_CLUSTER") +
   tm_view(set.zoom.limits = c(5,10)) +
   tm_borders(alpha = 0.5) 
 
-g_clustered_map
+nga_clustgeo_HClust_cluster_CA_map
 ```
 
 Similarly to the skater method of the **spdep** package, we can observe that once we added alpha into the formula, there are now 9 clusters that are mostly contiguous. This can help us make better decisions on what to do with each cluster and make planning easier when we need to consolidate resources.
@@ -1597,8 +1599,8 @@ Similarly to the skater method of the **spdep** package, we can observe that onc
 We attempt to conclude by plotting the 4 maps together
 
 ```{r}
-tmap_arrange(hclust_map_without_spatial_constraints,skatermap, 
-             default_ngeo_clustered_map, g_clustered_map, 
+tmap_arrange(nga_wp_hclust_map, nga_wp_spatialcluster_map, 
+             nga_clustgeo_HClust_cluster_map, nga_clustgeo_HClust_cluster_CA_map, 
              ncol = 2, nrow = 2, asp = 1,
              sync = TRUE)
 
@@ -1606,32 +1608,144 @@ tmap_arrange(hclust_map_without_spatial_constraints,skatermap,
 
 Based on the results, we can see that hierarchical clustering without spatial constraints produces clusters that are messy with no contiguity which is sub optimal in both methods if resources must be focused among similar areas. Such clustering can posed to be difficult when one conduct planning without spatial considerations.
 
-We can see that the SKATER map generated a map that assumed that the bulk of the water points were homogeneous, creating a relatively large cluster (Cluster 4). Due to the size of the cluster, this may not be the right approach for this data set. This is evident from the map generated below. The area in cluster 4 is unlikely to be homogeneous
-
-```{r}
-
-tmap_arrange(nga_wp_interested_data_pts.map.pct_func, nga_wp_interested_data_pts.map.pct_nonfunc, asp=1, ncol=2)
-```
+We can see that the SKATER map generated a map that assumed that the bulk of the water points were homogeneous, creating a relatively large cluster (Cluster 4). Due to the size of the cluster, this may not be the right approach for this data set. We will investigate the reasons in the next section
 
 The ClustGeo approach produced a much more optimal result as it was able to clearly separate out distinct areas as compared to the skater method.
 
-From the ClustGeo map, we could infer
-
--   the north eastern and eastern borders which contains little to no water points is a large cluster on its own with some small clusters within.
-
--   The northern part of Nigeria which has most of the functional water points, form a clusters on its own
-
--   The southern and south western coast of Nigeria, formed 2 main clusters facing the Bight of Benin and Gulf of Guinea
-
--   The western borders of Nigeria forms a cluster on its own
-
-These observation were similar to the observation we made in the section *Visualizing the spatial distribution of water points.*
-
 ## Visual Interpretation of Clusters
 
-skatermap - SP_CLUSTER
+Studies in the past have demonstrated how parallel coordinate plots can be used to reveal clustering variables effectively. We can use the [`ggparcoord()`](https://ggobi.github.io/ggally/reference/ggparcoord.html) function of the [**GGally**](https://ggobi.github.io/ggally/) package to achieve this.
 
-nga_Gcluster - CLUSTER
+Since we are interested in only the maps with spatial constraints, We will first need to combine our cluster data frame with our standardize correlated variables with `cbind()`.
+
+```{r}
+
+nga_wp_spatialcluster_wvar = cbind(nga_wp_spatialcluster, nga_wp_corr_vars.std_minmax) 
+
+nga_clustgeo_HClust_cluster_CA_wvar = cbind(nga_clustgeo_HClust_cluster_CA, nga_wp_corr_vars.std_minmax) 
+```
+
+We then use `ggparcoord()`to plot the box plots across the 9 clusters
+
+```{r}
+#| fig.height = 20, fig.width = 50
+ggparcoord(data = nga_wp_spatialcluster_wvar,
+           columns=c(4:13),
+           groupColumn = "SP_CLUSTER",
+           scale = "globalminmax",
+           alphaLines = 0.2,
+           boxplot = TRUE,
+           title = "Multi Parallel BoxPlots of WP Variables by HClust - SKATER") +
+  
+           facet_grid(~ SP_CLUSTER) + 
+           theme(axis.text.x = element_text(angle = 30, size = 6 ))
+```
+
+The box plot discloses The highest median for percentage non functional water points is shown by Cluster 5, then come cluster 1, 4, 9, 8, 3, 7, 2, 6. Cluster 6 has little to no water points in the SKATER Plot. The clustering algorithm correctly identified Cluster 6 & 8 to the North East of Nigeria, where there are very few water points.
+
+In the previous section, we noted that the SKATER map produced a really large cluster: cluster 4. Lets investigate what are the contributing factors. We first filter the rows in cluster 4, and plot the multi variable box plot using `ggparcoord()`
+
+```{r}
+nga_wp_spatialcluster_wvar_c4 = nga_wp_spatialcluster_wvar %>%
+filter(SP_CLUSTER == 4)
+
+ggparcoord(data = nga_wp_spatialcluster_wvar_c4,
+           columns=c(4:13),
+           groupColumn = "SP_CLUSTER",
+           scale = "globalminmax",
+           alphaLines = 0.2,
+           boxplot = TRUE,
+           title = "Cluster 4 of WP Variables by HClust - SKATER") +
+  
+           facet_grid(~ SP_CLUSTER) + 
+           theme(axis.text.x = element_text(angle = 30, size = 6 ))
+```
+
+From the result, we see that the largest contributing factor to this trend is whether the area is rural or otherwise, followed by having potable water and a capacity of less than 1000. We could infer that the clustering algorithm has grouped these similar rural areas that had potable water and capacity of less than 1000 together. The plot also identified that the cluster has more functional than non functional water points in cluster 4, by a thin margin.
+
+However, the plot does not give us sufficient insights as the area is too large which covers 388 LGAs, which is unlikely to be homogeneous if we would like to investigate how non functional water points are distributed. With that, we shall look at the results generated by the ClustGeo package to investigate how the clusters are formed
+
+Similarly, We use `ggparcoord()`to plot the box plots across the 9 clusters
+
+```{r}
+#| fig.height = 20, fig.width = 50
+ggparcoord(data = nga_clustgeo_HClust_cluster_CA_wvar,
+           columns=c(3:12),
+           groupColumn = "SP_CLUSTER",
+           scale = "globalminmax",
+           alphaLines = 0.2,
+           boxplot = TRUE,
+           title = "Multi Parallel BoxPlots of WP Variables by HClust - CLUSTGEO") +
+           facet_grid(~ SP_CLUSTER) + 
+           theme(axis.text.x = element_text(angle = 30, size = 6 ))
+```
+
+We also find the mean, median and standard deviation of the 9 cluster by using the summarise function and format it using `kable()` of **knitt** package
+
+```{r}
+nga_clustgeo_HClust_cluster_CA_wvar %>%
+  st_set_geometry(NULL)  %>% #remove spatial features
+  group_by(SP_CLUSTER) %>%
+  summarise(mean_pct_functional = mean(pct_functional),
+            median_pct_functional = median(pct_functional),
+            sd_pct_functional = sd(pct_functional),
+            
+            mean_pct_nonfunctional = mean(pct_non.functional),
+            median_pct_nonfunctional = median(pct_non.functional),
+            sd_pct_nonfunctional = sd(pct_non.functional),
+            
+            
+            mean_pct_rural = mean(pct_rural),
+            median_pct_rural = median(pct_rural),
+            sd_pct_rural = sd(pct_rural),
+            
+            
+            mean_pct_within_median_dist_to_PriRoad = mean(pct_w_meddist_to_PriRoad),
+            median_pct_within_median_dist_to_PriRoad = median(pct_w_meddist_to_PriRoad),
+            sd_pct_within_median_dist_to_PriRoad = sd(pct_w_meddist_to_PriRoad),
+
+                       mean_pct_within_median_dist_to_SecRoad = mean(pct_w_meddist_to_SecRoad),
+            median_pct_within_median_dist_to_SecRoad = median(pct_w_meddist_to_SecRoad),
+            sd_pct_within_median_dist_to_SecRoad = sd(pct_w_meddist_to_SecRoad)
+
+            
+            )  %>%
+            kable()
+```
+
+The box plot discloses The highest median for percentage non functional water points is shown by Cluster 4, then come cluster 6, 3, 5, 1, 8, 7, 9, 2. Interestingly, the area identified in cluster 2 has no water points at all, with all the variable values at 0.
+
+The result also correctly identified the following, consistent with our observations in [*Visualizing the spatial distribution of water points*](Visualizing the spatial distribution of water points)
+
+-   that Non functional water points congregates around the south western coast of Nigera, facing gulf of Guinea & Bight of Benin which are cluster 4 and 5 respectively
+
+-   The north east area of Nigeria have little to no water point at all, which are clusters 2 and 8
+
+-   Functional water points congregate in the northern side of the country which is identified by cluster 7
+
+#### Interpretation of Results produced by ClustGeo
+
+Since we know cluster 4 has the highest percentage of non functional water points, lets first filter the rows in cluster 4, and plot the multi variable box plot using `ggparcoord()`
+
+```{r}
+nga_clustgeo_HClust_cluster_CA_wvar_4 = nga_clustgeo_HClust_cluster_CA_wvar %>%
+filter(SP_CLUSTER == 4)
+
+ggparcoord(data = nga_clustgeo_HClust_cluster_CA_wvar_4,
+           columns=c(3:12),
+           groupColumn = "SP_CLUSTER",
+           scale = "globalminmax",
+           alphaLines = 0.2,
+           boxplot = TRUE,
+           title = "Cluster 4 of WP Variables by HClust - ClustGeo") +
+  
+           facet_grid(~ SP_CLUSTER) + 
+           theme(axis.text.x = element_text(angle = 30, size = 6 ))
+```
+
+From the result in cluster 4, they are are mostly made up of rural areas, the total number of water point in these area seems to be low with the median non functional water point at
+
+...
 
 ## References
 

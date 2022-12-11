@@ -27,6 +27,9 @@ website:
           - text: Hands-on Exercise Week 4.1 - Ch 6 Calibrating Hedonic Pricing Model for Private High-rise Property with GWR Method
             href: Hands-on_Ex5\Hands-on_Ex5.qmd
             
+          - text: Hands-on Exercise Week 5.1 - Ch 7 
+            href: Hands-on_Ex5\Hands-on_Ex6.qmd
+            
       - text: In class Exercises
         menu: 
           - text: In Class Exercise Week 1 - Ch 3 Applications of Spatial Weights
