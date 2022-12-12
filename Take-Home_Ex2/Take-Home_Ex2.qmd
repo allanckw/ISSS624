@@ -409,21 +409,12 @@ wpt_usageUnder1000 = wpdx_clean_sf %>%
 
 wpt_accessibility_PriRd_lessThanMedian = wpdx_clean_sf %>%
   filter(dist_to_primary_road < 6647.50)
-  
-wpt_accessibility_PriRd_moreThanMedian = wpdx_clean_sf %>%
-  filter(dist_to_primary_road >= 6647.50)
 
 wpt_accessibility_secRd_lessThanMedian = wpdx_clean_sf %>%
   filter(dist_to_secondary_road < 4446.0  )
   
-wpt_accessibility_secRd_moreThanMedian = wpdx_clean_sf %>%
-  filter(dist_to_secondary_road >= 4446.0  )
-  
 wpt_accessibility_TerRd_lessThanMedian = wpdx_clean_sf %>%
   filter(dist_to_tertiary_road < 1442.4  )
-  
-wpt_accessibility_TerRd_moreThanMedian = wpdx_clean_sf %>%
-  filter(dist_to_tertiary_road >= 1442.4  )
 
 wpt_managed_true = wpdx_clean_sf %>%
   filter(!Management %in% "Unknown")
@@ -492,18 +483,15 @@ nga_wp = nga %>%
   #Primary Road
   mutate(`Within Median Distance to Pri Road` = lengths(
     st_intersects(nga, wpt_accessibility_PriRd_lessThanMedian))) %>%
-  mutate(`Exceed Median Distance to Pri Road` = lengths(
-    st_intersects(nga, wpt_accessibility_PriRd_moreThanMedian))) %>%
+  
   #Secondary Road
   mutate(`Within Median Distance to Sec Road` = lengths(
     st_intersects(nga, wpt_accessibility_secRd_lessThanMedian))) %>%
-  mutate(`Exceed Median Distance to Sec Road` = lengths(
-    st_intersects(nga, wpt_accessibility_secRd_moreThanMedian))) %>%
+
   #Tertiary Road
   mutate(`Within Median Distance to Ter Road` = lengths(
     st_intersects(nga, wpt_accessibility_PriRd_lessThanMedian))) %>%
-  mutate(`Exceed Median Distance to Ter Road` = lengths(
-    st_intersects(nga, wpt_accessibility_TerRd_moreThanMedian))) %>%
+
   #management
   mutate(`Managed` = lengths(
     st_intersects(nga, wpt_managed_true))) 
@@ -599,7 +587,7 @@ We will only keep the following variables as the rest are intermediate data poin
 ```{r}
 #| eval: false
 nga_wp_interested_data_pts = nga_wp  %>% 
-      select(4:5, 19:30) 
+      select(4:5, 16:27) 
 colnames(nga_wp_interested_data_pts)
 ```
 
@@ -607,13 +595,13 @@ We save the processed data frame *nga_wp_interested_data_pts* into a file with `
 
 ```{r}
 #| eval: false
-saveRDS(nga_wp_interested_data_pts, "data/geospatial/nga_wp_interested_data_pts.rds")
+saveRDS(nga_wp_interested_data_pts, "data/geospatial/nga_wp_interested_data_points.rds")
 ```
 
 We can then retrieve the saved RDS file using `readRDS()` and check that the column names are correct before we proceed further with `colnames()`
 
 ```{r}
-nga_wp_interested_data_pts = readRDS("data/geospatial/nga_wp_interested_data_pts.rds")
+nga_wp_interested_data_pts = readRDS("data/geospatial/nga_wp_interested_data_points.rds")
 
 colnames(nga_wp_interested_data_pts)
 ```
@@ -654,7 +642,7 @@ ggarrange(functional_pct_histo, nonfunctional_pct_histo, ncol = 2, nrow = 1)
 
 ```
 
-From the result, we can observe that both functional and non functional water points distributions are positively skewed. The functional water point mean and median is close to 50%, whereas the non functional water points median and mean are very close to each other at 35.05% and 35.92% respectively
+From the result, we can observe that both functional and non functional water points distributions are positively skewed. It follows a normal distribution with its mean and median very close to each other.
 
 We can also use box plot to detect outliers with `geom_boxplot`. We plot them side by side using `ggarrange`
 
@@ -888,7 +876,9 @@ nga_wp_interested_data_pts.map.pct_nonfunc =
             main.title.size=0.8, 
             frame = TRUE) 
 
-tmap_arrange(nga_wp_interested_data_pts.map.pct_func, nga_wp_interested_data_pts.map.pct_nonfunc, asp=1, ncol=2)
+tmap_arrange(nga_wp_interested_data_pts.map.pct_func, 
+             nga_wp_interested_data_pts.map.pct_nonfunc, 
+             asp=1, ncol=2, sync = TRUE)
 ```
 
 From the results, we can observe the following:
@@ -1737,7 +1727,7 @@ nga_clustgeo_HClust_cluster_CA_wvar %>%
 
 The box plot discloses The highest median for percentage non functional water points is shown by Cluster 4, then come cluster 6, 3, 5, 1, 8, 7, 9, 2. Interestingly, the area identified in cluster 2 has no water points at all.
 
-The result also correctly identified the following, consistent with our observations in [*Visualizing the spatial distribution of water points*](Visualizing the spatial distribution of water points)
+The result also correctly identified the following, consistent with our observations in [*Visualizing the spatial distribution of water points*](Visualizing%20the%20spatial%20distribution%20of%20water%20points)
 
 -   that Non functional water points congregates around the south western coast of Nigera, facing gulf of Guinea & Bight of Benin which are cluster 4 and 5 respectively
 
