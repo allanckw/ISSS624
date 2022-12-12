@@ -659,7 +659,7 @@ ggarrange(functional_boxplot, nonfunctional_boxplot, ncol = 2, nrow = 1)
 
 We can see that there isn't any outliers for the functional water points, but for non functional water points, there are outliers where 100% of the water points are non functional.
 
-In the figure below, multiple histograms are plotted to reveal the distribution of the selected variables in the *nga_wp_interested_data_pts* data.frame.
+In the figure below, multiple histograms are plotted to reveal the distribution of the selected variables in the *nga_wp_interested_data_pts* data frame.
 
 First, We do this by creating all the histograms assigned to individual variables by using `ggplot()`.
 
@@ -843,7 +843,7 @@ ggarrange(functional, nonfunctional,
 
 From the Trellis plot, we can observe that most of the variables does not follow a Normal Distribution, except for % functional and % non functional.
 
-> *As functional and non functional water points are **NOT** of the same units as the other variables in percentage, we will need to standardize them later.*
+> *As number of functional and number of non functional water points are **NOT** in the same units as the other variables in percentage, we will need to standardize them later.*
 
 ### Visualizing the spatial distribution of water points
 
@@ -923,15 +923,15 @@ As a result, the following **5 observations** are highly correlated:
 
 1.  *pct_functional* vs. pct_managed - we will drop *pct_managed*
 
-2.  pct_handpump vs. *pct_Cap_Over1000* and *pct_Cap_Under1000* - we will drop *pct_Cap_Under1000* and *pct_handpump*
+2.  pct_handpump vs. *pct_Cap_Over1000* and *pct_Cap_Under1000* - we will drop *pct_Cap_Over1000* and *pct_handpump*
 
 3.  *pct_potable* vs. *pct managed* - *pct_managed* already drop in 1
 
-4.  *pct_Cap_Over_1000* vs. *pct_Cap_Under1000* - *pct_Cap_Under1000* already drop in 2
+4.  *pct_Cap_Over_1000* vs. *pct_Cap_Under1000* - *pct_Cap_Over1000* already drop in 2
 
 5.  *pct_w\_meddist_to_PriRoad* vs. *pct_w\_meddist_to_TerRoad* - we will drop *pct_w\_meddist_to_TerRoad*
 
-In conclusion, we will drop *pct_handpump (Column 5), pct_managed (Column 10), pct_Cap_Under1000 (Column 8), and pct_w\_meddist_to_TerRoad (Column 14).* Using `select()`, we drop the respective columns.
+In conclusion, we will drop *pct_handpump (Column 5), pct_managed (Column 10), pct_Cap_Over1000* *(Column 8), and pct_w\_meddist_to_TerRoad (Column 14).* Using `select()`, we drop the respective columns.
 
 At the end of it, we verify that the column names that are retained are correct by using `colnames()`
 
@@ -1384,7 +1384,7 @@ knn8 = knn2nb(knearneigh(coord, k=8, longlat = FALSE))
 
 **Calculating edge costs**
 
-The cost of each edge is determined using `nbcosts()` from the **spdep** package. Its nodes are separated by this distance. This function uses a data.frame with observations vectors in each node to calculate the distance.
+The cost of each edge is determined using `nbcosts()` from the **spdep** package. Its nodes are separated by this distance. This function uses a data frame with observations vectors in each node to calculate the distance.
 
 ```{r}
 lcosts = nbcosts(knn8, nga_wp_corr_vars.std_minmax_mat)
@@ -1762,7 +1762,7 @@ According to the results of cluster 4, which is primarily made up of rural areas
 
 -   With 24.5% having water points of low usage capacities
 
--   Contains at least 62.39% of the water points with potable water. However, the median of percentage functional water point is only at 34.85%. This cluster has a 27.54% difference between the percentage of water points with potable water and those with functional water.
+-   Contains at least 62.39% of the water points with potable water. However, the median of percentage functional water point is only at 34.85%. This cluster has a 27.54% difference between the percentage of water points with potable water and those with functional water points.
 
 #### Cluster 5
 
@@ -1796,7 +1796,7 @@ According to the results of cluster 5, it is primarily made up of rural areas li
 
 -   Contains at least 69.21% of the water points with potable water. However, the median of percentage functional water point stands at 40.71%.
 
-    This cluster has a 28.50% difference between the percentage of water points with potable water and those with functional water, when compared to cluster 4 of 27.54%.
+    This cluster has a 28.50% difference between the percentage of water points with potable water and and those with functional water points, when compared to cluster 4 of 27.54%.
 
 #### Cluster 7
 
@@ -1832,13 +1832,13 @@ Similarly, at least half of the LGAs
 
 -   Contains at least 94.44% of the water points with potable water. The median of percentage functional water point stands at 78.06%.
 
-    This cluster has a 16.38% difference between the percentage of water points with potable water and those with functional water, at least 10% lower as compared to 28.50% in cluster 5 and 27.54% in cluster 4
+    This cluster has a 16.38% difference between the percentage of water points with potable water and and those with functional water points, at least 10% lower as compared to 28.50% in cluster 5 and 27.54% in cluster 4
 
 ## Conclusion
 
 To further investigate how the variables of interest interact with each other, we could form hypotheses and use regression techniques to prove them.
 
-Since we know from the correlation matrix (and logically) that functional water points are likely to be managed and contains potable water. We may be able to alleviate the water shortage in Nigeria if we can identify the factors that can enable the Nigerian government to make water points with potable water functional, focusing on cluster 4 and 5 as priority.
+Since we know from the correlation matrix (and logically) that functional water points are likely to be managed and contain potable water. We may be able to alleviate the water shortage in Nigeria if we can identify the factors that can enable the Nigerian government to make water points with potable water functional, focusing on cluster 4 and 5 as priority.
 
 Some other questions we can ask are
 
