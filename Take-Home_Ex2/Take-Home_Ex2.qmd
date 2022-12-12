@@ -1655,7 +1655,7 @@ ggparcoord(data = nga_wp_spatialcluster_wvar_c4,
 
 From the result, we see that the largest contributing factor to this trend is whether the area is rural or otherwise, followed by having potable water and a capacity of less than 1000. We could infer that the clustering algorithm has grouped these similar rural areas that had potable water and capacity of less than 1000 together. The plot also identified that the cluster has more functional than non functional water points in cluster 4, by a thin margin.
 
-The result of cluster 4 which spans 388 LGAs is unlikely to be homogeneous if we want to look at how non-functional water points are distributed, as it does not provide sufficient insights. In order to look for more insights, lets take a look at the results produced by the ClustGeo package.
+The result of cluster 4 which spans 388 LGAs is unlikely to be homogeneous if we want to look at how non-functional water points are distributed. In order to look for more insights, lets take a look at the results produced by the ClustGeo package.
 
 Similarly, We use `ggparcoord()`to plot the box plots across the 9 clusters
 
@@ -1775,7 +1775,7 @@ According to the results of cluster 4, which is primarily made up of rural areas
 
 #### Cluster 5
 
-To make our analysis complete, lets also look at cluster 5, the adjacent cluster that is facing the Bight of Benin if we can spot similar trends
+To make our analysis complete, lets also look at cluster 5, adjacent to cluster 4 facing the Bight of Benin if we can spot similar trends
 
 Similarly, we will filter the rows in cluster 5, and plot the multi variable box plot using `ggparcoord()`
 
@@ -1847,7 +1847,7 @@ Some questions we can ask are
 
 -   Does distance from a road network to an area affects the functionality of water points?
 
--   Can we find out what variables will affect water point containing potable water to become non functional and how can we make it functional again to serve the population
+-   Can we find out what variables will affect water points containing potable water to become non functional and how can we make them functional again to serve the population
 
 ## References
 
