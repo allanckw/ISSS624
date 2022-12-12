@@ -145,7 +145,7 @@ From the result, we can observe the following:
 | NGA-ADM2-72505758B6675111  | Surulere (lagos)    |
 | NGA-ADM2-72505758B31597260 | Surulere (Oyo)      |
 
-Based on the results above, we replace the shape names with shapeID as the identifier and run the duplicate check again to verify that it is now empty
+Based on the results above, we replace the *shapeNames* with *shapeID* as the identifier and run the duplicate check again to verify that it is now empty
 
 ```{r}
 #| eval: false
@@ -182,7 +182,7 @@ nga = nga %>%
 saveRDS(nga, "data/geospatial/nga_ex2.rds")
 ```
 
-We can then retrieve the cleaned RDS file using `readRDS()` and the set view mode to interactive using `ttm()`
+We can then retrieve the cleaned RDS file using `readRDS(),` and set the tmap mode to interactive viewing
 
 ```{r}
 nga = readRDS("data/geospatial/nga_ex2.rds")
@@ -298,7 +298,7 @@ nga_wp = st_join(wpdx_clean_sf, nga)
 
 ## Exploratory Data Analysis (EDA)
 
-We can use `freq()` of the **funModeling** package to display the distribution of *our data points of interest using wpdx_clean_sf*. This is to help us aggregate the data as the dataset provide breakdowns of their respective catagories.
+We can use `freq()` of the **funModeling** package to display the distribution of *our data points of interest using wpdx_clean_sf*. This is to help us aggregate the data as the dataset provide breakdowns of their respective categories.
 
 ### Categorical Variables
 
@@ -308,29 +308,25 @@ freq(data=nga_wp, input = 'Functional')
 
 Checking out functionality, we know that functional water points are broken down into *Functional, Functional but needs repair,* and *Functional but not in use.*
 
-48.29% are functional, 4.82% are functional but needs repair and 1.77% of them are functional but not in use.
-
-To aggregate data, Abandoned and Decommissioned water points were be grouped as non functional as well.
+48.29% are functional, 4.82% are functional but needs repair and 1.77% of them are functional but not in use. To aggregate the data, Abandoned and Decommissioned water points will be grouped as non functional water points
 
 ```{r}
 freq(data=nga_wp, input = 'Management')
 ```
 
-Checking out water point management, we know that water points are mostly managed except 37.8% which are unknowns
+Checking out water point's management, we know that more than half of the water points are managed except 37.8% which are unknowns
 
 ```{r}
 freq(data=nga_wp, input = 'Quality')
 ```
 
-Checking out the quality of water points, we know that 75.57% of them are of acceptable quality, with an additional 0.04% of them within potable national limits / standards. We will aggregate Acceptable Quality, Within National Standards and Within National Limits as Potable water for this analysis.
-
-The rest are either unknown or of unacceptable quality.
+Checking out the quality of water points, we know that 75.57% of them are of acceptable quality, with an additional 0.04% of them within potable national limits / standards. We will aggregate Acceptable Quality, Within National Standards (Potable) and Within National Limits (Potable) as Potable water in general for this analysis.
 
 ```{r}
 freq(data=nga_wp, input = 'Water_Source_Category')
 ```
 
-Checking out the source of water points, we know that majority of them (96.35%) comes from well. With such a high number, this variable may not be useful for our analysis as most of the data points will have this value.
+Checking out the source of water points, we know that majority of them (96.35%) comes from some well. With such a high number, this variable may not be useful for our analysis as most of the data points will contain this value.
 
 ```{r}
 freq(data=nga_wp, input = 'Water_Tech_Category')
@@ -348,11 +344,11 @@ From the records, only 20.59% of the water points are in urban areas, while the 
 freq(data=nga_wp, input = 'usage_capacity')
 ```
 
-Majority of the water points caters to 300 people or less (73.1%), while 26.99% of the water points caters to a capacity of 1000 people
+Majority of the water points caters to 300 people or less (73.1%), while 26.99% of the water points caters to a capacity of at least 1000 people
 
 ### Continuous Variables
 
-We will need to find out the summary of the respective distance in order to categorize them appropriately for analysis. We can achieve that by using summary statistics in R
+We will need to find out the summary of the respective distance in order to categorize them appropriately for analysis. We can achieve that by using `summary` statistics in R
 
 ```{r}
 summary(nga_wp$dist_to_primary_road)
@@ -425,7 +421,7 @@ wpt_managed_unknown = wpdx_clean_sf %>%
 
 ### Computing our data points of interest
 
-We can use `st_intersects()` to find common data points between geographical datasets. In our case, we need to find the common points in the Nigeria's LGA spatial dataset and the water point aspatial dataset
+We can use `st_intersects()` to find common data points between the geographical datasets. In our case, we need to find the common points in the Nigeria's LGA spatial dataset and the water point aspatial dataset
 
 As an example, the below code intersects the Nigeria LGA dataset (*nga* dataframe) with the water point dataset (*wpdx_clean_sf* dataframe) and produce a new column to denote the total number of water points in the area (*Total wpt*) by using `mutate()` and `lengths()`
 
@@ -546,7 +542,7 @@ nga_wp = nga_wp %>%
   mutate(`pct_w_meddist_to_TerRoad` = `Within Median Distance to Ter Road`/`total wpt`) 
 ```
 
-After we are done, we will inspect the data by viewing the data frame, we can observe that there are some rows that have NaN values due to division by zero. We will replace these NaN values to 0 with the `is.na()` function and change the row names to the names of the LGAs with `row.names()` by using the code below
+Once we are done with adding the new columns, we can inspect the data by viewing the data frame. It can be observed that some rows contains *NaN* values as a result of division by zero. We will replace these *NaN* values to 0 with the `is.na()` function. We will also change the row names to the names of the LGAs with `row.names()` by using `row.names()`
 
 ```{r}
 #| eval: false
@@ -554,7 +550,7 @@ nga_wp[is.na(nga_wp)] = 0
 row.names(nga_wp) = nga_wp$shapeName
 ```
 
-We will only keep the following variables as the rest are intermediate data points that are no longer relevant by using `select()` and verify that the data is columns are correct using `colnames()`
+The following variables will be retained as the rest are intermediate data points that are no longer relevant by using `select()`. We can verify that the columns are correct by using `colnames()`
 
 1.  wpt functional
 
@@ -661,9 +657,11 @@ nonfunctional_boxplot = ggplot(data=nga_wp_interested_data_pts,
 ggarrange(functional_boxplot, nonfunctional_boxplot, ncol = 2, nrow = 1)
 ```
 
-We can see that there isn't any outliers in the functional water points, but for the non functional water points, there are outliers where 100% of the water points are not functional.
+We can see that there isn't any outliers for the functional water points, but for non functional water points, there are outliers where 100% of the water points are non functional.
 
-In the figure below, multiple histograms are plotted to reveal the distribution of the selected variables in the *nga_wp_interested_data_pts* data.frame. First, We do this by creating all the histograms assigned to individual variables by using `ggplot()`.
+In the figure below, multiple histograms are plotted to reveal the distribution of the selected variables in the *nga_wp_interested_data_pts* data.frame.
+
+First, We do this by creating all the histograms assigned to individual variables by using `ggplot()`.
 
 ```{r}
 
@@ -825,7 +823,7 @@ pct_within_median_dist_to_ter_road = ggplot(data=nga_wp_interested_data_pts,
 
 ```
 
-We can build a trellis plot with the code below after creating our graphs with `ggarrange()` to create 14 histograms. and organised into a 3 columns by 5 rows small multiple plot.
+We can build a trellis plot with the code below after creating our graphs with `ggarrange()` to create 14 histograms. and organised them into a 3 columns by 5 rows small multiplot.
 
 ```{r}
 #| eval: false
@@ -908,7 +906,7 @@ We will use `corrplot.mixed()` ([ref](https://cran.r-project.org/web/packages/c
 #| eval: false
 cluster_vars.cor = cor(nga_wp_corr_vars) 
 
-q = corrplot.mixed(cluster_vars.cor, 
+corrplot.mixed(cluster_vars.cor, 
                lower = "ellipse", 
                upper = "number", 
                tl.pos = "lt", 
@@ -921,7 +919,7 @@ q = corrplot.mixed(cluster_vars.cor,
 
 According to Calkins (2005), variables that can be regarded as having a high degree of correlation are indicated by correlation coefficients with magnitudes between ± 0.7 and 1.0.
 
-As a result, the following **5 observations** are strongly correlated with the findings.
+As a result, the following **5 observations** are highly correlated:
 
 1.  *pct_functional* vs. pct_managed - we will drop *pct_managed*
 
@@ -946,7 +944,9 @@ colnames(nga_wp_corr_vars)
 
 ### Data Standardization
 
-As most of the data points are already in percentages except *wpt functional* and *wpt non functional*, we will need to perform standardization so that they will be comparable. From the Trellis plot generated earlier, we know that not all of the variables follow some normal distribution, so we will use ***Min-Max*** standardization instead of the Z-score standardization
+As most of the data points are already in percentages except *wpt functional* and *wpt non functional*, we will need to perform standardization so that they will be comparable.
+
+From the Trellis plot generated earlier, we know that not all of the variables follow some normal distribution, so we will use ***Min-Max*** standardization instead of the Z-score standardization in this exercise.
 
 To achieve that we can use the [**heatmaply**](https://cran.r-project.org/web/packages/heatmaply/) package's `normalize()` function. The `summary()` function is used to show the summary statistics for the standardized clustering variables.
 
@@ -955,7 +955,7 @@ nga_wp_corr_vars.std_minmax = normalize(nga_wp_corr_vars)
 summary(nga_wp_corr_vars.std_minmax)
 ```
 
-The values range of the Min-max standardized clustering variables are between 0 and 1 now.
+We can see that the values range of the Min-max standardized clustering variables are between 0 and 1 now.
 
 #### Visualizing the standardize clustering variables
 
@@ -1180,7 +1180,7 @@ We can use `hclust()` method provided by the R Stat class to find our clusters w
 ```{r}
 #| fig.height = 10, fig.width = 10
 hclust_ward_d = hclust(proxmat, method="ward.D")
-q = plot(hclust_ward_d, cex=0.5) 
+plot(hclust_ward_d, cex=0.5) 
 ```
 
 #### Selecting the optimal clustering algorithm
@@ -1204,19 +1204,17 @@ ac = function(y) {
 map_dbl(m,ac)
 ```
 
-According to the results shown above, Ward's approach offers the greatest clustering structure out of the four examined methods as it is closest to 1. Consequently, only Ward's technique will be applied in the analysis that follows.
+According to the results shown above, *Ward* approach offers the greatest clustering structure out of the four examined methods as it is closest to 1. Consequently, only Ward's technique will be applied in the analysis that follows.
 
 ### Determining Optimal Clusters
 
-The choice of the best clusters to keep is a technical problem for data analysts when undertaking clustering analysis.
-
-The gap statistic contrasts the overall intra-cluster variation for various values of *k* with the values that would be predicted under a null reference distribution for the data.
+We can use the gap statistic contrasts the overall intra-cluster variation for various values of *k* with the values that would be predicted under a null reference distribution for the dataset.
 
 The value that maximizes the gap statistic will be used to estimate the best clusters (i.e., that yields the largest gap statistic). In other words, the clustering structure is very different from a randomly distributed, uniform distribution of points.
 
 To compute the gap statistic, [`clusGap()`](https://www.rdocumentation.org/packages/cluster/versions/2.1.0/topics/clusGap) of [**cluster**](https://cran.r-project.org/web/packages/cluster/) package will be used. with the [`hcut`](https://rpkgs.datanovia.com/factoextra/reference/hcut.html) function from [**factoextra**](https://rpkgs.datanovia.com/factoextra/) package. `hcut` calculates the hierarchical clustering and cuts the tree.
 
-We set k.max to 10 as there are 10 variable involved and we want to find the global maximum to determine what is the best value of *k.*
+We set k.max to 10 as there are 10 variable involved and we want to find the global maximum to determine the best value of *k.*
 
 ```{r}
 set.seed(12345)
@@ -1232,7 +1230,7 @@ Next, we can visualize the plot by using [`fviz_gap_stat()`](https://rpkgs.datan
 fviz_gap_stat(gap_stat)
 ```
 
-We can infer from the figure above that **9** clusters is the optimum number for the Hierarchical Clustering Algorithm.
+We can infer from the figure above that **9** **clusters** is the optimum number for the Hierarchical Clustering Algorithm.
 
 Using **R stats'** `rect.hclust()` function, the dendrogram can alternatively be plotted with a border around the chosen clusters. The rectangles' borders can be colored using the option border.
 
@@ -1274,13 +1272,11 @@ From the heat map, it can be observed that the following variables *pct_function
 
 ### Mapping the clusters formed in hierarchical clustering
 
-Following a thorough analysis of the dendragram shown above, we chose to keep 9 groups. The code below will use R Base's `cutree()` function to create a 9-cluster model.
+Following the analysis of the above, we will use $k=9$. The code below will use R Base's `cutree()` function to create a 9-cluster model.
 
 ```{r}
 groups = as.factor(cutree(hclust_ward_d, k=9))
 ```
-
-Groups are the output. It is a *list* object.
 
 The groups object needs to be added to the *nga* simple feature object in order to visualize the clusters.
 
@@ -1314,7 +1310,7 @@ nga_wp_hclust_map = tm_shape(nga_wp_cluster) +
 nga_wp_hclust_map
 ```
 
-We can see that without spatial constraints, the map generated 9 clusters that are quite messy and the regions forming the clusters are all over the place. This is sub optimal as there may be real world consideration that necessitates the regionalization of geographies into distinct regions, such as urban planning.
+Without any spatial constraints, the map produced nine erratic groupings, and the regions that made up the clusters are dispersed throughout the map. This is sub optimal as there may be real world considerations that necessitates the regionalization of areas into distinct regions, such as urban planning.
 
 ## Spatially Constrained Clustering
 
@@ -1347,7 +1343,7 @@ We must create the weights matrix after determining the spatial weights. A isola
 
 #### Building the weights matrix
 
-As there is an island involved, we will build an adaptive weight matrix.
+As there is an island involved, we will build an adaptive weight matrix as all features should have at least one neighbour if we were to use a fixed distance matrix.
 
 Using the k nearest neighbor (knn) technique, we can adjust how many neighbors each LGA has. As discussed in class, we set k in this instance to 8. The R functions used in this case are `knn2nb()` and `knearneigh()`
 
@@ -1442,7 +1438,7 @@ clust9 = skater(edge=nga_wp_mst[,1:2], #1st 2 col of MST
                 )
 ```
 
-Finally, we can also plot the pruned tree that shows the 9 clusters on top of the LGA area.
+Finally, we can plot the pruned tree that shows the 9 clusters on top of the LGA area.
 
 ```{r}
 #| fig.height = 20, fig.width = 20
@@ -1450,7 +1446,8 @@ plot(nga_sp, border=gray(.5))
 plot(clust9,
      coordinates(nga_sp),
      cex.lab=0.5,
-     groups.colors=c("red","green","blue", "brown", "orange", "darkgreen", "darksalmon", "gold2", "orchid", "tan3"),
+     groups.colors=c("red","green","blue", "brown", 
+                     "orange", "darkgreen", "darksalmon", "gold2", "orchid"),
      cex.circles=0.005, 
      add=TRUE
      )
@@ -1495,7 +1492,7 @@ The remarkable clusters are:
 
 Another method of introducing spatial constraints to use the **ClustGeo** package. We can make use of the `hclustgeo()` function in the **ClustGeo** package to perform Ward-style hierarchical clustering.
 
-First we will need to create the *`nga_clustgeo_HClust`* using `hclustgeo()` with the proximity matrix we created in the previous section and plot its corresponding Dendrogram
+First we will need to create the *`nga_clustgeo_HClust`* by using `hclustgeo()` with the proximity matrix we created in the previous section and plot its corresponding Dendrogram
 
 ```{r}
 #| fig.height = 10, fig.width = 10
@@ -1506,7 +1503,7 @@ rect.hclust(nga_clustgeo_HClust, k=9, border = 2:9)
 
 #### Mapping the clusters formed
 
-Similarly, by applying the techniques we discovered in the section *Mapping the clusters formed in hierarchical clustering,* we may plot the clusters on a categorical area shaded map.
+Similarly, by applying the techniques we discovered in the section [*Mapping the clusters formed in hierarchical clustering*](https://mitb-isss624-ackw-gis-analytics.netlify.app/take-home_ex2/take-home_ex2#mapping-the-clusters-formed-in-hierarchical-clustering)*,* we may plot the clusters on a categorical area shaded map.
 
 ```{r}
 groups = as.factor(cutree(nga_clustgeo_HClust, k=9))
@@ -1528,11 +1525,11 @@ nga_clustgeo_HClust_cluster_map = tm_shape(nga_clustgeo_HClust_cluster) +
 nga_clustgeo_HClust_cluster_map
 ```
 
-Without spatial constraints, the map generated 9 clusters that are rather messy and the regions composing the clusters are dispersed throughout the map, which is sub-optimal. This is similar to the results we applied in the section *Mapping the clusters formed in hierarchical clustering*.
+Without spatial constraints, the map generated 9 clusters that are rather messy and the regions composing the clusters are dispersed throughout the map, which is sub-optimal. This is similar to the results we applied in the section [*Mapping the clusters formed in hierarchical clustering*](https://mitb-isss624-ackw-gis-analytics.netlify.app/take-home_ex2/take-home_ex2#mapping-the-clusters-formed-in-hierarchical-clustering).
 
 #### Spatially Constrained Hierarchical Clustering
 
-Prior to starting the spatially constrained hierarchical clustering process, a spatial distance matrix will need to be derived by using [`st_distance()`](https://r-spatial.github.io/sf/reference/geos_measures.html) of **sf** package.
+Prior to starting the spatially constrained hierarchical clustering process, a spatial distance matrix will need to be derived by using [`st_distance()`](https://r-spatial.github.io/sf/reference/geos_measures.html) of the **sf** package.
 
 ```{r}
 dist = st_distance(nga, nga)
@@ -1541,10 +1538,10 @@ dist = st_distance(nga, nga)
 `as.dist()` is used to convert the data frame into a matrix.
 
 ```{r}
-distmat <- as.dist(dist)
+distmat = as.dist(dist)
 ```
 
-Our goal is to as much as possible **retain the attribute homogeneity** as much as possible but also **introduce spatial homogeneity**. In order to balance this, we can compute ***∝*** using the `choicealpha()` function.
+Our goal is to as much as possible **retain the attribute homogeneity** but also **introduce spatial homogeneity**. In order to balance this, we can compute ***∝*** using the `choicealpha()` function.
 
 ```{r}
 cr = choicealpha(proxmat, distmat, range.alpha = seq(0,1, 0.1), K=9, graph=T)
@@ -1552,7 +1549,7 @@ cr = choicealpha(proxmat, distmat, range.alpha = seq(0,1, 0.1), K=9, graph=T)
 
 As the data is skewed as we have explored in our EDA, we will use the QNorm graph based on normalized values.
 
-We can observe that when ***∝*** is raised from 0.2 to 0.4, the homogeneity of d1, which is our spatial relationship (contiguity matrix), gain significantly from about 50% to 80%. And for d0 (which is our attribute), the homogeneity loss is slightly more than 20%. Since ***∝ = 0.4*** is the most optimal, we will use it to form our cluster.
+We can observe that when ***∝*** is raised from 0.2 to 0.4, the homogeneity of d1, which is our spatial relationship (contiguity matrix), gain significantly from about 50% to 80%. And for d0 (which is our attribute homogeneity), the loss is slightly more than 20%. Since ***∝ = 0.4*** is the most optimal, we will use it to form our cluster.
 
 ```{r}
 clustG = hclustgeo(proxmat, distmat, alpha = 0.4)
@@ -1598,9 +1595,9 @@ tmap_arrange(nga_wp_hclust_map, nga_wp_spatialcluster_map,
 
 ```
 
-Based on the results, we can see that hierarchical clustering without spatial constraints produces clusters that are messy with no contiguity which is sub optimal in both methods if resources must be focused among similar areas. Such clustering can posed to be difficult when one conduct planning without spatial considerations.
+Based on the results, it is clear that hierarchical clustering without spatial constraints produces messy, non-contiguous clusters, which is less than ideal if there are resource constraints. When planning is done without taking into account spatial considerations, this clustering may prove challenging.
 
-We can see that the SKATER map generated a map that assumed that the bulk of the water points were homogeneous, creating a relatively large cluster (Cluster 4). Due to the size of the cluster, this may not be the right approach for this data set. We will investigate the reasons in the next section
+The SKATER method produced a map that assumed the majority of the LGAs were homogeneous in cluster 4, resulting in a disproportionately big cluster. This might not be the optimal approach for this data set due to the size of the cluster. We will investigate the reasons in the next section
 
 The ClustGeo approach produced a much more optimal result as it was able to clearly separate out distinct areas as compared to the skater method.
 
@@ -1633,9 +1630,9 @@ ggparcoord(data = nga_wp_spatialcluster_wvar,
            theme(axis.text.x = element_text(angle = 30, size = 6 ))
 ```
 
-The box plot discloses The highest median for percentage non functional water points is shown by Cluster 5, then come cluster 1, 4, 9, 8, 3, 7, 2, 6. The clustering algorithm correctly identified Cluster 6 to the North East of Nigeria, where there are very few water points.
+The parallel box plot shows the highest median for percentage of non functional water points is Cluster 5, followed by cluster 1, 4, 9, 8, 3, 7, 2, 6. The clustering algorithm correctly identified Cluster 6 to the North East of Nigeria, where there are very few water points.
 
-In the previous section, we noted that the SKATER map produced a really large cluster: cluster 4. Lets investigate what are the contributing factors. We first filter the rows in cluster 4, and plot the multi variable box plot using `ggparcoord()`
+In the previous section, we noted that the SKATER map produced a really large cluster: cluster 4. Let's investigate what are the contributing factors. We first filter the rows in cluster 4, and plot the multivariate box plot using `ggparcoord()`
 
 ```{r}
 nga_wp_spatialcluster_wvar_c4 = nga_wp_spatialcluster_wvar %>%
@@ -1653,9 +1650,9 @@ ggparcoord(data = nga_wp_spatialcluster_wvar_c4,
            theme(axis.text.x = element_text(angle = 30, size = 6 ))
 ```
 
-From the result, we see that the largest contributing factor to this trend is whether the area is rural or otherwise, followed by having potable water and a capacity of less than 1000. We could infer that the clustering algorithm has grouped these similar rural areas that had potable water and capacity of less than 1000 together. The plot also identified that the cluster has more functional than non functional water points in cluster 4, by a thin margin.
+From the result, we see that the largest contributing factor to this trend is whether the area is rural or otherwise, followed by having potable water and a capacity of less than 1000.
 
-The result of cluster 4 which spans 388 LGAs is unlikely to be homogeneous if we want to look at how non-functional water points are distributed. In order to look for more insights, lets take a look at the results produced by the ClustGeo package.
+We could infer that the clustering algorithm has grouped these similar rural areas that had potable water and capacity of less than 1000 together. Cluster 4 which spans 388 LGAs is unlikely to be homogeneous if we want to look at how non-functional water points are distributed. We shall look at the ClustGeo package's output in order to get additional insights.
 
 Similarly, We use `ggparcoord()`to plot the box plots across the 9 clusters
 
@@ -1672,7 +1669,7 @@ ggparcoord(data = nga_clustgeo_HClust_cluster_CA_wvar,
            theme(axis.text.x = element_text(angle = 30, size = 6 ))
 ```
 
-We also find the mean, median and standard deviation of the 9 cluster by using the summarise function and format it using `kable()` of **knitt** package
+We also find the mean, median and standard deviation of the 9 cluster by using the `summarise()` function and format it using `kable()` of **knitt** package
 
 ```{r}
 nga_clustgeo_HClust_cluster_CA_wvar %>%
@@ -1725,11 +1722,11 @@ nga_clustgeo_HClust_cluster_CA_wvar %>%
             kable()
 ```
 
-The box plot discloses The highest median for percentage non functional water points is shown by Cluster 4, then come cluster 6, 3, 5, 1, 8, 7, 9, 2. Interestingly, the area identified in cluster 2 has no water points at all.
+The parallel box plot shows the highest median for percentage of non functional water points is Cluster 4, followed by cluster 6, 3, 5, 1, 8, 7, 9, 2. Interestingly, the area identified in cluster 2 has no water points at all.
 
 The result also correctly identified the following, consistent with our observations in [*Visualizing the spatial distribution of water points*](Visualizing%20the%20spatial%20distribution%20of%20water%20points)
 
--   that Non functional water points congregates around the south western coast of Nigera, facing gulf of Guinea & Bight of Benin which are cluster 4 and 5 respectively
+-   that Non functional water points congregates around the south western coast of Nigeria, facing gulf of Guinea & Bight of Benin which are cluster 4 and 5 respectively
 
 -   The north east area of Nigeria have little to no water point at all, which are clusters 2 and 8
 
@@ -1739,7 +1736,7 @@ The result also correctly identified the following, consistent with our observat
 
 #### Cluster 4
 
-Since we know cluster 4 has the highest percentage of non functional water points, lets first filter the rows in cluster 4, and plot the multi variable box plot using `ggparcoord()`
+Since we know cluster 4 has the highest percentage of non functional water points, lets first filter the rows in cluster 4, and plot the multivariate box plot using `ggparcoord()`
 
 ```{r}
 nga_clustgeo_HClust_cluster_CA_wvar_4 = nga_clustgeo_HClust_cluster_CA_wvar %>%
@@ -1757,27 +1754,21 @@ ggparcoord(data = nga_clustgeo_HClust_cluster_CA_wvar_4,
            theme(axis.text.x = element_text(angle = 30, size = 6 ))
 ```
 
-According to the results of cluster 4, which is primarily made up of rural areas
+According to the results of cluster 4, which is primarily made up of rural areas, at least half of the LGAs
 
--   Half of the LGAs in this cluster have at least 53% non-operational water points in its area.
+-   Have at least 34.85% of the water points that are functional.
 
--   51.53% of the water points are within the median distance of a secondary road
+-   With 51.53% of them within the median distance of a secondary road
 
--   At least half of the LGAs in this cluster contains at least 62.39% of the water points with potable water. However, the median of percentage functional water point is only at 39.25%.
+-   With 24.5% having water points of low usage capacities
 
-    This represent a gap of 23.14% that could serve the population. Even though their capacity may be less than 1000, it could potentially help spread out the people trying to reach water if all of the water points that contains potable water can be made functional.
-
-    We could further examine if distance to reach the water point is an issue to the population.
-
-    Since we know from the correlation matrix (and logically) that functional water points are likely to be managed and contain potable water, we can also investigate if the distance to a road network is preventing maintenance work from going on.
-
--   The median of Low capacity water points stands at 24.5% here.
+-   Contains at least 62.39% of the water points with potable water. However, the median of percentage functional water point is only at 34.85%. This cluster has a 27.54% difference between the percentage of water points with potable water and those with functional water.
 
 #### Cluster 5
 
-To make our analysis complete, lets also look at cluster 5, adjacent to cluster 4 facing the Bight of Benin if we can spot similar trends
+To make our analysis complete, lets also look at cluster 5, adjacent to cluster 4 facing the Bight of Benin if we can spot similar trends.
 
-Similarly, we will filter the rows in cluster 5, and plot the multi variable box plot using `ggparcoord()`
+Similarly, we will filter the rows in cluster 5, and plot the multivariate box plot using `ggparcoord()`
 
 ```{r}
 nga_clustgeo_HClust_cluster_CA_wvar_5 = nga_clustgeo_HClust_cluster_CA_wvar %>%
@@ -1795,21 +1786,23 @@ ggparcoord(data = nga_clustgeo_HClust_cluster_CA_wvar_5,
            theme(axis.text.x = element_text(angle = 30, size = 6 ))
 ```
 
-According to the results of cluster 5
+According to the results of cluster 5, it is primarily made up of rural areas like cluster 4. At least half of the LGAs
 
--   Cluster 5 like cluster 4 is primarily made up of rural areas.
+-   Have at least 40.71% of the water points that are functional.
 
--   The median of percentage functional water point stands at 39.60%, but the difference here is that there are much more potable water points in this cluster at 69.21%. The gap is larger here at 30%.
+-   Is more much accessible with 72.49% of them within the median distance of a secondary road
 
--   Cluster 5 is also very more much accessible with a median of 72.49% of them having access to a secondary road as compared to cluster 4 at 51.53%
+-   With 68.0% having water points of low usage capacities
 
--   Cluster 5 also have a higher number of water points that are small with capacity less than 1000 at 68.0%, significantly higher than the numbers in cluster 4 (24.5%)
+-   Contains at least 69.21% of the water points with potable water. However, the median of percentage functional water point stands at 40.71%.
+
+    This cluster has a 28.50% difference between the percentage of water points with potable water and those with functional water, when compared to cluster 4 of 27.54%.
 
 #### Cluster 7
 
-We also learnt that the north of Nigeria contains a high number of functional water points, and it is highlighted as cluster 7, Lets try and see if we could spot trends that made it possible.
+We also observed that the north of Nigeria has a significant number of functional water points, which is indicated in this map by cluster 7. Let's attempt to identify the patterns that made it possible.
 
-Similarly, we will filter the rows in cluster 7, and plot the multi variable box plot using `ggparcoord()`
+Similarly, we will filter the rows in cluster 7, and plot the multivariate box plot using `ggparcoord()`
 
 ```{r}
 nga_clustgeo_HClust_cluster_CA_wvar_7 = nga_clustgeo_HClust_cluster_CA_wvar %>%
@@ -1827,27 +1820,35 @@ ggparcoord(data = nga_clustgeo_HClust_cluster_CA_wvar_7,
            theme(axis.text.x = element_text(angle = 30, size = 6 ))
 ```
 
-As we would expect, there are a high number of functional water points in the cluster.
+According to the results of cluster 7, like 4 & 5, is primarily made up of rural areas, we could hence infer that urbanization does not really contribute to whether a water point is functional or not
 
--   Cluster 7 is also primarily made up of rural area, we could hence infer that urbanization does not really contribute to whether a water point is functional or not
+Similarly, at least half of the LGAs
 
--   90% of the water points in this cluster are small, as compared to cluster 4 (24.5%) and cluster 5 (68%), we might investigate if a higher number of smaller water points are the way to go instead of big ones. We might also want to probe if large water points are harder to maintain.
+-   Have at least 78.06% functional water points in its area.
 
--   A very high number of water points (median of 94.44%) contains potable water. The median of percentage functional water points stands at 78.05%. The gap here is only 16.39%, lower than that of Cluster 4 and 5.
+-   90.46% of the water points in this cluster are small, as compared to cluster 4 (24.5%) and cluster 5 (68.0%), we might investigate if a higher number of smaller water points are the way to go instead of big ones. We might also want to probe if large water points are harder to maintain.
 
--   42.13% of the water points are within the median distance of a secondary road
+-   with 42.13% of them within the median distance of a secondary road
+
+-   Contains at least 94.44% of the water points with potable water. The median of percentage functional water point stands at 78.06%.
+
+    This cluster has a 16.38% difference between the percentage of water points with potable water and those with functional water, at least 10% lower as compared to 28.50% in cluster 5 and 27.54% in cluster 4
 
 ## Conclusion
 
-To further investigate how the variables of interest interact with each other, we could form hypothesis and use regression techniques to prove them.
+To further investigate how the variables of interest interact with each other, we could form hypotheses and use regression techniques to prove them.
 
-Some questions we can ask are
+Since we know from the correlation matrix (and logically) that functional water points are likely to be managed and contains potable water. We may be able to alleviate the water shortage in Nigeria if we can identify the factors that can enable the Nigerian government to make water points with potable water functional, focusing on cluster 4 and 5 as priority.
+
+Some other questions we can ask are
 
 -   Are smaller water points better than bigger ones for functional water points?
 
 -   Does distance from a road network to an area affects the functionality of water points?
 
--   Can we find out what variables will affect water points containing potable water to become non functional and how can we make them functional again to serve the population
+-   Which variables will affect water points containing potable water to become non functional?
+
+-   Which variables can influence non functional water points that contains potable water to become operational to serve the population?
 
 ## References
 
