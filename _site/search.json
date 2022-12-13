@@ -599,7 +599,7 @@
     "href": "Take-Home_Ex2/Take-Home_Ex2.html#getting-started",
     "title": "Take Home Exercise 2 - Regionalization of Nigeria with Water points",
     "section": "Getting Started",
-    "text": "Getting Started\nFirst, we load the required packages in R\n\nSpatial data handling\n\nsf and spdep\n\nAttribute data handling\n\ntidyverse especially readr, ggplot2 and dplyr and funModeling\n\nChoropleth mapping\n\ntmap\n\nMultivariate data visualization and analysis\n\ncoorplot, ggpubr, GGally and heatmaply\n\nCluster analysis\n\ncluster\nClustGeo\n\n\n\npacman::p_load(knitr, rgdal, spdep, tmap, sf, \n               ggpubr, GGally, cluster, funModeling,\n               factoextra, NbClust, ClustGeo,\n               heatmaply, corrplot, psych, tidyverse)"
+    "text": "Getting Started\nFirst, we load the required packages in R\n\nSpatial data handling & Clustering\n\nsf, spdep\n\nChoropleth mapping\n\ntmap\n\nAttribute data handling\n\ntidyverse especially readr, ggplot2 and dplyr and funModeling\n\nData visualization and analysis\n\ncorrplot, ggpubr, GGally, knitr and heatmaply\n\nCluster analysis\n\ncluster, NbClust, factoextra, and ClustGeo\n\n\n\npacman::p_load(knitr, spdep, tmap, sf, \n               ggpubr, GGally, cluster, funModeling,\n               factoextra, NbClust, ClustGeo,\n               heatmaply, corrplot, tidyverse)"
   },
   {
     "objectID": "Take-Home_Ex2/Take-Home_Ex2.html#spatial-data",
