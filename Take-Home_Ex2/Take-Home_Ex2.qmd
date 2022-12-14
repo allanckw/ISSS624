@@ -195,31 +195,31 @@ The aspatial dataset used in this assignment is the water point data exchange da
 
 As we are only interested in the functionality of the water point, it is important to capture fields that may may aid us in our analysis (Definition are found here: [Source](https://data.waterpointdata.org/dataset/Water-Point-Data-Exchange-Plus-WPdx-/eqje-vguj))
 
--   LGA: The area we are interested in
+-   #clean_adm2 - LGA: The area we are interested in
 
--   State: The state of the LGA of Nigeria
+-   #clean_adm1 - State: The state of the LGA of Nigeria
 
--   Functional: Whether it is functional or not
+-   #status_clean - Functional: Whether it is functional or not
 
--   Management: who manages it?
+-   #management_clean - Management: who manages it?
 
--   Quality: what is the quality?
+-   #subjective_quality - Quality: what is the quality?
 
--   Water Source Category: where the water came from?
+-   #water_source_category - Water Source Category: where the water came from?
 
--   Water Tech Category: What technology is used?
+-   #water_tech_category - Water Tech Category: What technology is used?
 
--   is_urban: Is it in an urban area?
+-   New Georeferenced Column - WKT: Well Known Text **(wkt)** representing spatial data in a textual format
 
--   #distance_to_primary_road: Based on calculations with data from OpenStreetMap, the distance in km to the nearest road.
+-   is_urban - Is_Urban_Area: Is it in an urban area?
 
--   #distance_to_secondary_road: Based on calculations using OpenStreetMap data, the distance in km to the second-closest road.
+-   #distance_to_primary_road - dist_to_primary_road: Based on calculations with data from OpenStreetMap, the distance in km to the nearest road.
 
--   #distance_to_tertiary_road: Using calculations with data from OpenStreetMap, the distance to the third-closest road is given in km.
+-   #distance_to_secondary_road - dist_to_secondary_road: Based on calculations using OpenStreetMap data, the distance in km to the second-closest road.
 
--   Usage Capacity: Maximum recommended number of users per waterpoint
+-   #distance_to_tertiary_road - dist_to_tertiary_road: Using calculations with data from OpenStreetMap, the distance to the third-closest road is given in km.
 
--   New Georeferenced Column: : Well Known Text **(wkt)** representing spatial data in a textual format
+-   usage_capacity: Maximum recommended number of users per water point
 
 To load the raw data file, we use the `read_csv` function
 
