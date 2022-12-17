@@ -116,7 +116,7 @@ After determining the data points of interest, we will create a new data frame w
 
 We will also omit all the rows with *NA* values by using `all_vars(!is.na(.))`
 
-We will use the `mutate()` function to modify *usage_capacity* into categorical variables as it is not a continuous variable, as they can be broken down into either 300, 500 or 1000. We shall categorize them into Small (300), Medium (500) and Large (1000) instead.
+We will use the `mutate()` function to modify *usage_capacity* into categorical variables as it is not a continuous variable, as they can be broken down into either 300, 500 or 1000. We shall categorize them into Small (300) and Large (1000) instead.
 
 ```{r}
 osun_wpt_sf_clean = osun_wpt_sf %>% #filter the required fields
@@ -133,7 +133,6 @@ osun_wpt_sf_clean = osun_wpt_sf %>% #filter the required fields
             all_vars(!is.na(.))) %>% #remove the na variable
             mutate(usage_capacity = as.factor(usage_capacity)) %>%
             mutate(usage_capacity = str_replace(usage_capacity, "300", "SMALL")) %>%
-  mutate(usage_capacity = str_replace(usage_capacity, "500", "MEDIUM")) %>%
   mutate(usage_capacity = str_replace(usage_capacity, "1000", "LARGE"))  
 ```
 
@@ -207,7 +206,7 @@ For continuous variables, positive value implies a direct correlation and a nega
 
 -   *water_point_population* has an inverse correlation with the functional status of water points
 
-We can generate the confusion matrix by using the model created by `blr_regress()` by calling `blr_confusion_matrix`with a cut off of 0.5 (For fitted values above 0.5, they are functional)
+We can generate the confusion matrix by using the model with the function `blr_confusion_matrix()` with a cut off of 0.5 (For fitted values above 0.5, they are functional)
 
 ```{r}
 blr_confusion_matrix(model, cutoff = 0.5)
@@ -300,7 +299,7 @@ cm_func = confusionMatrix(data = gwr.fixed$most,
 cm_func
 ```
 
-Comparing the Confusion matrix from [Multilogistic Regression](https://mitb-isss624-ackw-gis-analytics.netlify.app/in-class_ex5/in-class_ex5#multilogistic-regression), the accuracy has significantly increase from 67.39% to 88.37%, sensitivity (True positive rate) increased from 72.07% to 86.28% and specificity (True negative rate) increased from 61.54% to 90.05%, for the GWLR model.
+Comparing the Confusion matrix with the [Multilogistic Regression](https://mitb-isss624-ackw-gis-analytics.netlify.app/in-class_ex5/in-class_ex5#multilogistic-regression) model, the accuracy has significantly increase from 67.39% to 88.37%, sensitivity (True positive rate) increased from 72.07% to 86.28% and specificity (True negative rate) increased from 61.54% to 90.05%, for the GWLR model.
 
 ### Visualizing the results of GWLR
 
@@ -418,9 +417,9 @@ reference = gwlr.sigvar.fixed$y)
 cm_func_sigvar
 ```
 
-Comparing the Confusion matrix from [Multilogistic Regression](https://mitb-isss624-ackw-gis-analytics.netlify.app/in-class_ex5/in-class_ex5#multilogistic-regression), the accuracy has significantly increase from 67.39% to 88.46%, sensitivity (True positive rate) increased from 72.07% to 86.71% and specificity (True negative rate) increased from 61.54% to 89.86%, for the optimized GWLR model.
+Comparing the Confusion matrix with the [Multilogistic Regression](https://mitb-isss624-ackw-gis-analytics.netlify.app/in-class_ex5/in-class_ex5#multilogistic-regression) model, the accuracy has significantly increase from 67.39% to 88.46%, sensitivity (True positive rate) increased from 72.07% to 86.71% and specificity (True negative rate) increased from 61.54% to 89.86%, for the optimized GWLR model.
 
-Comparing the Confusion matrix from un-optimized GWLR model, the accuracy has only increased slightly from 88.37% to 88.46% (0.09%), sensitivity (True positive rate) increased slightly from 86.28% to 86.71% (0.43%) and specificity (True negative rate) decreased from 90.05% to 89.86% (0.19%).
+Comparing the Confusion matrix with the un-optimized GWLR model, the accuracy has only increased slightly from 88.37% to 88.46% (0.09%), sensitivity (True positive rate) increased slightly from 86.28% to 86.71% (0.43%) and specificity (True negative rate) decreased from 90.05% to 89.86% (0.19%).
 
 This tells us that statistically insignificant variables will not affect the overall performance of GWLR.
 
@@ -455,7 +454,7 @@ prob_t_sigvar = tm_shape(osun) +
 prob_t_sigvar
 ```
 
-We will plot both the optimized and un-optimized GWLR models side by side using tmap_arrange() to determine if there is any significantly visually
+We will plot both the optimized and un-optimized GWLR models side by side using `tmap_arrange()` to determine if there is any significant difference visually
 
 ```{r}
 tmap_arrange(prob_t, prob_t_sigvar,  
