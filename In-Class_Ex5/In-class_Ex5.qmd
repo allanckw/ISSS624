@@ -17,30 +17,6 @@ Despite technological advancement, providing rural people with clean water conti
 
 We will attempt to conduct logistic regression of the Osun state in Nigeria with the water points attributes in this exercise.
 
-#### Data points of interest
-
-In this assignment, we will attempt to regionalize Nigeria based on the following variables:
-
--   Functional status,
-
--   distance_to_primary_road
-
--   distance_to_secondary_road
-
--   distance_to_city
-
--   distance_to_town
-
--   water_point_population
-
--   local_population_1km
-
--   usage_capacity
-
--   is_urban
-
--   water_source_clean
-
 ## Getting Started
 
 First, we load the required packages in R
@@ -78,6 +54,7 @@ First we load the Osun spatial features using `readRDS()`
 
 ```{r}
 osun = readRDS("data/rds/Osun.rds")
+st_crs(osun)
 ```
 
 ### Aspatial Data
@@ -90,7 +67,9 @@ osun_wpt_sf = readRDS("data/rds/Osun_wp_sf.rds")
 freq(data=osun_wpt_sf, input = 'status')
 ```
 
-We toggle the mode to interactive mode by using `ttm()` and plot the map using functions from the **tmap** package
+We can see that 55.5% of the water points are functional and 44.5% of the rest are not.
+
+We toggle the mode to interactive mode by using `ttm()` and plot the map using functions from the **tmap** package of the status of the water points
 
 ```{r}
 ttm()
@@ -102,12 +81,42 @@ tm_polygons(alpha = 0.4) +
 
 ### Exploratory Data Analysis
 
-Using the **skimr** package, we can give a brief summary statistics of the variables found in the *osun_wpt_sf* data frame.
+Using the **skimr** package, we can give a brief summary statistics of the variables found in the *osun_wpt_sf* data frame. This can help us determine which variables we can choose by looking at the data completion rate. If data completion rate for a particular variable is poor, we will not want to use it or it can potentially present analysis that is inaccurate.
 
 ```{r}
 osun_wpt_sf %>%
   skim()
 ```
+
+#### Data points of interest
+
+In this assignment, we will attempt to use the following variables to attempt to investigate if the following variables can explain, classify and possibly predict the phenomenon of functional and non functional water points in the State of Osun in Nigeria.
+
+-   Functional status,
+
+-   distance_to_primary_road
+
+-   distance_to_secondary_road
+
+-   distance_to_city
+
+-   distance_to_town
+
+-   water_point_population
+
+-   local_population_1km
+
+-   usage_capacity
+
+-   is_urban
+
+-   water_source_clean
+
+After determining the data points of interest, we will create a new data frame that contains our columns of interest by using `select`
+
+We will also use the `mutate()` function to modify *usage_capacity* into categorical as it is not a continuous variable, and can be broken down into either 300, 500 or 1000. We shall categorize them into Small (300), Medium (500) and Large (1000) instead.
+
+We also will omit all the rows with NA by using `na.omit()` as part of **dplyr**
 
 ```{r}
 osun_wpt_sf_clean = osun_wpt_sf %>% #filter the required fields
@@ -122,12 +131,13 @@ osun_wpt_sf_clean = osun_wpt_sf %>% #filter the required fields
                  is_urban,
                  water_source_clean),
             all_vars(!is.na(.))) %>% #remove the na variable
-            mutate(usage_capacity = as.factor(usage_capacity) 
-                   #change it to factors as there are only 3 factors, 300, 500 and 1000
-            )
-
-
+            mutate(usage_capacity = as.factor(usage_capacity)) %>%
+            mutate(usage_capacity = str_replace(usage_capacity, "300", "SMALL")) %>%
+  mutate(usage_capacity = str_replace(usage_capacity, "500", "MEDIUM")) %>%
+  mutate(usage_capacity = str_replace(usage_capacity, "1000", "LARGE"))  
 ```
+
+We will remove the geometry object from the data frame using `st_set_geometry(NULL)` as we need create our correlation matrix that does not accept spatial data frame
 
 ```{r}
 var_list = c("water_source_clean",
@@ -148,6 +158,8 @@ osun_wp = osun_wpt_sf_clean %>%
   st_set_geometry(NULL)
 ```
 
+We will use `corrplot.mixed()` ([ref](https://cran.r-project.org/web/packages/corrplot/corrplot.pdf)) function of the [**corrplot**](https://cran.r-project.org/web/packages/corrplot/vignettes/corrplot-intro.html) package. However we need to find the correlation matrix first with `cor()`
+
 ```{r}
 cluster_vars.cor = cor(osun_wp[,2:7]) 
 
@@ -163,6 +175,8 @@ According to Calkins (2005), variables that can be regarded as having a high deg
 
 ### Multilogistic Regression
 
+We shall use the `glm()` function to create our multi logistic regression model, by using status as our explanatory or predictive variable (status) vs the independent variables (our interested data points) using the binomial family and logit link
+
 ```{r}
 #status is the variable we are interested as y
 model = glm(status ~ distance_to_primary_road + distance_to_secondary_road + 
@@ -170,9 +184,7 @@ model = glm(status ~ distance_to_primary_road + distance_to_secondary_road +
               distance_to_town + is_urban + usage_capacity +
               water_source_clean + water_point_population + local_population_1km,
             data = osun_wpt_sf_clean,
-            family = binomial(link = 'logit'))
-
-
+            family = binomial(link = 'logit')) 
 ```
 
 Instead of using a typical R Report, we use `blr_regress()` to convert the modelling result into a report
@@ -183,21 +195,35 @@ blr_regress(model)
 
 We will exclude distance_to_primary_road & distance_to_secondary_road as they have a p value of \> 0.05 implying that they are not statistically significant
 
-Interpret the variables by below rules:
+For categorical variable, a positive value implies an above average correlation and a negative value implies a below average correlation
 
-For categorical variable, a +ve value implies an above avg correlation and a -ve value implies a below avg correlation
+-   Small usage capacity implies an above average correlation while large usage capacity implies a below average correlation
 
-For continuous variables, +ve value implies a direct correlation and a -ve correlation implies an inverse correlation
+-   Urban area implies an above average correlation while large usage capacity implies a below average correlation
 
-Only do the above when they are statistically significant
+-   Water Source: Protected Shallow Well & Protected Spring implies an above average correlation
+
+For continuous variables, positive value implies a direct correlation and a negative correlation implies an inverse correlation
+
+-   *distance_to_tertiary_road*, *distance_to_city*, *distance_to_town, local_population_1km* has a direct correlation with the functional status of water points
+
+-   *water_point_population* has an inverse correlation with the functional status of water points
+
+We can generate the confusion matrix by using the model created by `blr_regress()` by calling `blr_confusion_matrix`with a cut off of 0.5 (For fitted values above 0.5, they are functional)
 
 ```{r}
 blr_confusion_matrix(model, cutoff = 0.5)
 ```
 
+The accuracy for this Multi logistic regression model is 67.39% has low distinguish ability.
+
+True positive rate (Sensitivity) is at 72.07% while True Negative Rate (Specificity) is quite low at only 61.54%.
+
+This model is not very good to explain or predict functional water points in Osun, we will thus look at Geographically weighted Logistic Regression (GWLR)
+
 ### Using Geographically Weighted Logistic Regression (GWLR)
 
-First We must first transform *osun_wp_sf_clean* into a spatial polygons data frame using `as_Spatial()`. This is because only SP objects (*SpatialPointDataFrame*) is required to generate the GWLR
+First, we must first transform *osun_wp_sf_clean* into a spatial polygons data frame using `as_Spatial()`. This is because SP objects (*SpatialPointDataFrame*) is required to generate the GWLR
 
 ```{r}
 osun_wp_sp = osun_wpt_sf_clean %>%
@@ -205,10 +231,11 @@ osun_wp_sp = osun_wpt_sf_clean %>%
   as_Spatial()
 ```
 
-Using a fixed distance matrix
+Using a fixed distance matrix, we will find the fixed distance bandwidth by using `bw.ggwr()`, we set longlat to FALSE as the dataframe has already been transformed into the Nigeria Mid Belt projected coordinate system.
 
 ```{r}
-bw.fixed = bw.ggwr(status ~ distance_to_primary_road + distance_to_secondary_road + 
+bw.fixed = bw.ggwr(status ~ distance_to_primary_road + distance_to_secondary_road +
+                     
               distance_to_tertiary_road + distance_to_city + 
               distance_to_town + is_urban + usage_capacity +
               water_source_clean + water_point_population + local_population_1km,
@@ -222,7 +249,9 @@ bw.fixed = bw.ggwr(status ~ distance_to_primary_road + distance_to_secondary_roa
               )
 ```
 
-2597.255m \~ 2.6km
+The fixed bandwidth was found to be 2597.255m or 2.597 km
+
+We will then generate our GWLR model using `ggwr.basic()`
 
 ```{r}
 gwlr.fixed = ggwr.basic(status ~ distance_to_primary_road + distance_to_secondary_road + 
@@ -239,21 +268,21 @@ gwlr.fixed = ggwr.basic(status ~ distance_to_primary_road + distance_to_secondar
               
 ```
 
+Lets check the result by displaying `gwlr.fixed`
+
 ```{r}
 gwlr.fixed
 ```
 
-The AIC value of Geographically Weighted Regression (GWR) is 4414.606 vs Generalized Linear Regression (GLR) is 5712. Hence, we can conclude that there is a significant improvement on the GWR model
+The AIC value of Geographically Weighted Logistic Regression (GWLR) is 4414.606 vs Generalized Linear regression model (GLR) at 5712. Hence, we can conclude that there is a significant improvement on the GWLR model, with a difference of about 1297.
 
-Note: Logistic regression does not have AICC
-
-To assess the performance of gwLR, we need to first convert the SDF object as a data frame
+To assess the performance of GWLR , we need to first convert the SDF object as a data frame
 
 ```{r}
 gwr.fixed = as.data.frame(gwlr.fixed$SDF)
 ```
 
-Next, we will label yhat values greater or equal to 0.5 into 1 and 0 otherwise. The result of the logical comparison will be saved into a new field call *most*
+Next, we will label yhat values greater or equal to 0.5 into 1 and 0 otherwise into the *most* column by using `mutate()` to denote functional water points.
 
 ```{r}
 gwr.fixed = gwr.fixed %>% 
@@ -261,42 +290,186 @@ gwr.fixed = gwr.fixed %>%
                      ifelse(gwr.fixed$yhat >= 0.5, T, F))
 ```
 
+We then generate the confusion matrix for both functional and non functional water points.
+
 ```{r}
 gwr.fixed$y = as.factor(gwr.fixed$y)
 gwr.fixed$most = as.factor(gwr.fixed$most)
 
-cm = confusionMatrix(data = gwr.fixed$most, 
+cm_func = confusionMatrix(data = gwr.fixed$most, 
                       reference = gwr.fixed$y)
-cm
+
+cm_func
 ```
 
-Perf increase from MLogR to 88.37% GWLR
+Comparing the Confusion matrix from [Multilogistic Regression](https://mitb-isss624-ackw-gis-analytics.netlify.app/in-class_ex5/in-class_ex5#multilogistic-regression), the accuracy has significantly increase from 67.39% to 88.37%, sensitivity (True positive rate) increased from 72.07% to 86.28% and specificity (True negative rate) increased from 61.54% to 90.05%, for the GWLR model.
 
-Sensitivity increase from
+### Visualizing the results of GWLR
 
-Specificity increased from
+We select our variable of interested by using the `select()` function, and then bind the data frame with *osun_wpt_sf_selected* with the GWLR data frame *gwr.fixed*
 
-Should apply localized strategy instead of using global localized strategy in order to identify reasons of non functional water points
+Thereafter, we create a multi layer map with **tmap** by using the Osun Map as base, followed by the yhat variable to plot the water points, with fixed breaks of 0, 0.5 and 1.0.
 
-Exclude the 2 statistically significant variables and run one more time..
+Lastly, we plot the LGA of OSun to figure out which LGAs requires attention
 
 ```{r}
-
 osun_wpt_sf_selected = osun_wpt_sf_clean %>%
   select(c(ADM2_EN, ADM2_PCODE, ADM1_EN, ADM1_PCODE, status))
+
 
 gwr_sf.fixed = cbind(osun_wpt_sf_selected, gwr.fixed)
 
 prob_t = tm_shape(osun) + 
   tm_polygons(alpha = 0.1) +
+ 
   tm_shape(gwr_sf.fixed) +
-  tm_dots(col="yhat",
+
+  tm_dots(col="yhat", n = 3, breaks = c(0, 0.50, 1.00),
+          style = "fixed",
   border.col = "gray60",
   border.lwd = 1) +
-  tm_view(set.zoom.limits = c(8,14))
+  
+  tm_shape(osun) +
+
+  tm_polygons(col="ADM2_EN", alpha = 0.2) +
+  
+  
+  tm_view(set.zoom.limits = c(9,14))
 
 prob_t
 ```
+
+In this model, we can observe that the area of concern in Osun as shown by the plot above. It can be observed that the North West region of Osun has a high concentration of non functional water points as compared to the rest of the LGAs. Significant areas includes Ejigbo, Egbedore, Ede North, Ede South and Ola-oluwa.
+
+### Optimizing our GWLR model
+
+Since we now know that the 2 variables *distance_to_primary_road* and *distance_to_secondary_road* is statistically insignificant, we shall optimize the model by removing the 2 variables in our GWLR model.
+
+Similarly, in the previous section, we will use a fixed distance matrix, we will find the fixed distance bandwidth by using `bw.ggwr()`, we set longlat to FALSE as the data frame has already been transformed into the Nigeria Mid Belt projected coordinate system.
+
+```{r}
+bw.sigvar.fixed = bw.ggwr(status ~ distance_to_tertiary_road + distance_to_city + 
+              distance_to_town + is_urban + usage_capacity +
+              water_source_clean + water_point_population + local_population_1km,
+              data = osun_wp_sp,
+              family = "binomial",
+              approach = "AIC",
+              kernel = "gaussian",
+              adaptive = FALSE,
+              longlat = FALSE #use false if its converted into projected coord system (number will be very big)
+              
+              )
+```
+
+The fixed bandwidth was found to be 2377.018 m or 2.377 km
+
+We will then generate our GWLR model using `ggwr.basic()`
+
+```{r}
+gwlr.sigvar.fixed = ggwr.basic(status ~ distance_to_tertiary_road + distance_to_city + 
+              distance_to_town + is_urban + usage_capacity +
+              water_source_clean + water_point_population + local_population_1km,
+              data = osun_wp_sp,
+              bw = bw.sigvar.fixed,
+              family = "binomial",
+              kernel = "gaussian",
+              adaptive = FALSE,
+              longlat = FALSE
+)
+```
+
+Lets check the result by displaying `gwlr.sigvar.fixed`
+
+```{r}
+gwlr.sigvar.fixed
+```
+
+The AIC value of Geographically Weighted Logistic Regression (GWLR) is 4418.776 vs Generalized Linear regression model (GLR) at 5708.9. Hence, we can conclude that there is a significant improvement on the GWLR model, with a difference of about 1290.
+
+We can observe that after the 2 statistically insignificant variables were removed, it did not really change the statistical power as the difference between the AIC of the optimized and un-optimized model only differ by 7.
+
+> ***Note:** In general, when an independent variable was removed from a regression model, the overall explanatory or performance of the model will be compromised.*
+>
+> *This is the nature of regression models.  However, when an insignificant independent variable was removed from the model, we should expect the impact on the performance of the model will be lesser than when a significant independent was removed from the model.*
+
+To assess the performance of the optimized GWLR, we need to first convert the SDF object as a data frame
+
+```{r}
+gwlr.sigvar.fixed = as.data.frame(gwlr.sigvar.fixed$SDF)
+```
+
+Next, we will label yhat values greater or equal to 0.5 into 1 and 0 otherwise into the *most* column by using `mutate()` to denote functional water points.
+
+```{r}
+gwlr.sigvar.fixed = gwlr.sigvar.fixed %>% 
+            mutate(most = 
+                     ifelse(gwlr.sigvar.fixed$yhat >= 0.5, T, F))
+```
+
+We then generate the confusion matrix for both functional and non functional water points.
+
+```{r}
+gwlr.sigvar.fixed$y = as.factor(gwlr.sigvar.fixed$y)
+
+gwlr.sigvar.fixed$most = as.factor(gwlr.sigvar.fixed$most)
+
+cm_func_sigvar = confusionMatrix(data = gwlr.sigvar.fixed$most,
+
+reference = gwlr.sigvar.fixed$y)
+
+cm_func_sigvar
+```
+
+Comparing the Confusion matrix from [Multilogistic Regression](https://mitb-isss624-ackw-gis-analytics.netlify.app/in-class_ex5/in-class_ex5#multilogistic-regression), the accuracy has significantly increase from 67.39% to 88.46%, sensitivity (True positive rate) increased from 72.07% to 86.71% and specificity (True negative rate) increased from 61.54% to 89.86%, for the optimized GWLR model.
+
+Comparing the Confusion matrix from un-optimized GWLR model, the accuracy has only increased slightly from 88.37% to 88.46% (0.09%), sensitivity (True positive rate) increased slightly from 86.28% to 86.71% (0.43%) and specificity (True negative rate) decreased from 90.05% to 89.86% (0.19%).
+
+This tells us that statistically insignificant variables will not affect the overall performance of GWLR.
+
+### Visualizing the results of the optimized GWLR
+
+Similarly, in this case, we select our variable of interested by using the `select()` function, and then bind the data frame with *osun_wpt_sf_selected* with the GWLR data frame *gwr_sf_sigvar.fixed*
+
+Thereafter, we create a multi layer map with **tmap** by using the Osun Map as base, followed by the yhat variable to plot the water points, with fixed breaks of 0, 0.5 and 1.0.
+
+Lastly, we plot the LGA of OSun to figure out which LGAs requires attention
+
+```{r}
+gwr_sf_sigvar.fixed = cbind(osun_wpt_sf_selected, gwlr.sigvar.fixed)
+
+prob_t_sigvar = tm_shape(osun) + 
+  tm_polygons(alpha = 0.1) +
+ 
+  tm_shape(gwr_sf_sigvar.fixed) +
+
+  tm_dots(col="yhat", n = 3, breaks = c(0, 0.50, 1.00),
+          style = "fixed",
+  border.col = "gray60",
+  border.lwd = 1) +
+  
+  tm_shape(osun) +
+
+  tm_polygons(col="ADM2_EN", alpha = 0.2) +
+  
+  
+  tm_view(set.zoom.limits = c(9,14))
+
+prob_t_sigvar
+```
+
+We will plot both the optimized and un-optimized GWLR models side by side using tmap_arrange() to determine if there is any significantly visually
+
+```{r}
+tmap_arrange(prob_t, prob_t_sigvar,  
+             ncol = 2, nrow = 1, asp = 1,
+             sync = TRUE)
+```
+
+From the above the plot, both the models presents similar trends that the north west region of Osun deserves attention as it presents a high concentration of non functional water points as compared to the rest of the LGAs.
+
+## Conclusion
+
+The Nigerian government should use a localized strategy at the state level rather than a national strategy to address the issue of water points functionality, based on the considerable increase from both the optimized and un-optimized GWLR model. To increase access to water in Nigeria's rural areas, state governments will have to take analyze data at the state level while receiving overarching federal guidance.
 
 ## References
 
