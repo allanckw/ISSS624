@@ -1,0 +1,305 @@
+---
+title: "Hands On Exercise 6.1 -"
+author: "Allan Chong"
+editor: visual
+execute: 
+  warning: false
+  message: false
+---
+
+## Overview
+
+Water is a crucial resource for humanity. People must have access to clean water in order to be healthy. It promotes a healthy environment, peace and security, and a sustainable economy. However, more than 40% of the world's population lacks access to enough clean water. According to UN-Water, 1.8 billion people would live in places with a complete water shortage by 2025. One of the many areas that the water problem gravely threatens is food security. Agriculture uses over 70% of the freshwater that is present on Earth.
+
+The severe water shortages and water quality issues are seen in underdeveloped countries. Up to 80% of infections in developing nations are attributed to inadequate water and sanitation infrastructure.
+
+Despite technological advancement, providing rural people with clean water continues to be a key development concern in many countries around the world, especially in those on the continent of Africa.
+
+We will attempt to conduct logistic regression of the Osun state in Nigeria with the water points attributes in this exercise.
+
+#### Data points of interest
+
+In this assignment, we will attempt to regionalize Nigeria based on the following variables:
+
+-   Functional status,
+
+-   distance_to_primary_road
+
+-   distance_to_secondary_road
+
+-   distance_to_city
+
+-   distance_to_town
+
+-   water_point_population
+
+-   local_population_1km
+
+-   usage_capacity
+
+-   is_urban
+
+-   water_source_clean
+
+## Getting Started
+
+First, we load the required packages in R
+
+-   **Spatial data handling & Clustering**
+
+    -   **sf**, **spdep**
+
+-   **Choropleth mapping**
+
+    -   **tmap**
+
+-   **Attribute data handling**
+
+    -   **tidyverse** especially **readr**, **ggplot2** and **dplyr** and **funModeling**
+
+-   **Exploration Data visualization and analysis**
+
+    -   **corrplot**, **ggpubr**, **GGally, knitr** and **skimr**
+
+-   **Logistic Regression**
+
+    -   **blorr, caret, GWModel**
+
+```{r}
+pacman::p_load(knitr, spdep, tmap, sf, 
+               ggpubr, GGally, funModeling,
+               corrplot, GWmodel,
+               tidyverse, blorr, skimr, caret)
+```
+
+## Spatial Data
+
+First we load the Osun spatial features using `readRDS()`
+
+```{r}
+osun = readRDS("data/rds/Osun.rds")
+```
+
+### Aspatial Data
+
+Next we load the Osun water point data using `readRDS()`
+
+```{r}
+osun_wpt_sf = readRDS("data/rds/Osun_wp_sf.rds")
+
+freq(data=osun_wpt_sf, input = 'status')
+```
+
+We toggle the mode to interactive mode by using `ttm()` and plot the map using functions from the **tmap** package
+
+```{r}
+ttm()
+tm_shape(osun) +
+tm_polygons(alpha = 0.4) + 
+  tm_shape(osun_wpt_sf) +
+  tm_dots(col="status")
+```
+
+### Exploratory Data Analysis
+
+Using the **skimr** package, we can give a brief summary statistics of the variables found in the *osun_wpt_sf* data frame.
+
+```{r}
+osun_wpt_sf %>%
+  skim()
+```
+
+```{r}
+osun_wpt_sf_clean = osun_wpt_sf %>% #filter the required fields
+  filter_at(vars(status,
+                 distance_to_primary_road,
+                 distance_to_secondary_road,
+                 distance_to_city,
+                 distance_to_town,
+                 water_point_population,
+                 local_population_1km,
+                 usage_capacity,
+                 is_urban,
+                 water_source_clean),
+            all_vars(!is.na(.))) %>% #remove the na variable
+            mutate(usage_capacity = as.factor(usage_capacity) 
+                   #change it to factors as there are only 3 factors, 300, 500 and 1000
+            )
+
+
+```
+
+```{r}
+var_list = c("water_source_clean",
+                 "distance_to_primary_road",
+                 "distance_to_secondary_road",
+                 "distance_to_tertiary_road",
+                 "distance_to_city",
+                 "distance_to_town",
+                 "water_point_population",
+                 "local_population_1km",
+                 "usage_capacity",
+                 "is_urban",
+                 "status"
+                 )
+
+osun_wp = osun_wpt_sf_clean %>%
+  select(var_list)  %>%
+  st_set_geometry(NULL)
+```
+
+```{r}
+cluster_vars.cor = cor(osun_wp[,2:7]) 
+
+corrplot.mixed(cluster_vars.cor, 
+               lower = "ellipse", 
+               upper = "number", 
+               tl.pos = "lt", 
+               diag="l", 
+               tl.col="black")
+```
+
+According to Calkins (2005), variables that can be regarded as having a high degree of correlation are indicated by correlation coefficients with magnitudes between ± 0.7 and 1.0. Hence we conclude that there is no highly correlated variables.
+
+### Multilogistic Regression
+
+```{r}
+#status is the variable we are interested as y
+model = glm(status ~ distance_to_primary_road + distance_to_secondary_road + 
+              distance_to_tertiary_road + distance_to_city + 
+              distance_to_town + is_urban + usage_capacity +
+              water_source_clean + water_point_population + local_population_1km,
+            data = osun_wpt_sf_clean,
+            family = binomial(link = 'logit'))
+
+
+```
+
+Instead of using a typical R Report, we use `blr_regress()` to convert the modelling result into a report
+
+```{r}
+blr_regress(model)
+```
+
+We will exclude distance_to_primary_road & distance_to_secondary_road as they have a p value of \> 0.05 implying that they are not statistically significant
+
+Interpret the variables by below rules:
+
+For categorical variable, a +ve value implies an above avg correlation and a -ve value implies a below avg correlation
+
+For continuous variables, +ve value implies a direct correlation and a -ve correlation implies an inverse correlation
+
+Only do the above when they are statistically significant
+
+```{r}
+blr_confusion_matrix(model, cutoff = 0.5)
+```
+
+### Using Geographically Weighted Logistic Regression (GWLR)
+
+First We must first transform *osun_wp_sf_clean* into a spatial polygons data frame using `as_Spatial()`. This is because only SP objects (*SpatialPointDataFrame*) is required to generate the GWLR
+
+```{r}
+osun_wp_sp = osun_wpt_sf_clean %>%
+  select(var_list)  %>%
+  as_Spatial()
+```
+
+Using a fixed distance matrix
+
+```{r}
+bw.fixed = bw.ggwr(status ~ distance_to_primary_road + distance_to_secondary_road + 
+              distance_to_tertiary_road + distance_to_city + 
+              distance_to_town + is_urban + usage_capacity +
+              water_source_clean + water_point_population + local_population_1km,
+              data = osun_wp_sp,
+              family = "binomial",
+              approach = "AIC",
+              kernel = "gaussian",
+              adaptive = FALSE,
+              longlat = FALSE #use false if its converted into projected coord system (number will be very big)
+              
+              )
+```
+
+2597.255m \~ 2.6km
+
+```{r}
+gwlr.fixed = ggwr.basic(status ~ distance_to_primary_road + distance_to_secondary_road + 
+              distance_to_tertiary_road + distance_to_city + 
+              distance_to_town + is_urban + usage_capacity +
+              water_source_clean + water_point_population + local_population_1km,
+              data = osun_wp_sp,
+              bw = bw.fixed,
+              family = "binomial",
+              kernel = "gaussian",
+              adaptive = FALSE,
+              longlat = FALSE #use false if its converted into projected coord system (number will be very big)
+)
+              
+```
+
+```{r}
+gwlr.fixed
+```
+
+The AIC value of Geographically Weighted Regression (GWR) is 4414.606 vs Generalized Linear Regression (GLR) is 5712. Hence, we can conclude that there is a significant improvement on the GWR model
+
+Note: Logistic regression does not have AICC
+
+To assess the performance of gwLR, we need to first convert the SDF object as a data frame
+
+```{r}
+gwr.fixed = as.data.frame(gwlr.fixed$SDF)
+```
+
+Next, we will label yhat values greater or equal to 0.5 into 1 and 0 otherwise. The result of the logical comparison will be saved into a new field call *most*
+
+```{r}
+gwr.fixed = gwr.fixed %>% 
+            mutate(most = 
+                     ifelse(gwr.fixed$yhat >= 0.5, T, F))
+```
+
+```{r}
+gwr.fixed$y = as.factor(gwr.fixed$y)
+gwr.fixed$most = as.factor(gwr.fixed$most)
+
+cm = confusionMatrix(data = gwr.fixed$most, 
+                      reference = gwr.fixed$y)
+cm
+```
+
+Perf increase from MLogR to 88.37% GWLR
+
+Sensitivity increase from
+
+Specificity increased from
+
+Should apply localized strategy instead of using global localized strategy in order to identify reasons of non functional water points
+
+Exclude the 2 statistically significant variables and run one more time..
+
+```{r}
+
+osun_wpt_sf_selected = osun_wpt_sf_clean %>%
+  select(c(ADM2_EN, ADM2_PCODE, ADM1_EN, ADM1_PCODE, status))
+
+gwr_sf.fixed = cbind(osun_wpt_sf_selected, gwr.fixed)
+
+prob_t = tm_shape(osun) + 
+  tm_polygons(alpha = 0.1) +
+  tm_shape(gwr_sf.fixed) +
+  tm_dots(col="yhat",
+  border.col = "gray60",
+  border.lwd = 1) +
+  tm_view(set.zoom.limits = c(8,14))
+
+prob_t
+```
+
+## References
+
+Calkins K. G (2005) *Applied Statistics - Lesson 5, Correlation Coefficients*
+
+https://www.andrews.edu/\~calkins/math/edrm611/edrm05.htm#:\~:text=Correlation%20coefficients%20whose%20magnitude%20are,can%20be%20considered%20highly%20correlated.

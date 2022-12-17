@@ -26,10 +26,7 @@ website:
             
           - text: Hands-on Exercise Week 4.1 - Ch 6 Calibrating Hedonic Pricing Model for Private High-rise Property with GWR Method
             href: Hands-on_Ex5\Hands-on_Ex5.qmd
-            
-          - text: Hands-on Exercise Week 5.1 - Ch 7 
-            href: Hands-on_Ex5\Hands-on_Ex6.qmd
-            
+
       - text: In class Exercises
         menu: 
           - text: In Class Exercise Week 1 - Ch 3 Applications of Spatial Weights
@@ -42,8 +39,10 @@ website:
             href: https://mitb-isss624-ackw-gis-analytics.netlify.app/in-class_ex3/in-class_ex3#spatially-constrained-clustering---clustgeo-method
           
           - text: In Class Exercise Week 4 - Hedonic Pricing Models using GW model and Visualizing coefficient estimates of 2015 Condo Resale price in Singapore
-            href: In-Class_Ex4\In-class_Ex4.qmd  
-      
+            href: In-Class_Ex4\In-class_Ex4.qmd
+          
+          - text: In Class Exercise Week 5 - Investigation of functional and non functional water points using Geographical Weighted Logistic Regression (GWLR) in Nigeria
+            href: In-Class_Ex5\In-class_Ex5.qmd  
       
       - text: Take Home Exercises    
         menu: 
