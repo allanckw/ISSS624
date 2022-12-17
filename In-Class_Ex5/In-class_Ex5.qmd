@@ -1,5 +1,5 @@
 ---
-title: "Hands On Exercise 6.1 -"
+title: "In Class Exercise Week 5 - Investigation of functional and non functional water points using Geographical Weighted Logistic Regression (GWLR) in Nigeria"
 author: "Allan Chong"
 editor: visual
 execute: 
