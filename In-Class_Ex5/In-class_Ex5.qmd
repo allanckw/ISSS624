@@ -112,11 +112,11 @@ In this assignment, we will attempt to use the following variables to attempt to
 
 -   water_source_clean
 
-After determining the data points of interest, we will create a new data frame that contains our columns of interest by using `select`
+After determining the data points of interest, we will create a new data frame with the `filter_at()` function
 
-We will also use the `mutate()` function to modify *usage_capacity* into categorical as it is not a continuous variable, and can be broken down into either 300, 500 or 1000. We shall categorize them into Small (300), Medium (500) and Large (1000) instead.
+We will also omit all the rows with *NA* values by using `all_vars(!is.na(.))`
 
-We also will omit all the rows with NA by using `na.omit()` as part of **dplyr**
+We will use the `mutate()` function to modify *usage_capacity* into categorical variables as it is not a continuous variable, as they can be broken down into either 300, 500 or 1000. We shall categorize them into Small (300), Medium (500) and Large (1000) instead.
 
 ```{r}
 osun_wpt_sf_clean = osun_wpt_sf %>% #filter the required fields
@@ -137,7 +137,7 @@ osun_wpt_sf_clean = osun_wpt_sf %>% #filter the required fields
   mutate(usage_capacity = str_replace(usage_capacity, "1000", "LARGE"))  
 ```
 
-We will remove the geometry object from the data frame using `st_set_geometry(NULL)` as we need create our correlation matrix that does not accept spatial data frame
+We will remove the geometry object from the data frame using `st_set_geometry(NULL)` as we need to create our correlation matrix that does not accept geometry object and select only our interested variables
 
 ```{r}
 var_list = c("water_source_clean",
@@ -187,21 +187,19 @@ model = glm(status ~ distance_to_primary_road + distance_to_secondary_road +
             family = binomial(link = 'logit')) 
 ```
 
-Instead of using a typical R Report, we use `blr_regress()` to convert the modelling result into a report
+Instead of using a typical R Report, we use `blr_regress()` to convert the resulting model into a report
 
 ```{r}
 blr_regress(model)
 ```
 
-We will exclude distance_to_primary_road & distance_to_secondary_road as they have a p value of \> 0.05 implying that they are not statistically significant
+We will exclude *distance_to_primary_road* & *distance_to_secondary_road* as they have a p value of more than 0.05 implying that they are statistically insignificant
 
 For categorical variable, a positive value implies an above average correlation and a negative value implies a below average correlation
 
--   Small usage capacity implies an above average correlation while large usage capacity implies a below average correlation
+-   *usage_capacity* & *water_source_clean* implies an above average correlation
 
--   Urban area implies an above average correlation while large usage capacity implies a below average correlation
-
--   Water Source: Protected Shallow Well & Protected Spring implies an above average correlation
+-   *is_urban* implies a below average correlation
 
 For continuous variables, positive value implies a direct correlation and a negative correlation implies an inverse correlation
 
