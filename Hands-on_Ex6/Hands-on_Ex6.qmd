@@ -1,0 +1,67 @@
+---
+title: "Accessibility to COVID-19 vaccination centres in Singapore"
+author: "Allan Chong"
+editor: visual
+execute: 
+  warning: false
+  message: false
+---
+
+## Overview
+
+In a bid to combat Covid-19, Singapore has roll out, Starting from January 4 2023, anyone who needs a Covid-19 immunization or a booster shot can come into any vaccination centers for their shots (The Straits Times, 2023). Residents could visit *Vaccine Go Where* (<https://www.gowhere.gov.sg/vaccine>) to look for their nearest vaccination center based on their postal code, a web application designed by Government Technology Agency (GovTech) of Singapore. (The Straits Times, 2023)
+
+In this exercise, we attempt to look at the Geospatial properties of accessibility of vaccination centers and how residents might prefer one vaccination center over another using Geospatial analytics.
+
+We load the required library for the exercise below:
+
+...
+
+```{r}
+pacman::p_load(olsrr, corrplot, ggpubr, sf, spdep, GWmodel, tmap, tidyverse, gtsummary, SpatialAcc, ggstatsplot, reshape2)
+```
+
+## Geospatial Data Wrangling
+
+Using the URA Master Plan 2014 subzone boundary GIS data, we will load the spatial data with st_read()
+
+```{r}
+mpsz = st_read(dsn="data/geospatial", layer="MP14_SUBZONE_WEB_PL")
+```
+
+We then transform the dataset to the SVY21 projection system and ensure that it is valid with the below code
+
+```{r}
+mpsz_svy21 = st_transform(mpsz, 3414)
+st_crs(mpsz_svy21)
+st_is_valid(mpsz_svy21)
+```
+
+We will then need to create a 250m radius hexagons GIS data. This data set was created by using [*st_make_grid()*](https://r-spatial.github.io/sf/reference/st_make_grid.html) of sf package, we will also create an ID for every hexagon.
+
+```{r}
+ttm()
+
+grid_250  <- st_as_sfc(mpsz_svy21) %>%
+  st_make_grid(square = FALSE, cellsize = c(2.5e2, 2.5e2)) %>% 
+  st_sf() %>% 
+  mutate(id_250 = 1:nrow(.)) # this will be "final" id
+
+
+tm_shape(grid_250) +
+            tmap_options(check.and.fix = TRUE) +
+            tm_polygons("id_250", alpha = 0.5) +
+            tm_view(set.zoom.limits = c(10,15))
+            
+plot(grid_250)
+```
+
+Next Step
+
+Create vaccination center dataset using onemap.gov.sg to retrieve spatial coordinates and data from MOH vaccination pages
+
+Retrieve dataset of footpath, bus stop, mrt station .. from LTA datamart.
+
+## Reference
+
+The Straits Times (2023), *All can walk in for Covid-19 jabs at vaccination centres from Jan 4* https://www.straitstimes.com/singapore/people-can-walk-into-vaccine-centres-to-get-covid-19-jab-from-wednesday

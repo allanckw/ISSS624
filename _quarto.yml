@@ -52,6 +52,10 @@ website:
           - text: Take Home Exercise 2 - Regionalization of Nigeria with Water points
             href: Take-Home_Ex2\Take-Home_Ex2.qmd
             
+            
+          - text: Accessibility to COVID-19 vaccination centres in Singapore
+            href: Hands-on_Ex6\Hands-on_Ex6.qmd
+            
       - text: Course Website
         href: https://isss624-ay2022-23nov.netlify.app/ 
         
