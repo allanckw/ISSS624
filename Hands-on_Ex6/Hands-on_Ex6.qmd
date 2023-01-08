@@ -33,34 +33,91 @@ We then transform the dataset to the SVY21 projection system and ensure that it 
 
 ```{r}
 mpsz_svy21 = st_transform(mpsz, 3414)
-st_crs(mpsz_svy21)
-st_is_valid(mpsz_svy21)
 ```
 
 We will then need to create a 250m radius hexagons GIS data. This data set was created by using [*st_make_grid()*](https://r-spatial.github.io/sf/reference/st_make_grid.html) of sf package, we will also create an ID for every hexagon.
 
 ```{r}
-ttm()
-
+#| eval: false
 grid_250  <- st_as_sfc(mpsz_svy21) %>%
   st_make_grid(square = FALSE, cellsize = c(2.5e2, 2.5e2)) %>% 
   st_sf() %>% 
   mutate(id_250 = 1:nrow(.)) # this will be "final" id
 
 
-tm_shape(grid_250) +
-            tmap_options(check.and.fix = TRUE) +
-            tm_polygons("id_250", alpha = 0.5) +
-            tm_view(set.zoom.limits = c(10,15))
-            
-plot(grid_250)
+
 ```
 
-Next Step
+We save the hexagon file into a new RDS
 
-Create vaccination center dataset using onemap.gov.sg to retrieve spatial coordinates and data from MOH vaccination pages
+```{r}
+#| eval: false
+saveRDS(grid_250, "data/geospatial/hexagon.rds")
+```
 
-Retrieve dataset of footpath, bus stop, mrt station .. from LTA datamart.
+```{r}
+grid_250 = readRDS("data/geospatial/hexagon.rds")
+ttm()
+
+tm_shape(grid_250) +
+            tmap_options(check.and.fix = TRUE) +
+            tm_polygons("id_250", alpha = 0.1) +
+            tm_view(set.zoom.limits = c(10,15))
+            
+#plot(grid_250)
+```
+
+```{r}
+tm_shape(mpsz_svy21)+
+  tm_polygons("PLN_AREA_N", alpha = 0.1) +
+
+tm_shape(mpsz_svy21) +
+  tm_polygons("SUBZONE_N", alpha = 0.2) +
+  
+  tm_view(set.zoom.limits = c(11,15))
+```
+
+### Public Transport Points
+
+LTA Datamart provides us with the public transport locations, we will attempt to load them here for analysis
+
+```{r}
+busStop = st_read(dsn="data/geospatial/BusStopLocation", layer="BusStop")
+busStop = st_transform(busStop, 3414)
+```
+
+```{r}
+mrt = st_read(dsn="data/geospatial/TrainStationExit", layer="Train_Station_Exit_Layer")
+mrt = st_transform(mrt, 3414)
+```
+
+```{r}
+taxi = st_read(dsn="data/geospatial/TaxiStand", layer="TaxiStop")
+taxi = st_transform(taxi, 3414)
+```
+
+## Aspatial Data Wrangling
+
+```{r}
+vacc_centers = read_csv("data/aspatial/vacc_center_cleaned.csv") 
+```
+
+We can use `st_as_sf`to create a dataframe from the longitude (*x*) and latitude (*y*) values. The EPSG 4326 code is used as the dataset is referencing WGS84 geographic coordinate system. We could use `st_crs()`to verify the coordinate system from the object.
+
+```{r}
+vacc_centers_sf = st_as_sf(vacc_centers, coords = c("Longitude", "Latitude"), crs=4326)
+st_crs(vacc_centers_sf)
+```
+
+```{r}
+#| eval: false
+vacc_centers_sf = st_transform(vacc_centers_sf, 3414)
+saveRDS(vacc_centers_sf, "data/aspatial/vacc_centers_sf.rds")
+```
+
+```{r}
+vacc_centers_sf = readRDS("data/aspatial/vacc_centers_sf.rds")
+```
 
 ## Reference
 
