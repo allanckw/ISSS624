@@ -85,6 +85,11 @@ LTA Datamart provides us with the public transport locations, we will attempt to
 ```{r}
 busStop = st_read(dsn="data/geospatial/BusStopLocation", layer="BusStop")
 busStop = st_transform(busStop, 3414)
+
+busStop_XY = do.call(rbind, st_geometry(busStop)) %>% 
+    as_tibble() %>% setNames(c("X","Y"))
+
+busStop = cbind(busStop, busStop_XY)
 ```
 
 The number of Plan Area N is 55, however the default number of categories is only 30, so we will also need to update it by using `tmap_options(max.categories = 55)` such that all planning zones are shown
@@ -111,6 +116,11 @@ mpsz_svy21_tmap +
 ```{r}
 mrt = st_read(dsn="data/geospatial/TrainStationExit", layer="Train_Station_Exit_Layer")
 mrt = st_transform(mrt, 3414)
+
+mrt_XY = do.call(rbind, st_geometry(mrt)) %>% 
+    as_tibble() %>% setNames(c("X","Y"))
+
+mrt = cbind(mrt, mrt_XY)
 ```
 
 Below is the map of the MRT exits
@@ -132,6 +142,11 @@ mpsz_svy21_tmap +
 ```{r}
 taxi = st_read(dsn="data/geospatial/TaxiStand", layer="TaxiStop")
 taxi = st_transform(taxi, 3414)
+
+taxi_XY = do.call(rbind, st_geometry(taxi)) %>% 
+    as_tibble() %>% setNames(c("X","Y"))
+
+taxi = cbind(taxi, taxi_XY)
 ```
 
 Below is the map of the taxi stands
