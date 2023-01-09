@@ -116,8 +116,6 @@ mrt = st_transform(mrt, 3414)
 Below is the map of the MRT exits
 
 ```{r}
-tmap_options(max.categories = 55)
-
 mpsz_svy21_tmap = tm_shape(mpsz_svy21)+
   tm_polygons("PLN_AREA_N", alpha = 0.1) +
 
@@ -139,8 +137,6 @@ taxi = st_transform(taxi, 3414)
 Below is the map of the taxi stands
 
 ```{r}
-tmap_options(max.categories = 55)
-
 mpsz_svy21_tmap = tm_shape(mpsz_svy21)+
   tm_polygons("PLN_AREA_N", alpha = 0.1) +
 
@@ -180,8 +176,6 @@ vacc_centers_sf = readRDS("data/aspatial/vacc_centers_sf.rds")
 Below is the map of the vaccination centers
 
 ```{r}
-tmap_options(max.categories = 55)
-
 mpsz_svy21_tmap = tm_shape(mpsz_svy21)+
   tm_polygons("PLN_AREA_N", alpha = 0.1) +
 
