@@ -627,7 +627,7 @@ The outcome demonstrates that 30 data points should be used.
 Now, utilizing fixed bandwidth and a Gaussian kernel, we may calibrate the ***gwr*** ***model*** using the code below.
 
 ```{r}
-gwr.adaptive.cv <- gwr.basic(formula = SELLING_PRICE ~ AREA_SQM + AGE + PROX_CBD + PROX_CHILDCARE + PROX_ELDERLYCARE + 
+gwr.adaptive.cv = gwr.basic(formula = SELLING_PRICE ~ AREA_SQM + AGE + PROX_CBD + PROX_CHILDCARE + PROX_ELDERLYCARE + 
 PROX_URA_GROWTH_AREA + PROX_MRT + PROX_PARK + 
 PROX_PRIMARY_SCH + PROX_SHOPPING_MALL +                 NO_Of_UNITS + FAMILY_FRIENDLY + FREEHOLD, 
                           data=condo_resale_sp, 
@@ -665,7 +665,7 @@ The outcome demonstrates that 27 data points should be used.
 Now, utilizing fixed bandwidth and a Gaussian kernel, we may calibrate the ***gwr*** ***model*** using the code below.
 
 ```{r}
-gwr.adaptive.aicc <- gwr.basic(formula = SELLING_PRICE ~ AREA_SQM + AGE + PROX_CBD + PROX_CHILDCARE + PROX_ELDERLYCARE + 
+gwr.adaptive.aicc = gwr.basic(formula = SELLING_PRICE ~ AREA_SQM + AGE + PROX_CBD + PROX_CHILDCARE + PROX_ELDERLYCARE + 
 PROX_URA_GROWTH_AREA + PROX_MRT + PROX_PARK + 
 PROX_PRIMARY_SCH + PROX_SHOPPING_MALL +                 NO_Of_UNITS + FAMILY_FRIENDLY + FREEHOLD, 
                           data=condo_resale_sp, 

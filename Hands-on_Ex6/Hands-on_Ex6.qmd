@@ -33,6 +33,8 @@ We then transform the dataset to the SVY21 projection system and ensure that it 
 
 ```{r}
 mpsz_svy21 = st_transform(mpsz, 3414)
+
+mpsz_svy21_SubZone = mpsz_svy21
 ```
 
 We will then need to create a 250m radius hexagons GIS data. This data set was created by using [*st_make_grid()*](https://r-spatial.github.io/sf/reference/st_make_grid.html) of sf package, we will also create an ID for every hexagon.
@@ -68,13 +70,12 @@ tm_shape(grid_250) +
 ```
 
 ```{r}
-tm_shape(mpsz_svy21)+
+mpsz_svy21_PLN = tm_shape(mpsz_svy21)+
   tm_polygons("PLN_AREA_N", alpha = 0.1) +
 
-tm_shape(mpsz_svy21) +
-  tm_polygons("SUBZONE_N", alpha = 0.2) +
-  
-  tm_view(set.zoom.limits = c(11,15))
+tm_shape(mpsz_svy21_SubZone) +
+  tm_polygons("SUBZONE_N", alpha = 0.2)
+
 ```
 
 ### Public Transport Points
@@ -86,14 +87,71 @@ busStop = st_read(dsn="data/geospatial/BusStopLocation", layer="BusStop")
 busStop = st_transform(busStop, 3414)
 ```
 
+The number of Plan Area N is 55, however the default number of categories is only 30, so we will also need to update it by using `tmap_options(max.categories = 55)` such that all planning zones are shown
+
+Below is the map of the bus stops
+
+```{r}
+tmap_options(max.categories = 55)
+
+mpsz_svy21_tmap = tm_shape(mpsz_svy21)+
+  tm_polygons("PLN_AREA_N", alpha = 0.1) +
+
+tm_shape(mpsz_svy21_SubZone) +
+  tm_polygons("SUBZONE_N", alpha = 0.2) 
+ 
+mpsz_svy21_tmap +
+  tm_shape(busStop) + 
+  tm_dots("BUS_STOP_N", legend.show = FALSE) +
+  
+  tm_view(set.zoom.limits = c(11,15)) 
+
+```
+
 ```{r}
 mrt = st_read(dsn="data/geospatial/TrainStationExit", layer="Train_Station_Exit_Layer")
 mrt = st_transform(mrt, 3414)
 ```
 
+Below is the map of the MRT exits
+
+```{r}
+tmap_options(max.categories = 55)
+
+mpsz_svy21_tmap = tm_shape(mpsz_svy21)+
+  tm_polygons("PLN_AREA_N", alpha = 0.1) +
+
+tm_shape(mpsz_svy21_SubZone) +
+  tm_polygons("SUBZONE_N", alpha = 0.2) 
+ 
+mpsz_svy21_tmap +
+  tm_shape(mrt) + 
+  tm_dots("stn_name", legend.show = FALSE) +
+  
+  tm_view(set.zoom.limits = c(11,15)) 
+```
+
 ```{r}
 taxi = st_read(dsn="data/geospatial/TaxiStand", layer="TaxiStop")
 taxi = st_transform(taxi, 3414)
+```
+
+Below is the map of the taxi stands
+
+```{r}
+tmap_options(max.categories = 55)
+
+mpsz_svy21_tmap = tm_shape(mpsz_svy21)+
+  tm_polygons("PLN_AREA_N", alpha = 0.1) +
+
+tm_shape(mpsz_svy21_SubZone) +
+  tm_polygons("SUBZONE_N", alpha = 0.2) 
+ 
+mpsz_svy21_tmap +
+  tm_shape(taxi) + 
+  tm_dots(legend.show = FALSE) +
+  
+  tm_view(set.zoom.limits = c(11,15)) 
 ```
 
 ## Aspatial Data Wrangling
@@ -117,6 +175,24 @@ saveRDS(vacc_centers_sf, "data/aspatial/vacc_centers_sf.rds")
 
 ```{r}
 vacc_centers_sf = readRDS("data/aspatial/vacc_centers_sf.rds")
+```
+
+Below is the map of the vaccination centers
+
+```{r}
+tmap_options(max.categories = 55)
+
+mpsz_svy21_tmap = tm_shape(mpsz_svy21)+
+  tm_polygons("PLN_AREA_N", alpha = 0.1) +
+
+tm_shape(mpsz_svy21_SubZone) +
+  tm_polygons("SUBZONE_N", alpha = 0.2) 
+ 
+mpsz_svy21_tmap +
+  tm_shape(vacc_centers_sf) + 
+  tm_dots("name", legend.show = FALSE) +
+  
+  tm_view(set.zoom.limits = c(11,15)) 
 ```
 
 ## Reference
